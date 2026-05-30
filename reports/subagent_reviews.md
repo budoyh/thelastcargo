@@ -43,3 +43,13 @@
 - result before remediation: blocked by missing top-level exception fallback, dead preference hard-block path, and minimal trace/regret schema mismatch.
 - remediation: `ModelDecisionService.decide()` now catches runtime exceptions and returns legal wait with trace; preference compiler now emits quantitative DSL rules and high-confidence irreversible certificates when evidence supports it; regret dashboard handles minimal trace and bad JSONL lines; added tests.
 - gate after remediation: `33 passed`, audit green, compileall green.
+
+## Final Re-Review Results
+
+| reviewer | gate | final note |
+|---|---|---|
+| Prompt-Adherence | no before final commit/push | Function/compliance side passed; remaining blocker was only untracked final report, dirty worktree, and push not yet completed. |
+| Compliance | yes | `audit_guard.py --fail-on-p0` passed with `findings=0 p0=0`; no runtime raw-data/server import/hardcoding issue. |
+| Safety & Runtime | yes | Query refresh, post-query filtering, current observed take, horizon clamp, exception fallback, trace fields and latest artifacts verified. |
+| Regret & Ablation | yes | Six regret categories, module go/no-go decisions, reposition OFF and ablation honesty verified. |
+| Code Quality | yes | Prior P1 issues fixed; one non-blocking stability-audit bad-line tolerance note was addressed after review. |

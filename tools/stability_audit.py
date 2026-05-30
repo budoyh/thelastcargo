@@ -34,7 +34,12 @@ def _summary(results_dir: Path) -> dict[str, Any]:
         for line in path.read_text(encoding="utf-8").splitlines():
             if not line.strip():
                 continue
-            row = json.loads(line)
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(row, dict):
+                continue
             action = ((row.get("action") or {}).get("action") or "other").strip()
             counts[action if action in counts else "other"] += 1
     summary = data["summary"]
@@ -72,7 +77,12 @@ def _time_blocks(results_dir: Path, block_minutes: int = 7 * 24 * 60) -> list[di
         for line in path.read_text(encoding="utf-8").splitlines():
             if not line.strip():
                 continue
-            row = json.loads(line)
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            if not isinstance(row, dict):
+                continue
             minute = int((row.get("result") or {}).get("simulation_progress_minutes", 0) or 0)
             idx = min(4, max(0, minute // block_minutes))
             item = blocks.setdefault(idx, {"block": idx, "steps": 0, "take": 0, "wait": 0, "reposition": 0, "illegal": 0})

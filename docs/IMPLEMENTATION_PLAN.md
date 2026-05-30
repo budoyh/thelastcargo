@@ -21,6 +21,6 @@
 - [x] Run 31-day smoke/full local simulation on 20260529.
 - [x] Run local evaluation on 20260509 reference or document blocker.
 - [x] Generate regret dashboard and stability audit.
-- [ ] Generate final audit report.
+- [x] Generate final audit report.
 - [x] Run final subagent/reviewer audit and remediation pass.
 - [ ] Commit and push or document remote blocker.
