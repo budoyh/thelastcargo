@@ -23,4 +23,4 @@
 - [x] Generate regret dashboard and stability audit.
 - [x] Generate final audit report.
 - [x] Run final subagent/reviewer audit and remediation pass.
-- [ ] Commit and push or document remote blocker.
+- [x] Commit and push or document remote blocker.

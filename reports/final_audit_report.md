@@ -6,6 +6,7 @@
 - Mainline: P0/P0++ stable, P1 conservative scoring modules, P2/P3 default OFF.
 - Implementation commit: `f2a4503` (`Implement CROWN-Y tournament build`).
 - Final report commit: `5ad621c` (`Add final audit report`).
+- Push status: success; branch `crown-y-tournament-build` tracks `origin/crown-y-tournament-build`.
 - Branch: `crown-y-tournament-build`.
 - Runtime model calls: `0`; LLM Judge default OFF and budget `0`.
 - Final default: Time Shadow, Preference Monitor, Visible two-hop and Resource Endgame ON; Scout-then-deepen, Reposition, Learned Ranker, LLM Judge, Destination Shadow Query, three-hop and option rollout OFF.
@@ -228,4 +229,4 @@ Full notes are in `reports/subagent_reviews.md`.
 | raw data/server import/hardcoding audit | PASS |
 | AGENTS.md and agent.md maintained | PASS |
 | final reviewer notes recorded | PASS |
-| final commit/push | PENDING final push attempt after report commit; implementation commit `f2a4503`, report commit `5ad621c` |
+| final commit/push | PASS; branch pushed to `origin/crown-y-tournament-build`; implementation commit `f2a4503`, report commit `5ad621c` |
