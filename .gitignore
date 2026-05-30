@@ -1,0 +1,21 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Local source packages and raw data are kept for development only.
+demo/server/data/
+demo/results/
+demo/server/config/config.json
+_offline_reference_20260509/
+demo_docs_release_*.zip
+crown_y_tournament_build_codex_prompt.md
+赛事简介(4).txt
+赛题详情(1).txt
+技术分享与主办法回复整理.md
+
+# Run outputs
+runs/
+!runs/.gitkeep
+reports/*.tmp
+
