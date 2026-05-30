@@ -9,6 +9,9 @@ Primary final report:
 Score rescue result:
 
 - status: `RESCUE_SUCCESS`
+- implementation_commit: `1ff309f`
+- evidence_report_commit: `f96786a`
+- push_status: `success to origin/crown-y-score-rescue`
 - final run: `runs/latest_rescue`
 - net: `5067.69`
 - preference_penalty: `38140.0`

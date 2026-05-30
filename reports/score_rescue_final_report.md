@@ -3,6 +3,9 @@
 - result: `RESCUE_SUCCESS`
 - branch: `crown-y-score-rescue`
 - head_at_report_generation: `1ff309f`
+- implementation_commit: `1ff309f`
+- evidence_report_commit: `f96786a`
+- push_status: `success to origin/crown-y-score-rescue`
 - working_tree_status_at_generation: `clean`
 - latest_results_dir: `C:\budostudy\only_for_codex\thelatstcargo\runs\latest_rescue`
 - old_0509_results_dir: `C:\budostudy\only_for_codex\thelatstcargo\runs\old_0509_rescue`
