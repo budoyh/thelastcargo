@@ -19,12 +19,16 @@ from agent import (  # noqa: E402
     endgame_planner,
     learned_ranker,
     llm_preference_judge,
+    micro_reposition,
     preference_monitor,
+    qwen_preference_compiler,
     query_policy,
+    rescue_scorer,
     safety,
     time_bid_scorer,
     time_shadow_market,
     trace_writer,
+    wait_lock,
     world as world_module,
 )
 from agent.model_decision_service import ModelDecisionService  # noqa: E402
@@ -194,6 +198,9 @@ def test_decide_returns_wait_on_runtime_exception():
     assert action["action"] == "wait"
     assert action["params"]["duration_minutes"] == 1
     assert "decision_exception" in action["agent_trace"]["chosen"]["action_reasons"]
+    forensic = action["agent_trace"]["rescue"]["wait_forensic"]
+    assert forensic["wait_reason"] == "decision_exception"
+    assert "why_wait_won" in forensic
 
 
 def test_no_server_import():
@@ -424,6 +431,35 @@ def test_regret_reposition_not_recovered_uses_payback_window(tmp_path):
     assert regret_dashboard.build_stats(tmp_path).counts["reposition_not_recovered"] == 0
 
 
+def test_regret_dashboard_v2_writes_six_categories(tmp_path):
+    from tools import regret_dashboard
+
+    run_dir = tmp_path / "a7"
+    run_dir.mkdir()
+    row = {
+        "driver_id": "D_TEST",
+        "query_scan_cost_minutes": 20,
+        "action_exec_cost_minutes": 800,
+        "simulation_end_time": "2026-03-25 00:00",
+        "action": {
+            "action": "take_order",
+            "agent_trace": {
+                "visible_count": 1,
+                "debt_value": 300,
+                "chosen": {"score": -1},
+            },
+        },
+        "result": {"accepted": True, "simulation_progress_minutes": 800},
+    }
+    (run_dir / "actions_202603_D001.jsonl").write_text(json.dumps(row) + "\n", encoding="utf-8")
+    (run_dir / "monthly_income_202603.json").write_text(json.dumps({"summary": {"total_net_income_all_drivers": 1}}), encoding="utf-8")
+    out = tmp_path / "regret.md"
+    regret_dashboard.write_rescue_report(tmp_path, out)
+    text = out.read_text(encoding="utf-8")
+    for key in regret_dashboard.REGRET_KEYS:
+        assert key in text
+
+
 def test_trace_records_certificate_fields_in_minimal_mode(monkeypatch):
     world1, _, _ = build_world()
     visible = cargo_filter.normalize_and_filter(
@@ -484,3 +520,324 @@ def test_llm_json_failure_unknown():
     parsed = llm_preference_judge.parse_judge_response("{")
     assert parsed["violates_preference"] == "unknown"
     assert parsed["confidence"] == 0.0
+
+
+def test_rescue_scorer_takes_safe_positive_net(monkeypatch):
+    monkeypatch.setattr(config, "ENABLE_RESCUE_SCORER", True)
+    monkeypatch.setattr(config, "ENABLE_RESCUE_PREFERENCE_SOFT", True)
+    monkeypatch.setattr(config, "RESCUE_DIRECT_NET_FLOOR", 1.0)
+    monkeypatch.setattr(config, "RESCUE_PROFIT_PER_HOUR_FLOOR", 0.0)
+    world1, _, _ = build_world()
+    visible = cargo_filter.normalize_and_filter(
+        raw_cargos=[cargo_item(price=600, cost=60)],
+        world=world1,
+        source_scope=CURRENT_ACTIONABLE,
+        decision_id="d1",
+    )
+    options = candidate_generator.build_options(world1, visible, "d1")
+    options = safety.pre_filter_and_attach_action_certificate(options, world1, {visible[0].cargo_id})
+    options, stats = rescue_scorer.score_options(options, world1, wait_lock.WaitLockState())
+    chosen = rescue_scorer.choose(options, stats, wait_lock.WaitLockState())
+    assert chosen.action_type == "take_order"
+    assert chosen.direct_money > 0
+
+
+def test_wait_forensic_contains_required_fields(monkeypatch):
+    monkeypatch.setattr(config, "ENABLE_RESCUE_SCORER", True)
+    monkeypatch.setattr(config, "RESCUE_DIRECT_NET_FLOOR", 35.0)
+    world1, _, _ = build_world()
+    visible = cargo_filter.normalize_and_filter(
+        raw_cargos=[cargo_item(price=5, cost=60)],
+        world=world1,
+        source_scope=CURRENT_ACTIONABLE,
+        decision_id="d1",
+    )
+    options = candidate_generator.build_options(world1, visible, "d1")
+    options = safety.pre_filter_and_attach_action_certificate(options, world1, {visible[0].cargo_id})
+    state = wait_lock.WaitLockState()
+    options, stats = rescue_scorer.score_options(options, world1, state)
+    chosen = rescue_scorer.choose(options, stats, state)
+    forensic = rescue_scorer.wait_forensic(chosen, options, stats, state)
+    assert forensic["wait_reason"]
+    assert "best_order_net" in forensic
+    assert "best_order_per_hour" in forensic
+    assert forensic["top_5_rejected_take"]
+    assert "score_components" in forensic["top_5_rejected_take"][0]
+
+
+def test_unknown_preference_risk_is_soft_not_hard(monkeypatch):
+    monkeypatch.setattr(config, "ENABLE_RESCUE_PREFERENCE_SOFT", True)
+    monkeypatch.setattr(config, "RESCUE_DIRECT_NET_FLOOR", 1.0)
+    monkeypatch.setattr(config, "RESCUE_PROFIT_PER_HOUR_FLOOR", 0.0)
+    world1, _, _ = build_world(preferences=[{"content": "abstract runtime constraint", "penalty_amount": 100}])
+    visible = cargo_filter.normalize_and_filter(
+        raw_cargos=[cargo_item(price=700, cost=90)],
+        world=world1,
+        source_scope=CURRENT_ACTIONABLE,
+        decision_id="d1",
+    )
+    options = candidate_generator.build_options(world1, visible, "d1")
+    options = safety.pre_filter_and_attach_action_certificate(options, world1, {visible[0].cargo_id})
+    options, stats = rescue_scorer.score_options(options, world1, wait_lock.WaitLockState())
+    take = next(o for o in options if o.action_type == "take_order")
+    assert take.trace.get("hard_block_reason", "") == ""
+    assert rescue_scorer.choose(options, stats, wait_lock.WaitLockState()).action_type == "take_order"
+
+
+def test_query_wait_loop_breaker_lowers_thresholds(monkeypatch):
+    monkeypatch.setattr(config, "ENABLE_RESCUE_WAIT_PENALTY", True)
+    monkeypatch.setattr(config, "RESCUE_DIRECT_NET_FLOOR", 35.0)
+    monkeypatch.setattr(config, "RESCUE_PROFIT_PER_HOUR_FLOOR", 18.0)
+    world1, _, _ = build_world()
+    state = wait_lock.WaitLockState(consecutive_wait=3, consecutive_query_wait=3)
+    direct, per_hour = wait_lock.lowered_thresholds(state)
+    assert wait_lock.query_k(state, world1) == config.RESCUE_QUERY_K_HIGH
+    assert direct < 35.0
+    assert per_hour < 18.0
+
+
+def test_micro_reposition_uses_current_visible_cluster(monkeypatch):
+    monkeypatch.setattr(config, "ENABLE_RESCUE_MICRO_REPOSITION", True)
+    world1, _, _ = build_world()
+    visible = cargo_filter.normalize_and_filter(
+        raw_cargos=[cargo_item(price=800, start_lat=23.2, start_lng=113.0, cost=90)],
+        world=world1,
+        source_scope=CURRENT_ACTIONABLE,
+        decision_id="d1",
+    )
+    option = micro_reposition.build_candidate(
+        world1,
+        visible,
+        "d1",
+        wait_lock.WaitLockState(consecutive_wait=config.RESCUE_MICRO_REPOSITION_TRIGGER_WAITS),
+    )
+    assert option is not None
+    assert option.trace["target_source"] == "current_visible_pickup_cluster"
+    assert config.RESCUE_MICRO_REPOSITION_MIN_KM <= option.deadhead_km <= config.RESCUE_MICRO_REPOSITION_MAX_KM + 0.01
+
+
+def test_rescue_negative_net_hard_block():
+    option = CandidateOption(
+        id="take:negative",
+        action_type="take_order",
+        decision_id="d1",
+        direct_money=-100.0,
+        occupied_minutes=60,
+    )
+    assert rescue_scorer.hard_block_reason(option, min_direct=1.0, min_per_hour=0.0) == "severe_negative_net"
+
+
+def test_force_take_does_not_bypass_rest_guard(monkeypatch):
+    monkeypatch.setattr(config, "ENABLE_RESCUE_REST_GUARD", True)
+    monkeypatch.setattr(config, "RESCUE_DIRECT_NET_FLOOR", 1.0)
+    monkeypatch.setattr(config, "RESCUE_PROFIT_PER_HOUR_FLOOR", 0.0)
+    world1, _, _ = build_world(preferences=[{"content": "abstract runtime constraint", "penalty_amount": 10000}])
+    visible = cargo_filter.normalize_and_filter(
+        raw_cargos=[cargo_item(price=700, cost=60)],
+        world=world1,
+        source_scope=CURRENT_ACTIONABLE,
+        decision_id="d1",
+    )
+    options = candidate_generator.build_options(world1, visible, "d1")
+    options = safety.pre_filter_and_attach_action_certificate(options, world1, {visible[0].cargo_id})
+    state = wait_lock.WaitLockState(consecutive_wait=config.RESCUE_FORCE_TAKE_AFTER_WAITS)
+    options, stats = rescue_scorer.score_options(options, world1, state)
+    take = next(o for o in options if o.action_type == "take_order")
+    assert take.trace["hard_block_reason"] == "rest_window_overlap"
+    assert rescue_scorer.choose(options, stats, state).action_type == "wait"
+
+
+def test_rest_guard_wait_has_post_query_forensic(monkeypatch):
+    monkeypatch.setattr(config, "ENABLE_RESCUE_SCORER", True)
+    monkeypatch.setattr(config, "ENABLE_RESCUE_REST_GUARD", True)
+    monkeypatch.setattr(config, "ENABLE_QWEN_PREFERENCE_COMPILER", False)
+    monkeypatch.setattr(config, "RESCUE_DIRECT_NET_FLOOR", 1.0)
+    monkeypatch.setattr(config, "RESCUE_PROFIT_PER_HOUR_FLOOR", 0.0)
+    api = FakeApi()
+    api.preferences = [{"content": "abstract runtime constraint", "penalty_amount": 10000}]
+    api.items = [cargo_item(price=700, cost=60)]
+    action = ModelDecisionService(api).decide("D_TEST")
+    trace = action["agent_trace"]
+    forensic = trace["rescue"]["wait_forensic"]
+    assert action["action"] == "wait"
+    assert trace["query_minutes"] > 0
+    assert forensic["wait_reason"] == "daily_rest_guard"
+    assert forensic["top_5_rejected_take"]
+    assert forensic["best_order_net"] > 0
+
+
+def test_filter_rejection_summary_includes_rescue_reasons(monkeypatch):
+    monkeypatch.setattr(config, "ENABLE_RESCUE_SCORER", True)
+    world1, _, _ = build_world(now=5)
+    visible = cargo_filter.normalize_and_filter(
+        raw_cargos=[cargo_item(remove="2026-03-01 00:10:00")],
+        world=world1,
+        source_scope=CURRENT_ACTIONABLE,
+        decision_id="filter-d1",
+    )
+    assert visible == []
+    assert cargo_filter.rejection_summary("filter-d1")["remove_slack_too_short"] == 1
+
+
+def test_invalid_explicit_load_window_rejected():
+    item = cargo_item()
+    item["cargo"]["load_time"] = ["2026-03-02 00:00:00", "2026-03-01 00:00:00"]
+    assert normalize_cargo_item(item, world_minutes=0, source_scope=CURRENT_ACTIONABLE, decision_id="d1") is None
+
+
+def test_qwen_compiler_calls_model_for_new_pref_hash(monkeypatch):
+    class CompilerApi:
+        def __init__(self):
+            self.calls = 0
+
+        def model_chat_completion(self, payload):
+            self.calls += 1
+            assert payload["model"] == "qwen3.5-flash"
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "rules": [
+                                        {
+                                            "kind": "unknown",
+                                            "scope": "whole_period",
+                                            "condition": {},
+                                            "repairability": "always_soft",
+                                            "reward_or_penalty": {"amount": 10, "direction": "penalty"},
+                                            "evidence": "abstract",
+                                            "confidence": 0.3,
+                                        }
+                                    ]
+                                }
+                            )
+                        }
+                    }
+                ],
+                "usage": {"prompt_tokens": 1, "completion_tokens": 1, "total_tokens": 2},
+            }
+
+    monkeypatch.setenv("DASHSCOPE_API_KEY", "unit-test-key")
+    api = CompilerApi()
+    before = qwen_preference_compiler.STATS.compile_calls
+    rules = qwen_preference_compiler.compile_with_qwen(
+        api=api,
+        pref_hash="unit-qwen-new-pref",
+        preferences=({"content": "abstract runtime preference", "penalty_amount": 10},),
+        fallback_amounts=[{"amount": 10.0, "cap": None, "direction": "penalty"}],
+    )
+    assert rules is not None
+    assert api.calls == 1
+    assert qwen_preference_compiler.STATS.compile_calls == before + 1
+
+
+def test_qwen_compiler_env_priority_fallback_keys(monkeypatch):
+    class CompilerApi:
+        def model_chat_completion(self, payload):
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "rules": [
+                                        {
+                                            "kind": "unknown",
+                                            "scope": "whole_period",
+                                            "condition": {},
+                                            "repairability": "always_soft",
+                                            "evidence": "abstract",
+                                            "confidence": 0.3,
+                                        }
+                                    ]
+                                }
+                            )
+                        }
+                    }
+                ],
+                "usage": {},
+            }
+
+    monkeypatch.delenv("DASHSCOPE_API_KEY", raising=False)
+    monkeypatch.setenv("BAILIAN_API_KEY", "unit-test-key")
+    rules = qwen_preference_compiler.compile_with_qwen(
+        api=CompilerApi(),
+        pref_hash="unit-qwen-bailian-pref",
+        preferences=({"content": "abstract runtime preference", "penalty_amount": 10},),
+        fallback_amounts=[{"amount": 10.0, "cap": None, "direction": "penalty"}],
+    )
+    assert rules is not None
+
+
+def test_qwen_compiler_does_not_treat_dummy_key_as_success(monkeypatch):
+    class ForbiddenApi:
+        def model_chat_completion(self, payload):
+            raise AssertionError("dummy key path must not call the model")
+
+    monkeypatch.setenv("DASHSCOPE_API_KEY", "local-dummy-key-not-used")
+    before = qwen_preference_compiler.STATS.dummy_key_blocked_count
+    rules = qwen_preference_compiler.compile_with_qwen(
+        api=ForbiddenApi(),
+        pref_hash="unit-qwen-dummy-pref",
+        preferences=({"content": "abstract runtime preference", "penalty_amount": 10},),
+        fallback_amounts=[{"amount": 10.0, "cap": None, "direction": "penalty"}],
+    )
+    assert rules is None
+    assert qwen_preference_compiler.STATS.dummy_key_blocked_count == before + 1
+
+
+def test_qwen_irreversible_repairability_reaches_certificate(monkeypatch):
+    class CompilerApi:
+        def model_chat_completion(self, payload):
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "rules": [
+                                        {
+                                            "kind": "distance_budget",
+                                            "scope": "whole_period",
+                                            "condition": {},
+                                            "repairability": "irreversible",
+                                            "reward_or_penalty": {"amount": 10000, "direction": "penalty"},
+                                            "evidence": "abstract",
+                                            "confidence": 0.9,
+                                        }
+                                    ]
+                                }
+                            )
+                        }
+                    }
+                ],
+                "usage": {},
+            }
+
+    monkeypatch.setenv("DASHSCOPE_API_KEY", "unit-test-key")
+    rules = qwen_preference_compiler.compile_with_qwen(
+        api=CompilerApi(),
+        pref_hash="unit-qwen-irreversible-pref",
+        preferences=({"content": "abstract runtime preference", "penalty_amount": 10000},),
+        fallback_amounts=[{"amount": 10000.0, "cap": None, "direction": "penalty"}],
+    )
+    assert rules is not None
+    assert rules[0].repairability == "irreversible_after_action"
+    from dataclasses import replace
+    from agent.schemas import CompiledPreferenceSet
+
+    world1, _, _ = build_world()
+    world2 = replace(world1, rules=CompiledPreferenceSet(pref_hash="unit-qwen-irreversible-pref", rules=rules))
+    option = CandidateOption(
+        id="take:qwen-risk",
+        action_type="take_order",
+        decision_id="d1",
+        direct_money=500,
+        occupied_minutes=900,
+        deadhead_km=300,
+        haul_km=400,
+        finish_minutes=900,
+    )
+    cert = preference_monitor.certify(option, world2)
+    assert cert.high_confidence_irreversible_violation

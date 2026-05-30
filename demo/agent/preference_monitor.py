@@ -16,7 +16,7 @@ def _rule_exposure(option: CandidateOption, kind: str) -> float:
         return _bounded(duration / 720.0) * 0.35
     if kind == "time_window":
         return _bounded(duration / 720.0)
-    if kind == "quantitative_limit":
+    if kind in {"quantitative_limit", "distance_budget"}:
         distance_risk = _bounded(total_distance / 650.0)
         duration_risk = _bounded(duration / 840.0)
         return max(distance_risk, duration_risk)
@@ -41,7 +41,7 @@ def certify(option: CandidateOption, world: World) -> PreferenceCertificate:
             effect = "violates" if exposure >= 0.6 and confidence >= 0.72 else "unknown"
             debt_delta = amount * exposure * (0.008 + 0.008 * confidence)
         if (
-            rule.repairability == "irreversible_after_action"
+            rule.repairability in {"irreversible_after_action", "irreversible"}
             and option.action_type in {"take_order", "reposition"}
             and confidence >= 0.72
             and exposure >= 0.7

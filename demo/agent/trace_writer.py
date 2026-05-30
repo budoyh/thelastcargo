@@ -36,6 +36,7 @@ def attach_trace(
     chosen: CandidateOption,
     options: list[CandidateOption] | None = None,
     query_minutes: int,
+    rescue: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if config.SUBMIT_MODE:
         action["agent_trace"] = {
@@ -43,6 +44,8 @@ def attach_trace(
             "decision_id": chosen.decision_id,
             "chosen": _cert_payload(chosen),
         }
+        if rescue:
+            action["agent_trace"]["rescue"] = rescue
         return action
     reposition_candidates = []
     for option in options or []:
@@ -74,6 +77,8 @@ def attach_trace(
         "reposition_gate": dict(chosen.trace) if chosen.action_type == "reposition" else {},
         "reposition_candidates": reposition_candidates,
     }
+    if rescue:
+        action["agent_trace"]["rescue"] = rescue
     return action
 
 
@@ -102,6 +107,26 @@ def attach_exception_trace(
             "action_reasons": ["decision_exception", reason],
             "score": 0.0,
             "components": {},
+        },
+        "rescue": {
+            "variant": config.RESCUE_VARIANT,
+            "positive_count": 0,
+            "safe_positive_count": 0,
+            "best_order_net": 0.0,
+            "best_order_per_hour": 0.0,
+            "hard_block_reason_counts": {"decision_exception": 1},
+            "wait_forensic": {
+                "wait_reason": "decision_exception",
+                "best_available_order": None,
+                "best_order_net": 0.0,
+                "best_order_per_hour": 0.0,
+                "why_not_take": reason,
+                "why_not_reposition": "decision_exception",
+                "why_wait_minutes": int(action.get("params", {}).get("duration_minutes", 0) or 0),
+                "why_wait_won": {"fallback": "exception", "exception_type": reason},
+                "top_5_rejected_take": [],
+                "hard_block_reason_counts": {"decision_exception": 1},
+            },
         },
     }
     return action

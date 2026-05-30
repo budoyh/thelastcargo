@@ -89,7 +89,34 @@ LLM_MAX_JUDGE_CALLS_PER_DRIVER = 0
 LLM_MAX_JUDGE_CALLS_PER_DAY = 0
 LLM_TIMEOUT_SECONDS = 3.0
 
+RESCUE_QUERY_K_DEFAULT = 120
+RESCUE_QUERY_K_HIGH = 200
+RESCUE_DIRECT_NET_FLOOR = 35.0
+RESCUE_PROFIT_PER_HOUR_FLOOR = 18.0
+RESCUE_NEGATIVE_HARD_BLOCK = -80.0
+RESCUE_SOFT_RISK_CAP = 80.0
+RESCUE_TIME_COST_CAP = 90.0
+RESCUE_WAIT_PENALTY_STEP = 35.0
+RESCUE_WAIT_MINUTES_DEFAULT = 150
+RESCUE_FORCE_TAKE_AFTER_WAITS = 6
+RESCUE_LOOP_BREAK_AFTER_WAITS = 3
+RESCUE_MICRO_REPOSITION_MIN_KM = 5.0
+RESCUE_MICRO_REPOSITION_MAX_KM = 30.0
+RESCUE_MICRO_REPOSITION_TRIGGER_WAITS = 3
+RESCUE_DAILY_REST_UNTIL_MINUTE = 9 * 60
+RESCUE_FULL_REST_PERIOD_DAYS = 15
+RESCUE_MIN_REMOVE_SLACK_MINUTES = 60
+ENABLE_RESCUE_SCORER = False
+ENABLE_RESCUE_WAIT_PENALTY = False
+ENABLE_RESCUE_MICRO_REPOSITION = False
+ENABLE_RESCUE_PREFERENCE_SOFT = False
+ENABLE_RESCUE_TWOHOP_LITE = False
+ENABLE_RESCUE_TIME_SHADOW_LITE = False
+ENABLE_RESCUE_REST_GUARD = False
+ENABLE_QWEN_PREFERENCE_COMPILER = False
+
 _VARIANT = os.environ.get("CROWN_Y_VARIANT", "").strip().lower()
+RESCUE_VARIANT = _VARIANT
 if _VARIANT in {"a", "baseline", "safe_greedy"}:
     ENABLE_TIME_SHADOW = False
     ENABLE_VISIBLE_TWO_HOP = False
@@ -107,6 +134,66 @@ elif _VARIANT in {"no_scout", "fixed_scout"}:
     ENABLE_SCOUT_THEN_DEEPEN = False
 elif _VARIANT in {"c", "default", ""}:
     pass
+
+if _VARIANT in {
+    "fixed_k50_positive_net",
+    "fixed_k100_profit_per_hour",
+    "fixed_k200_direct_profit_with_slack",
+    "simple_balanced_greedy",
+    "safe_profit_greedy",
+    "a0",
+    "a1",
+    "a2",
+    "a3",
+    "a4",
+    "a5",
+    "a6",
+    "a7",
+    "best_rescue",
+}:
+    ENABLE_RESCUE_SCORER = True
+    ENABLE_SCOUT_THEN_DEEPEN = False
+    ENABLE_TIME_SHADOW = False
+    ENABLE_VISIBLE_TWO_HOP = False
+    ENABLE_RESOURCE_ENDGAME = False
+    ENABLE_REPOSITION = False
+    TIME_SHADOW_MODE = "rescue_lite"
+
+if _VARIANT in {"a1", "a2", "a3", "a4", "a5", "a6", "a7", "best_rescue"}:
+    ENABLE_RESCUE_WAIT_PENALTY = True
+if _VARIANT in {"a2", "a3", "a4", "a5", "a6", "a7", "best_rescue"}:
+    ENABLE_RESCUE_MICRO_REPOSITION = True
+if _VARIANT in {"a3", "a4", "a5", "a6", "a7", "best_rescue"}:
+    ENABLE_RESCUE_PREFERENCE_SOFT = True
+if _VARIANT in {"a4", "a5", "a6", "a7", "best_rescue"}:
+    ENABLE_RESCUE_TWOHOP_LITE = True
+if _VARIANT in {"a5", "a6", "a7", "best_rescue"}:
+    ENABLE_RESCUE_TIME_SHADOW_LITE = True
+if _VARIANT in {"a6", "a7", "best_rescue"}:
+    ENABLE_QWEN_PREFERENCE_COMPILER = True
+if _VARIANT in {"a6", "a7", "best_rescue"}:
+    ENABLE_RESCUE_REST_GUARD = True
+
+if _VARIANT in {"best_rescue", "a7"}:
+    RESCUE_QUERY_K_DEFAULT = 120
+    RESCUE_DIRECT_NET_FLOOR = 1.0
+    RESCUE_PROFIT_PER_HOUR_FLOOR = 0.0
+elif _VARIANT == "fixed_k50_positive_net":
+    RESCUE_QUERY_K_DEFAULT = 50
+    RESCUE_DIRECT_NET_FLOOR = 1.0
+    RESCUE_PROFIT_PER_HOUR_FLOOR = 0.0
+elif _VARIANT == "fixed_k100_profit_per_hour":
+    RESCUE_QUERY_K_DEFAULT = 100
+    RESCUE_DIRECT_NET_FLOOR = 1.0
+    RESCUE_PROFIT_PER_HOUR_FLOOR = 20.0
+elif _VARIANT == "fixed_k200_direct_profit_with_slack":
+    RESCUE_QUERY_K_DEFAULT = 200
+    RESCUE_DIRECT_NET_FLOOR = 30.0
+    RESCUE_PROFIT_PER_HOUR_FLOOR = 0.0
+elif _VARIANT == "simple_balanced_greedy":
+    RESCUE_QUERY_K_DEFAULT = 120
+    RESCUE_DIRECT_NET_FLOOR = 20.0
+    RESCUE_PROFIT_PER_HOUR_FLOOR = 10.0
 
 if os.environ.get("CROWN_Y_ENABLE_REPOSITION", "").strip() == "1":
     ENABLE_REPOSITION = True

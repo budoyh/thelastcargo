@@ -1,0 +1,4901 @@
+[
+  {
+    "name": "a0",
+    "results_dir": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a0",
+    "net": -113176.86,
+    "penalty": 192780.0,
+    "proxy_score": -305956.86,
+    "failed_driver_count": 0,
+    "simulation_failures": {},
+    "simulation_duration_days": 31,
+    "completed_steps": 184,
+    "counts": {
+      "take_order": 167,
+      "wait": 17,
+      "reposition": 0,
+      "other": 0,
+      "rejected_take": 0
+    },
+    "query_minutes": 2165,
+    "query_minutes_per_take": 12.96,
+    "wait_ratio": 0.0924,
+    "illegal_actions": 0,
+    "feasible_positive_cargo_but_wait": 0,
+    "wait_regret_v2": 8,
+    "max_consecutive_wait": 7,
+    "p95_consecutive_wait": 2,
+    "wait_reasons": {
+      "positive_orders_failed_threshold_or_soft_risk": 10,
+      "no_safe_positive_net_cargo": 7
+    },
+    "hard_blocks": {
+      "below_profit_per_hour_threshold": 1864,
+      "filter_remove_slack_too_short": 2634,
+      "below_direct_net_threshold": 455,
+      "severe_negative_net": 245,
+      "filter_load_window_unreachable": 9619,
+      "filter_not_online": 1192,
+      "filter_normalize_failed": 109,
+      "filter_finish_after_horizon": 36,
+      "high_confidence_preference_violation": 3228
+    },
+    "qwen": {
+      "model_name": "qwen3.5-flash",
+      "compile_calls": 0,
+      "judge_calls": 0,
+      "cache_hits": 0,
+      "cache_misses": 0,
+      "fallback_unknown_count": 0,
+      "api_error_count": 0,
+      "preferences_nonempty_count": 0,
+      "dummy_key_blocked_count": 0,
+      "budget_blocked_count": 0,
+      "token_usage_input": 0,
+      "token_usage_output": 0,
+      "token_usage_total": 0,
+      "last_error_type": ""
+    },
+    "top_rejected": [
+      {
+        "candidate_id": "take:220556",
+        "cargo_id": "220556",
+        "direct_net": 371.77,
+        "profit_per_hour": 7.47,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": -18072.81,
+        "score_components": {
+          "direct_net": 371.77,
+          "profit_per_hour": 7.47,
+          "load_slack_bonus": 80.0,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -18120.0,
+          "deadhead_penalty": -314.47
+        }
+      },
+      {
+        "candidate_id": "take:220556",
+        "cargo_id": "220556",
+        "direct_net": 358.13,
+        "profit_per_hour": 7.2,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -28103.9,
+        "score_components": {
+          "direct_net": 358.13,
+          "profit_per_hour": 7.2,
+          "load_slack_bonus": 80.0,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -18120.0,
+          "deadhead_penalty": -450.83
+        }
+      },
+      {
+        "candidate_id": "take:46483",
+        "cargo_id": "46483",
+        "direct_net": 358.28,
+        "profit_per_hour": 31.94,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9497.56,
+        "score_components": {
+          "direct_net": 358.28,
+          "profit_per_hour": 31.94,
+          "load_slack_bonus": 16.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:346115",
+        "cargo_id": "346115",
+        "direct_net": 512.57,
+        "profit_per_hour": 43.81,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9614.73,
+        "score_components": {
+          "direct_net": 512.57,
+          "profit_per_hour": 43.81,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -348.94
+        }
+      },
+      {
+        "candidate_id": "take:276733",
+        "cargo_id": "276733",
+        "direct_net": 459.67,
+        "profit_per_hour": 39.86,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9651.32,
+        "score_components": {
+          "direct_net": 459.67,
+          "profit_per_hour": 39.86,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -316.81
+        }
+      },
+      {
+        "candidate_id": "take:349482",
+        "cargo_id": "349482",
+        "direct_net": 211.13,
+        "profit_per_hour": 18.94,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9696.73,
+        "score_components": {
+          "direct_net": 211.13,
+          "profit_per_hour": 18.94,
+          "load_slack_bonus": 16.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:349432",
+        "cargo_id": "349432",
+        "direct_net": 151.47,
+        "profit_per_hour": 15.4,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9740.51,
+        "score_components": {
+          "direct_net": 151.47,
+          "profit_per_hour": 15.4,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:54816",
+        "cargo_id": "54816",
+        "direct_net": 57.48,
+        "profit_per_hour": 10.2,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": 25.59,
+        "score_components": {
+          "direct_net": 57.48,
+          "profit_per_hour": 10.2,
+          "load_slack_bonus": 47.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363528",
+        "cargo_id": "363528",
+        "direct_net": 213.43,
+        "profit_per_hour": 20.13,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9692.73,
+        "score_components": {
+          "direct_net": 213.43,
+          "profit_per_hour": 20.13,
+          "load_slack_bonus": 13.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363401",
+        "cargo_id": "363401",
+        "direct_net": 75.11,
+        "profit_per_hour": 7.18,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9878.89,
+        "score_components": {
+          "direct_net": 75.11,
+          "profit_per_hour": 7.18,
+          "load_slack_bonus": 17.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363171",
+        "cargo_id": "363171",
+        "direct_net": 309.69,
+        "profit_per_hour": 23.98,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -10013.11,
+        "score_components": {
+          "direct_net": 309.69,
+          "profit_per_hour": 23.98,
+          "load_slack_bonus": 21.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -440.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:364280",
+        "cargo_id": "364280",
+        "direct_net": 230.04,
+        "profit_per_hour": 17.88,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -10097.15,
+        "score_components": {
+          "direct_net": 230.04,
+          "profit_per_hour": 17.88,
+          "load_slack_bonus": 17.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -416.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409008",
+        "cargo_id": "409008",
+        "direct_net": 102.53,
+        "profit_per_hour": 11.21,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": 48.12,
+        "score_components": {
+          "direct_net": 102.53,
+          "profit_per_hour": 11.21,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409127",
+        "cargo_id": "409127",
+        "direct_net": 248.44,
+        "profit_per_hour": 23.7,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9635.99,
+        "score_components": {
+          "direct_net": 248.44,
+          "profit_per_hour": 23.7,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409405",
+        "cargo_id": "409405",
+        "direct_net": 225.61,
+        "profit_per_hour": 20.14,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9681.05,
+        "score_components": {
+          "direct_net": 225.61,
+          "profit_per_hour": 20.14,
+          "load_slack_bonus": 12.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:407803",
+        "cargo_id": "407803",
+        "direct_net": 414.11,
+        "profit_per_hour": 32.82,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9729.83,
+        "score_components": {
+          "direct_net": 414.11,
+          "profit_per_hour": 32.82,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -296.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409545",
+        "cargo_id": "409545",
+        "direct_net": 102.81,
+        "profit_per_hour": 9.46,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9842.58,
+        "score_components": {
+          "direct_net": 102.81,
+          "profit_per_hour": 9.46,
+          "load_slack_bonus": 16.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:422890",
+        "cargo_id": "422890",
+        "direct_net": 135.99,
+        "profit_per_hour": 15.14,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": 90.85,
+        "score_components": {
+          "direct_net": 135.99,
+          "profit_per_hour": 15.14,
+          "load_slack_bonus": 14.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:421296",
+        "cargo_id": "421296",
+        "direct_net": 516.33,
+        "profit_per_hour": 52.69,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9228.63,
+        "score_components": {
+          "direct_net": 516.33,
+          "profit_per_hour": 52.69,
+          "load_slack_bonus": 44.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:124041",
+        "cargo_id": "124041",
+        "direct_net": 265.02,
+        "profit_per_hour": 22.27,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9625.6,
+        "score_components": {
+          "direct_net": 265.02,
+          "profit_per_hour": 22.27,
+          "load_slack_bonus": 20.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      }
+    ],
+    "monthly": {
+      "month": "2026-03",
+      "simulate_time_seconds": 49.6,
+      "result_files_count": 2,
+      "drivers": [
+        {
+          "driver_id": "D001",
+          "income": {
+            "gross_income": 60397.49,
+            "distance_km": 12143.12,
+            "cost": 18214.68,
+            "preference_penalty": 106500.0,
+            "net_income": -64317.19
+          },
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日连续休息≥8小时",
+                "penalty": 74400.0,
+                "preference_text": "我这人熬不住连轴转，每天至少连续停车熄火休息满8小时。",
+                "violations": 31
+              },
+              {
+                "rule": "禁接机械设备",
+                "penalty": 6300.0,
+                "preference_text": "接过两次龙门吊底座、机床铸件，死沉还容易砸坏挡板，机械设备这类活儿我干不了，每接一次都要扣钱。",
+                "violations": 3
+              },
+              {
+                "rule": "不接惠州货源",
+                "penalty": 12800.0,
+                "preference_text": "惠州那一路我熟也怕，装货地或卸货地在惠州的货，我一律不接，每接一次都要扣钱。",
+                "violations": 16
+              },
+              {
+                "rule": "每月至少3整天休息",
+                "penalty": 10000.0,
+                "preference_text": "爹妈在老家盼着，三月怎么也得抽三个整天完全歇着（00:00~24:00，车处于静止状态），回去陪陪二老。",
+                "off_days": 0
+              },
+              {
+                "rule": "三四号不进深圳",
+                "penalty": 3000.0,
+                "preference_text": "三月四号五号交警在深圳查车，这天我不往深圳跑，也别给我派进去那边的货。",
+                "violations": 1
+              }
+            ]
+          }
+        },
+        {
+          "driver_id": "D002",
+          "income": {
+            "gross_income": 52575.41,
+            "distance_km": 10103.39,
+            "cost": 15155.09,
+            "preference_penalty": 86280.0,
+            "net_income": -48859.67
+          },
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日0–6点休息",
+                "penalty": 55800.0,
+                "preference_text": "零点以后到早上六点这段我得睡觉，车得停着熄火，雷打不动。",
+                "violations": 31
+              },
+              {
+                "rule": "禁接蔬菜",
+                "penalty": 3400.0,
+                "preference_text": "蔬菜几分钱一斤的路一颠就烂，赔不起损耗，凡是蔬菜货源我一律推掉，每接一次都扣钱。",
+                "violations": 1
+              },
+              {
+                "rule": "月度增城≥4日",
+                "penalty": 6000.0,
+                "preference_text": "我在广州市增城区有家老档口（23.15，113.67）要照应，自然月里装货或卸货在增城的货，起码得接够四个不同的日子，同一天几单也只算一天。",
+                "order_days": 2
+              },
+              {
+                "rule": "赴装货空驶≤55km",
+                "penalty": 1080.0,
+                "preference_text": "看好了单子再动身，接单后赶去装货那一程，空驶超过五十五公里我就不想接，超一次扣120。",
+                "violations": 9
+              },
+              {
+                "rule": "每月至少2整天休息",
+                "penalty": 10000.0,
+                "preference_text": "这月得进修理厂做保养，起码留两个整天停驶检修，那天别给我排活。",
+                "off_days": 0
+              },
+              {
+                "rule": "三月十二号增城盘库",
+                "penalty": 5000.0,
+                "preference_text": "三月十二号增城老档口清库存，当天得到增城区停一趟，花两小时把数目对清楚。",
+                "satisfied": false,
+                "waited_minutes": 0
+              },
+              {
+                "rule": "三月三十一号舅公寿宴",
+                "penalty": 5000.0,
+                "preference_text": "三月三十一号舅公做寿，上午得先过增城区档口捎上寿礼，中午十二点前赶到四会县城（23.32，112.83）赴宴到下午两点。",
+                "satisfied": false
+              }
+            ]
+          }
+        }
+      ],
+      "summary": {
+        "total_net_income_all_drivers": -113176.86,
+        "total_preference_penalty": 192780.0,
+        "total_token_usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "reasoning_tokens": 0,
+          "total_tokens": 0
+        },
+        "failed_driver_count": 0,
+        "failed_drivers": {}
+      },
+      "cost_meaning": "cost = distance_km * cost_per_km",
+      "cost_metric": "net_income = gross_income - cost - preference_penalty"
+    },
+    "run": {
+      "month": "2026-03",
+      "simulate_time_seconds": 49.6,
+      "simulation_duration_days": 31,
+      "completed_steps": 184,
+      "remaining_cargo_count": 0,
+      "driver_completed_steps": {
+        "D001": 86,
+        "D002": 98
+      },
+      "driver_result_files": {
+        "D001": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a0\\actions_202603_D001_20260531_052919.jsonl",
+        "D002": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a0\\actions_202603_D002_20260531_052919.jsonl"
+      },
+      "simulation_max_steps_per_driver": 20000,
+      "driver_max_total_tokens": 5000000,
+      "driver_token_usage": {
+        "D001": 0,
+        "D002": 0
+      },
+      "driver_token_limit_stopped": {},
+      "driver_end_reasons": {
+        "D001": "normal",
+        "D002": "normal"
+      },
+      "driver_simulation_failures": {}
+    },
+    "regret_counts": {
+      "query_too_big": 1,
+      "query_too_small": 4,
+      "long_order_trap": 7,
+      "wait_regret": 7,
+      "reposition_not_recovered": 0,
+      "preference_late_panic": 0
+    }
+  },
+  {
+    "name": "a1",
+    "results_dir": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a1",
+    "net": -113176.86,
+    "penalty": 192780.0,
+    "proxy_score": -305956.86,
+    "failed_driver_count": 0,
+    "simulation_failures": {},
+    "simulation_duration_days": 31,
+    "completed_steps": 184,
+    "counts": {
+      "take_order": 167,
+      "wait": 17,
+      "reposition": 0,
+      "other": 0,
+      "rejected_take": 0
+    },
+    "query_minutes": 2165,
+    "query_minutes_per_take": 12.96,
+    "wait_ratio": 0.0924,
+    "illegal_actions": 0,
+    "feasible_positive_cargo_but_wait": 0,
+    "wait_regret_v2": 8,
+    "max_consecutive_wait": 7,
+    "p95_consecutive_wait": 2,
+    "wait_reasons": {
+      "positive_orders_failed_threshold_or_soft_risk": 10,
+      "no_safe_positive_net_cargo": 7
+    },
+    "hard_blocks": {
+      "below_profit_per_hour_threshold": 1864,
+      "filter_remove_slack_too_short": 2634,
+      "below_direct_net_threshold": 455,
+      "severe_negative_net": 245,
+      "filter_load_window_unreachable": 9619,
+      "filter_not_online": 1192,
+      "filter_normalize_failed": 109,
+      "filter_finish_after_horizon": 36,
+      "high_confidence_preference_violation": 3228
+    },
+    "qwen": {
+      "model_name": "qwen3.5-flash",
+      "compile_calls": 0,
+      "judge_calls": 0,
+      "cache_hits": 0,
+      "cache_misses": 0,
+      "fallback_unknown_count": 0,
+      "api_error_count": 0,
+      "preferences_nonempty_count": 0,
+      "dummy_key_blocked_count": 0,
+      "budget_blocked_count": 0,
+      "token_usage_input": 0,
+      "token_usage_output": 0,
+      "token_usage_total": 0,
+      "last_error_type": ""
+    },
+    "top_rejected": [
+      {
+        "candidate_id": "take:220556",
+        "cargo_id": "220556",
+        "direct_net": 371.77,
+        "profit_per_hour": 7.47,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": -18072.81,
+        "score_components": {
+          "direct_net": 371.77,
+          "profit_per_hour": 7.47,
+          "load_slack_bonus": 80.0,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -18120.0,
+          "deadhead_penalty": -314.47
+        }
+      },
+      {
+        "candidate_id": "take:220556",
+        "cargo_id": "220556",
+        "direct_net": 358.13,
+        "profit_per_hour": 7.2,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -28103.9,
+        "score_components": {
+          "direct_net": 358.13,
+          "profit_per_hour": 7.2,
+          "load_slack_bonus": 80.0,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -18120.0,
+          "deadhead_penalty": -450.83
+        }
+      },
+      {
+        "candidate_id": "take:46483",
+        "cargo_id": "46483",
+        "direct_net": 358.28,
+        "profit_per_hour": 31.94,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9497.56,
+        "score_components": {
+          "direct_net": 358.28,
+          "profit_per_hour": 31.94,
+          "load_slack_bonus": 16.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:346115",
+        "cargo_id": "346115",
+        "direct_net": 512.57,
+        "profit_per_hour": 43.81,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9614.73,
+        "score_components": {
+          "direct_net": 512.57,
+          "profit_per_hour": 43.81,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -348.94
+        }
+      },
+      {
+        "candidate_id": "take:276733",
+        "cargo_id": "276733",
+        "direct_net": 459.67,
+        "profit_per_hour": 39.86,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9651.32,
+        "score_components": {
+          "direct_net": 459.67,
+          "profit_per_hour": 39.86,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -316.81
+        }
+      },
+      {
+        "candidate_id": "take:349482",
+        "cargo_id": "349482",
+        "direct_net": 211.13,
+        "profit_per_hour": 18.94,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9696.73,
+        "score_components": {
+          "direct_net": 211.13,
+          "profit_per_hour": 18.94,
+          "load_slack_bonus": 16.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:349432",
+        "cargo_id": "349432",
+        "direct_net": 151.47,
+        "profit_per_hour": 15.4,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9740.51,
+        "score_components": {
+          "direct_net": 151.47,
+          "profit_per_hour": 15.4,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:54816",
+        "cargo_id": "54816",
+        "direct_net": 57.48,
+        "profit_per_hour": 10.2,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": 25.59,
+        "score_components": {
+          "direct_net": 57.48,
+          "profit_per_hour": 10.2,
+          "load_slack_bonus": 47.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363528",
+        "cargo_id": "363528",
+        "direct_net": 213.43,
+        "profit_per_hour": 20.13,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9692.73,
+        "score_components": {
+          "direct_net": 213.43,
+          "profit_per_hour": 20.13,
+          "load_slack_bonus": 13.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363401",
+        "cargo_id": "363401",
+        "direct_net": 75.11,
+        "profit_per_hour": 7.18,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9878.89,
+        "score_components": {
+          "direct_net": 75.11,
+          "profit_per_hour": 7.18,
+          "load_slack_bonus": 17.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363171",
+        "cargo_id": "363171",
+        "direct_net": 309.69,
+        "profit_per_hour": 23.98,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -10013.11,
+        "score_components": {
+          "direct_net": 309.69,
+          "profit_per_hour": 23.98,
+          "load_slack_bonus": 21.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -440.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:364280",
+        "cargo_id": "364280",
+        "direct_net": 230.04,
+        "profit_per_hour": 17.88,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -10097.15,
+        "score_components": {
+          "direct_net": 230.04,
+          "profit_per_hour": 17.88,
+          "load_slack_bonus": 17.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -416.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409008",
+        "cargo_id": "409008",
+        "direct_net": 102.53,
+        "profit_per_hour": 11.21,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": 48.12,
+        "score_components": {
+          "direct_net": 102.53,
+          "profit_per_hour": 11.21,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409127",
+        "cargo_id": "409127",
+        "direct_net": 248.44,
+        "profit_per_hour": 23.7,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9635.99,
+        "score_components": {
+          "direct_net": 248.44,
+          "profit_per_hour": 23.7,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409405",
+        "cargo_id": "409405",
+        "direct_net": 225.61,
+        "profit_per_hour": 20.14,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9681.05,
+        "score_components": {
+          "direct_net": 225.61,
+          "profit_per_hour": 20.14,
+          "load_slack_bonus": 12.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:407803",
+        "cargo_id": "407803",
+        "direct_net": 414.11,
+        "profit_per_hour": 32.82,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9729.83,
+        "score_components": {
+          "direct_net": 414.11,
+          "profit_per_hour": 32.82,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -296.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409545",
+        "cargo_id": "409545",
+        "direct_net": 102.81,
+        "profit_per_hour": 9.46,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9842.58,
+        "score_components": {
+          "direct_net": 102.81,
+          "profit_per_hour": 9.46,
+          "load_slack_bonus": 16.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:422890",
+        "cargo_id": "422890",
+        "direct_net": 135.99,
+        "profit_per_hour": 15.14,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": 90.85,
+        "score_components": {
+          "direct_net": 135.99,
+          "profit_per_hour": 15.14,
+          "load_slack_bonus": 14.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:421296",
+        "cargo_id": "421296",
+        "direct_net": 516.33,
+        "profit_per_hour": 52.69,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9228.63,
+        "score_components": {
+          "direct_net": 516.33,
+          "profit_per_hour": 52.69,
+          "load_slack_bonus": 44.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:124041",
+        "cargo_id": "124041",
+        "direct_net": 265.02,
+        "profit_per_hour": 22.27,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9625.6,
+        "score_components": {
+          "direct_net": 265.02,
+          "profit_per_hour": 22.27,
+          "load_slack_bonus": 20.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      }
+    ],
+    "monthly": {
+      "month": "2026-03",
+      "simulate_time_seconds": 50.26,
+      "result_files_count": 2,
+      "drivers": [
+        {
+          "driver_id": "D001",
+          "income": {
+            "gross_income": 60397.49,
+            "distance_km": 12143.12,
+            "cost": 18214.68,
+            "preference_penalty": 106500.0,
+            "net_income": -64317.19
+          },
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日连续休息≥8小时",
+                "penalty": 74400.0,
+                "preference_text": "我这人熬不住连轴转，每天至少连续停车熄火休息满8小时。",
+                "violations": 31
+              },
+              {
+                "rule": "禁接机械设备",
+                "penalty": 6300.0,
+                "preference_text": "接过两次龙门吊底座、机床铸件，死沉还容易砸坏挡板，机械设备这类活儿我干不了，每接一次都要扣钱。",
+                "violations": 3
+              },
+              {
+                "rule": "不接惠州货源",
+                "penalty": 12800.0,
+                "preference_text": "惠州那一路我熟也怕，装货地或卸货地在惠州的货，我一律不接，每接一次都要扣钱。",
+                "violations": 16
+              },
+              {
+                "rule": "每月至少3整天休息",
+                "penalty": 10000.0,
+                "preference_text": "爹妈在老家盼着，三月怎么也得抽三个整天完全歇着（00:00~24:00，车处于静止状态），回去陪陪二老。",
+                "off_days": 0
+              },
+              {
+                "rule": "三四号不进深圳",
+                "penalty": 3000.0,
+                "preference_text": "三月四号五号交警在深圳查车，这天我不往深圳跑，也别给我派进去那边的货。",
+                "violations": 1
+              }
+            ]
+          }
+        },
+        {
+          "driver_id": "D002",
+          "income": {
+            "gross_income": 52575.41,
+            "distance_km": 10103.39,
+            "cost": 15155.09,
+            "preference_penalty": 86280.0,
+            "net_income": -48859.67
+          },
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日0–6点休息",
+                "penalty": 55800.0,
+                "preference_text": "零点以后到早上六点这段我得睡觉，车得停着熄火，雷打不动。",
+                "violations": 31
+              },
+              {
+                "rule": "禁接蔬菜",
+                "penalty": 3400.0,
+                "preference_text": "蔬菜几分钱一斤的路一颠就烂，赔不起损耗，凡是蔬菜货源我一律推掉，每接一次都扣钱。",
+                "violations": 1
+              },
+              {
+                "rule": "月度增城≥4日",
+                "penalty": 6000.0,
+                "preference_text": "我在广州市增城区有家老档口（23.15，113.67）要照应，自然月里装货或卸货在增城的货，起码得接够四个不同的日子，同一天几单也只算一天。",
+                "order_days": 2
+              },
+              {
+                "rule": "赴装货空驶≤55km",
+                "penalty": 1080.0,
+                "preference_text": "看好了单子再动身，接单后赶去装货那一程，空驶超过五十五公里我就不想接，超一次扣120。",
+                "violations": 9
+              },
+              {
+                "rule": "每月至少2整天休息",
+                "penalty": 10000.0,
+                "preference_text": "这月得进修理厂做保养，起码留两个整天停驶检修，那天别给我排活。",
+                "off_days": 0
+              },
+              {
+                "rule": "三月十二号增城盘库",
+                "penalty": 5000.0,
+                "preference_text": "三月十二号增城老档口清库存，当天得到增城区停一趟，花两小时把数目对清楚。",
+                "satisfied": false,
+                "waited_minutes": 0
+              },
+              {
+                "rule": "三月三十一号舅公寿宴",
+                "penalty": 5000.0,
+                "preference_text": "三月三十一号舅公做寿，上午得先过增城区档口捎上寿礼，中午十二点前赶到四会县城（23.32，112.83）赴宴到下午两点。",
+                "satisfied": false
+              }
+            ]
+          }
+        }
+      ],
+      "summary": {
+        "total_net_income_all_drivers": -113176.86,
+        "total_preference_penalty": 192780.0,
+        "total_token_usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "reasoning_tokens": 0,
+          "total_tokens": 0
+        },
+        "failed_driver_count": 0,
+        "failed_drivers": {}
+      },
+      "cost_meaning": "cost = distance_km * cost_per_km",
+      "cost_metric": "net_income = gross_income - cost - preference_penalty"
+    },
+    "run": {
+      "month": "2026-03",
+      "simulate_time_seconds": 50.26,
+      "simulation_duration_days": 31,
+      "completed_steps": 184,
+      "remaining_cargo_count": 0,
+      "driver_completed_steps": {
+        "D001": 86,
+        "D002": 98
+      },
+      "driver_result_files": {
+        "D001": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a1\\actions_202603_D001_20260531_052919.jsonl",
+        "D002": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a1\\actions_202603_D002_20260531_052919.jsonl"
+      },
+      "simulation_max_steps_per_driver": 20000,
+      "driver_max_total_tokens": 5000000,
+      "driver_token_usage": {
+        "D001": 0,
+        "D002": 0
+      },
+      "driver_token_limit_stopped": {},
+      "driver_end_reasons": {
+        "D001": "normal",
+        "D002": "normal"
+      },
+      "driver_simulation_failures": {}
+    },
+    "regret_counts": {
+      "query_too_big": 1,
+      "query_too_small": 4,
+      "long_order_trap": 7,
+      "wait_regret": 7,
+      "reposition_not_recovered": 0,
+      "preference_late_panic": 0
+    }
+  },
+  {
+    "name": "a2",
+    "results_dir": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a2",
+    "net": -113176.86,
+    "penalty": 192780.0,
+    "proxy_score": -305956.86,
+    "failed_driver_count": 0,
+    "simulation_failures": {},
+    "simulation_duration_days": 31,
+    "completed_steps": 184,
+    "counts": {
+      "take_order": 167,
+      "wait": 17,
+      "reposition": 0,
+      "other": 0,
+      "rejected_take": 0
+    },
+    "query_minutes": 2165,
+    "query_minutes_per_take": 12.96,
+    "wait_ratio": 0.0924,
+    "illegal_actions": 0,
+    "feasible_positive_cargo_but_wait": 0,
+    "wait_regret_v2": 8,
+    "max_consecutive_wait": 7,
+    "p95_consecutive_wait": 2,
+    "wait_reasons": {
+      "positive_orders_failed_threshold_or_soft_risk": 10,
+      "no_safe_positive_net_cargo": 7
+    },
+    "hard_blocks": {
+      "below_profit_per_hour_threshold": 1864,
+      "filter_remove_slack_too_short": 2634,
+      "below_direct_net_threshold": 455,
+      "severe_negative_net": 245,
+      "filter_load_window_unreachable": 9619,
+      "filter_not_online": 1192,
+      "filter_normalize_failed": 109,
+      "filter_finish_after_horizon": 36,
+      "high_confidence_preference_violation": 3228
+    },
+    "qwen": {
+      "model_name": "qwen3.5-flash",
+      "compile_calls": 0,
+      "judge_calls": 0,
+      "cache_hits": 0,
+      "cache_misses": 0,
+      "fallback_unknown_count": 0,
+      "api_error_count": 0,
+      "preferences_nonempty_count": 0,
+      "dummy_key_blocked_count": 0,
+      "budget_blocked_count": 0,
+      "token_usage_input": 0,
+      "token_usage_output": 0,
+      "token_usage_total": 0,
+      "last_error_type": ""
+    },
+    "top_rejected": [
+      {
+        "candidate_id": "take:220556",
+        "cargo_id": "220556",
+        "direct_net": 371.77,
+        "profit_per_hour": 7.47,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": -18072.81,
+        "score_components": {
+          "direct_net": 371.77,
+          "profit_per_hour": 7.47,
+          "load_slack_bonus": 80.0,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -18120.0,
+          "deadhead_penalty": -314.47
+        }
+      },
+      {
+        "candidate_id": "take:220556",
+        "cargo_id": "220556",
+        "direct_net": 358.13,
+        "profit_per_hour": 7.2,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -28103.9,
+        "score_components": {
+          "direct_net": 358.13,
+          "profit_per_hour": 7.2,
+          "load_slack_bonus": 80.0,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -18120.0,
+          "deadhead_penalty": -450.83
+        }
+      },
+      {
+        "candidate_id": "take:46483",
+        "cargo_id": "46483",
+        "direct_net": 358.28,
+        "profit_per_hour": 31.94,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9497.56,
+        "score_components": {
+          "direct_net": 358.28,
+          "profit_per_hour": 31.94,
+          "load_slack_bonus": 16.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:346115",
+        "cargo_id": "346115",
+        "direct_net": 512.57,
+        "profit_per_hour": 43.81,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9614.73,
+        "score_components": {
+          "direct_net": 512.57,
+          "profit_per_hour": 43.81,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -348.94
+        }
+      },
+      {
+        "candidate_id": "take:276733",
+        "cargo_id": "276733",
+        "direct_net": 459.67,
+        "profit_per_hour": 39.86,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9651.32,
+        "score_components": {
+          "direct_net": 459.67,
+          "profit_per_hour": 39.86,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -316.81
+        }
+      },
+      {
+        "candidate_id": "take:349482",
+        "cargo_id": "349482",
+        "direct_net": 211.13,
+        "profit_per_hour": 18.94,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9696.73,
+        "score_components": {
+          "direct_net": 211.13,
+          "profit_per_hour": 18.94,
+          "load_slack_bonus": 16.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:349432",
+        "cargo_id": "349432",
+        "direct_net": 151.47,
+        "profit_per_hour": 15.4,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9740.51,
+        "score_components": {
+          "direct_net": 151.47,
+          "profit_per_hour": 15.4,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:54816",
+        "cargo_id": "54816",
+        "direct_net": 57.48,
+        "profit_per_hour": 10.2,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": 25.59,
+        "score_components": {
+          "direct_net": 57.48,
+          "profit_per_hour": 10.2,
+          "load_slack_bonus": 47.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363528",
+        "cargo_id": "363528",
+        "direct_net": 213.43,
+        "profit_per_hour": 20.13,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9692.73,
+        "score_components": {
+          "direct_net": 213.43,
+          "profit_per_hour": 20.13,
+          "load_slack_bonus": 13.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363401",
+        "cargo_id": "363401",
+        "direct_net": 75.11,
+        "profit_per_hour": 7.18,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9878.89,
+        "score_components": {
+          "direct_net": 75.11,
+          "profit_per_hour": 7.18,
+          "load_slack_bonus": 17.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363171",
+        "cargo_id": "363171",
+        "direct_net": 309.69,
+        "profit_per_hour": 23.98,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -10013.11,
+        "score_components": {
+          "direct_net": 309.69,
+          "profit_per_hour": 23.98,
+          "load_slack_bonus": 21.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -440.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:364280",
+        "cargo_id": "364280",
+        "direct_net": 230.04,
+        "profit_per_hour": 17.88,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -10097.15,
+        "score_components": {
+          "direct_net": 230.04,
+          "profit_per_hour": 17.88,
+          "load_slack_bonus": 17.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -416.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409008",
+        "cargo_id": "409008",
+        "direct_net": 102.53,
+        "profit_per_hour": 11.21,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": 48.12,
+        "score_components": {
+          "direct_net": 102.53,
+          "profit_per_hour": 11.21,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409127",
+        "cargo_id": "409127",
+        "direct_net": 248.44,
+        "profit_per_hour": 23.7,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9635.99,
+        "score_components": {
+          "direct_net": 248.44,
+          "profit_per_hour": 23.7,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409405",
+        "cargo_id": "409405",
+        "direct_net": 225.61,
+        "profit_per_hour": 20.14,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9681.05,
+        "score_components": {
+          "direct_net": 225.61,
+          "profit_per_hour": 20.14,
+          "load_slack_bonus": 12.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:407803",
+        "cargo_id": "407803",
+        "direct_net": 414.11,
+        "profit_per_hour": 32.82,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9729.83,
+        "score_components": {
+          "direct_net": 414.11,
+          "profit_per_hour": 32.82,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -296.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409545",
+        "cargo_id": "409545",
+        "direct_net": 102.81,
+        "profit_per_hour": 9.46,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9842.58,
+        "score_components": {
+          "direct_net": 102.81,
+          "profit_per_hour": 9.46,
+          "load_slack_bonus": 16.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:422890",
+        "cargo_id": "422890",
+        "direct_net": 135.99,
+        "profit_per_hour": 15.14,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": 90.85,
+        "score_components": {
+          "direct_net": 135.99,
+          "profit_per_hour": 15.14,
+          "load_slack_bonus": 14.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:421296",
+        "cargo_id": "421296",
+        "direct_net": 516.33,
+        "profit_per_hour": 52.69,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9228.63,
+        "score_components": {
+          "direct_net": 516.33,
+          "profit_per_hour": 52.69,
+          "load_slack_bonus": 44.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:124041",
+        "cargo_id": "124041",
+        "direct_net": 265.02,
+        "profit_per_hour": 22.27,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9625.6,
+        "score_components": {
+          "direct_net": 265.02,
+          "profit_per_hour": 22.27,
+          "load_slack_bonus": 20.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -0.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      }
+    ],
+    "monthly": {
+      "month": "2026-03",
+      "simulate_time_seconds": 50.1,
+      "result_files_count": 2,
+      "drivers": [
+        {
+          "driver_id": "D001",
+          "income": {
+            "gross_income": 60397.49,
+            "distance_km": 12143.12,
+            "cost": 18214.68,
+            "preference_penalty": 106500.0,
+            "net_income": -64317.19
+          },
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日连续休息≥8小时",
+                "penalty": 74400.0,
+                "preference_text": "我这人熬不住连轴转，每天至少连续停车熄火休息满8小时。",
+                "violations": 31
+              },
+              {
+                "rule": "禁接机械设备",
+                "penalty": 6300.0,
+                "preference_text": "接过两次龙门吊底座、机床铸件，死沉还容易砸坏挡板，机械设备这类活儿我干不了，每接一次都要扣钱。",
+                "violations": 3
+              },
+              {
+                "rule": "不接惠州货源",
+                "penalty": 12800.0,
+                "preference_text": "惠州那一路我熟也怕，装货地或卸货地在惠州的货，我一律不接，每接一次都要扣钱。",
+                "violations": 16
+              },
+              {
+                "rule": "每月至少3整天休息",
+                "penalty": 10000.0,
+                "preference_text": "爹妈在老家盼着，三月怎么也得抽三个整天完全歇着（00:00~24:00，车处于静止状态），回去陪陪二老。",
+                "off_days": 0
+              },
+              {
+                "rule": "三四号不进深圳",
+                "penalty": 3000.0,
+                "preference_text": "三月四号五号交警在深圳查车，这天我不往深圳跑，也别给我派进去那边的货。",
+                "violations": 1
+              }
+            ]
+          }
+        },
+        {
+          "driver_id": "D002",
+          "income": {
+            "gross_income": 52575.41,
+            "distance_km": 10103.39,
+            "cost": 15155.09,
+            "preference_penalty": 86280.0,
+            "net_income": -48859.67
+          },
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日0–6点休息",
+                "penalty": 55800.0,
+                "preference_text": "零点以后到早上六点这段我得睡觉，车得停着熄火，雷打不动。",
+                "violations": 31
+              },
+              {
+                "rule": "禁接蔬菜",
+                "penalty": 3400.0,
+                "preference_text": "蔬菜几分钱一斤的路一颠就烂，赔不起损耗，凡是蔬菜货源我一律推掉，每接一次都扣钱。",
+                "violations": 1
+              },
+              {
+                "rule": "月度增城≥4日",
+                "penalty": 6000.0,
+                "preference_text": "我在广州市增城区有家老档口（23.15，113.67）要照应，自然月里装货或卸货在增城的货，起码得接够四个不同的日子，同一天几单也只算一天。",
+                "order_days": 2
+              },
+              {
+                "rule": "赴装货空驶≤55km",
+                "penalty": 1080.0,
+                "preference_text": "看好了单子再动身，接单后赶去装货那一程，空驶超过五十五公里我就不想接，超一次扣120。",
+                "violations": 9
+              },
+              {
+                "rule": "每月至少2整天休息",
+                "penalty": 10000.0,
+                "preference_text": "这月得进修理厂做保养，起码留两个整天停驶检修，那天别给我排活。",
+                "off_days": 0
+              },
+              {
+                "rule": "三月十二号增城盘库",
+                "penalty": 5000.0,
+                "preference_text": "三月十二号增城老档口清库存，当天得到增城区停一趟，花两小时把数目对清楚。",
+                "satisfied": false,
+                "waited_minutes": 0
+              },
+              {
+                "rule": "三月三十一号舅公寿宴",
+                "penalty": 5000.0,
+                "preference_text": "三月三十一号舅公做寿，上午得先过增城区档口捎上寿礼，中午十二点前赶到四会县城（23.32，112.83）赴宴到下午两点。",
+                "satisfied": false
+              }
+            ]
+          }
+        }
+      ],
+      "summary": {
+        "total_net_income_all_drivers": -113176.86,
+        "total_preference_penalty": 192780.0,
+        "total_token_usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "reasoning_tokens": 0,
+          "total_tokens": 0
+        },
+        "failed_driver_count": 0,
+        "failed_drivers": {}
+      },
+      "cost_meaning": "cost = distance_km * cost_per_km",
+      "cost_metric": "net_income = gross_income - cost - preference_penalty"
+    },
+    "run": {
+      "month": "2026-03",
+      "simulate_time_seconds": 50.1,
+      "simulation_duration_days": 31,
+      "completed_steps": 184,
+      "remaining_cargo_count": 0,
+      "driver_completed_steps": {
+        "D001": 86,
+        "D002": 98
+      },
+      "driver_result_files": {
+        "D001": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a2\\actions_202603_D001_20260531_052919.jsonl",
+        "D002": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a2\\actions_202603_D002_20260531_052919.jsonl"
+      },
+      "simulation_max_steps_per_driver": 20000,
+      "driver_max_total_tokens": 5000000,
+      "driver_token_usage": {
+        "D001": 0,
+        "D002": 0
+      },
+      "driver_token_limit_stopped": {},
+      "driver_end_reasons": {
+        "D001": "normal",
+        "D002": "normal"
+      },
+      "driver_simulation_failures": {}
+    },
+    "regret_counts": {
+      "query_too_big": 1,
+      "query_too_small": 4,
+      "long_order_trap": 7,
+      "wait_regret": 7,
+      "reposition_not_recovered": 0,
+      "preference_late_panic": 0
+    }
+  },
+  {
+    "name": "a3",
+    "results_dir": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a3",
+    "net": -113702.22,
+    "penalty": 194380.0,
+    "proxy_score": -308082.22,
+    "failed_driver_count": 0,
+    "simulation_failures": {},
+    "simulation_duration_days": 31,
+    "completed_steps": 185,
+    "counts": {
+      "take_order": 168,
+      "wait": 17,
+      "reposition": 0,
+      "other": 0,
+      "rejected_take": 0
+    },
+    "query_minutes": 2177,
+    "query_minutes_per_take": 12.96,
+    "wait_ratio": 0.0919,
+    "illegal_actions": 0,
+    "feasible_positive_cargo_but_wait": 0,
+    "wait_regret_v2": 8,
+    "max_consecutive_wait": 7,
+    "p95_consecutive_wait": 2,
+    "wait_reasons": {
+      "positive_orders_failed_threshold_or_soft_risk": 10,
+      "no_safe_positive_net_cargo": 7
+    },
+    "hard_blocks": {
+      "below_profit_per_hour_threshold": 1879,
+      "filter_remove_slack_too_short": 2644,
+      "below_direct_net_threshold": 458,
+      "severe_negative_net": 252,
+      "filter_load_window_unreachable": 9680,
+      "filter_not_online": 1202,
+      "filter_normalize_failed": 109,
+      "filter_finish_after_horizon": 36,
+      "high_confidence_preference_violation": 3228
+    },
+    "qwen": {
+      "model_name": "qwen3.5-flash",
+      "compile_calls": 0,
+      "judge_calls": 0,
+      "cache_hits": 0,
+      "cache_misses": 0,
+      "fallback_unknown_count": 0,
+      "api_error_count": 0,
+      "preferences_nonempty_count": 0,
+      "dummy_key_blocked_count": 0,
+      "budget_blocked_count": 0,
+      "token_usage_input": 0,
+      "token_usage_output": 0,
+      "token_usage_total": 0,
+      "last_error_type": ""
+    },
+    "top_rejected": [
+      {
+        "candidate_id": "take:220556",
+        "cargo_id": "220556",
+        "direct_net": 371.77,
+        "profit_per_hour": 7.47,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": -18152.81,
+        "score_components": {
+          "direct_net": 371.77,
+          "profit_per_hour": 7.47,
+          "load_slack_bonus": 80.0,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -80.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -18120.0,
+          "deadhead_penalty": -314.47
+        }
+      },
+      {
+        "candidate_id": "take:220556",
+        "cargo_id": "220556",
+        "direct_net": 358.13,
+        "profit_per_hour": 7.2,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -28177.49,
+        "score_components": {
+          "direct_net": 358.13,
+          "profit_per_hour": 7.2,
+          "load_slack_bonus": 80.0,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -73.59,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -18120.0,
+          "deadhead_penalty": -450.83
+        }
+      },
+      {
+        "candidate_id": "take:46483",
+        "cargo_id": "46483",
+        "direct_net": 358.28,
+        "profit_per_hour": 31.94,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9561.06,
+        "score_components": {
+          "direct_net": 358.28,
+          "profit_per_hour": 31.94,
+          "load_slack_bonus": 16.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -63.5,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:346115",
+        "cargo_id": "346115",
+        "direct_net": 512.57,
+        "profit_per_hour": 43.81,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9679.98,
+        "score_components": {
+          "direct_net": 512.57,
+          "profit_per_hour": 43.81,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -65.25,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -348.94
+        }
+      },
+      {
+        "candidate_id": "take:276733",
+        "cargo_id": "276733",
+        "direct_net": 459.67,
+        "profit_per_hour": 39.86,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9715.97,
+        "score_components": {
+          "direct_net": 459.67,
+          "profit_per_hour": 39.86,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -64.65,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -316.81
+        }
+      },
+      {
+        "candidate_id": "take:349482",
+        "cargo_id": "349482",
+        "direct_net": 211.13,
+        "profit_per_hour": 18.94,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9759.99,
+        "score_components": {
+          "direct_net": 211.13,
+          "profit_per_hour": 18.94,
+          "load_slack_bonus": 16.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -63.26,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:349432",
+        "cargo_id": "349432",
+        "direct_net": 151.47,
+        "profit_per_hour": 15.4,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9798.99,
+        "score_components": {
+          "direct_net": 151.47,
+          "profit_per_hour": 15.4,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -58.48,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:54816",
+        "cargo_id": "54816",
+        "direct_net": 57.48,
+        "profit_per_hour": 10.2,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": -24.6,
+        "score_components": {
+          "direct_net": 57.48,
+          "profit_per_hour": 10.2,
+          "load_slack_bonus": 47.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -50.2,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363528",
+        "cargo_id": "363528",
+        "direct_net": 213.43,
+        "profit_per_hour": 20.13,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9760.94,
+        "score_components": {
+          "direct_net": 213.43,
+          "profit_per_hour": 20.13,
+          "load_slack_bonus": 13.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -68.21,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363401",
+        "cargo_id": "363401",
+        "direct_net": 75.11,
+        "profit_per_hour": 7.18,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9946.61,
+        "score_components": {
+          "direct_net": 75.11,
+          "profit_per_hour": 7.18,
+          "load_slack_bonus": 17.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -67.72,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363171",
+        "cargo_id": "363171",
+        "direct_net": 309.69,
+        "profit_per_hour": 23.98,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -10089.72,
+        "score_components": {
+          "direct_net": 309.69,
+          "profit_per_hour": 23.98,
+          "load_slack_bonus": 21.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -76.61,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -440.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:364280",
+        "cargo_id": "364280",
+        "direct_net": 230.04,
+        "profit_per_hour": 17.88,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -10173.58,
+        "score_components": {
+          "direct_net": 230.04,
+          "profit_per_hour": 17.88,
+          "load_slack_bonus": 17.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -76.43,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -416.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409008",
+        "cargo_id": "409008",
+        "direct_net": 102.53,
+        "profit_per_hour": 11.21,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": -7.89,
+        "score_components": {
+          "direct_net": 102.53,
+          "profit_per_hour": 11.21,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -56.01,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409127",
+        "cargo_id": "409127",
+        "direct_net": 248.44,
+        "profit_per_hour": 23.7,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9696.83,
+        "score_components": {
+          "direct_net": 248.44,
+          "profit_per_hour": 23.7,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -60.84,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409405",
+        "cargo_id": "409405",
+        "direct_net": 225.61,
+        "profit_per_hour": 20.14,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9744.49,
+        "score_components": {
+          "direct_net": 225.61,
+          "profit_per_hour": 20.14,
+          "load_slack_bonus": 12.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -63.44,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:407803",
+        "cargo_id": "407803",
+        "direct_net": 414.11,
+        "profit_per_hour": 32.82,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9798.41,
+        "score_components": {
+          "direct_net": 414.11,
+          "profit_per_hour": 32.82,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -68.58,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -296.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409545",
+        "cargo_id": "409545",
+        "direct_net": 102.81,
+        "profit_per_hour": 9.46,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9904.81,
+        "score_components": {
+          "direct_net": 102.81,
+          "profit_per_hour": 9.46,
+          "load_slack_bonus": 16.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -62.23,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:422890",
+        "cargo_id": "422890",
+        "direct_net": 135.99,
+        "profit_per_hour": 15.14,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": 35.45,
+        "score_components": {
+          "direct_net": 135.99,
+          "profit_per_hour": 15.14,
+          "load_slack_bonus": 14.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -55.4,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:421296",
+        "cargo_id": "421296",
+        "direct_net": 516.33,
+        "profit_per_hour": 52.69,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9286.99,
+        "score_components": {
+          "direct_net": 516.33,
+          "profit_per_hour": 52.69,
+          "load_slack_bonus": 44.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -58.36,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:124041",
+        "cargo_id": "124041",
+        "direct_net": 265.02,
+        "profit_per_hour": 22.27,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9691.58,
+        "score_components": {
+          "direct_net": 265.02,
+          "profit_per_hour": 22.27,
+          "load_slack_bonus": 20.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -65.98,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      }
+    ],
+    "monthly": {
+      "month": "2026-03",
+      "simulate_time_seconds": 50.3,
+      "result_files_count": 2,
+      "drivers": [
+        {
+          "driver_id": "D001",
+          "income": {
+            "gross_income": 61689.39,
+            "distance_km": 12287.96,
+            "cost": 18431.94,
+            "preference_penalty": 108100.0,
+            "net_income": -64842.55
+          },
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日连续休息≥8小时",
+                "penalty": 74400.0,
+                "preference_text": "我这人熬不住连轴转，每天至少连续停车熄火休息满8小时。",
+                "violations": 31
+              },
+              {
+                "rule": "禁接机械设备",
+                "penalty": 6300.0,
+                "preference_text": "接过两次龙门吊底座、机床铸件，死沉还容易砸坏挡板，机械设备这类活儿我干不了，每接一次都要扣钱。",
+                "violations": 3
+              },
+              {
+                "rule": "不接惠州货源",
+                "penalty": 14400.0,
+                "preference_text": "惠州那一路我熟也怕，装货地或卸货地在惠州的货，我一律不接，每接一次都要扣钱。",
+                "violations": 18
+              },
+              {
+                "rule": "每月至少3整天休息",
+                "penalty": 10000.0,
+                "preference_text": "爹妈在老家盼着，三月怎么也得抽三个整天完全歇着（00:00~24:00，车处于静止状态），回去陪陪二老。",
+                "off_days": 0
+              },
+              {
+                "rule": "三四号不进深圳",
+                "penalty": 3000.0,
+                "preference_text": "三月四号五号交警在深圳查车，这天我不往深圳跑，也别给我派进去那边的货。",
+                "violations": 1
+              }
+            ]
+          }
+        },
+        {
+          "driver_id": "D002",
+          "income": {
+            "gross_income": 52575.41,
+            "distance_km": 10103.39,
+            "cost": 15155.09,
+            "preference_penalty": 86280.0,
+            "net_income": -48859.67
+          },
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日0–6点休息",
+                "penalty": 55800.0,
+                "preference_text": "零点以后到早上六点这段我得睡觉，车得停着熄火，雷打不动。",
+                "violations": 31
+              },
+              {
+                "rule": "禁接蔬菜",
+                "penalty": 3400.0,
+                "preference_text": "蔬菜几分钱一斤的路一颠就烂，赔不起损耗，凡是蔬菜货源我一律推掉，每接一次都扣钱。",
+                "violations": 1
+              },
+              {
+                "rule": "月度增城≥4日",
+                "penalty": 6000.0,
+                "preference_text": "我在广州市增城区有家老档口（23.15，113.67）要照应，自然月里装货或卸货在增城的货，起码得接够四个不同的日子，同一天几单也只算一天。",
+                "order_days": 2
+              },
+              {
+                "rule": "赴装货空驶≤55km",
+                "penalty": 1080.0,
+                "preference_text": "看好了单子再动身，接单后赶去装货那一程，空驶超过五十五公里我就不想接，超一次扣120。",
+                "violations": 9
+              },
+              {
+                "rule": "每月至少2整天休息",
+                "penalty": 10000.0,
+                "preference_text": "这月得进修理厂做保养，起码留两个整天停驶检修，那天别给我排活。",
+                "off_days": 0
+              },
+              {
+                "rule": "三月十二号增城盘库",
+                "penalty": 5000.0,
+                "preference_text": "三月十二号增城老档口清库存，当天得到增城区停一趟，花两小时把数目对清楚。",
+                "satisfied": false,
+                "waited_minutes": 0
+              },
+              {
+                "rule": "三月三十一号舅公寿宴",
+                "penalty": 5000.0,
+                "preference_text": "三月三十一号舅公做寿，上午得先过增城区档口捎上寿礼，中午十二点前赶到四会县城（23.32，112.83）赴宴到下午两点。",
+                "satisfied": false
+              }
+            ]
+          }
+        }
+      ],
+      "summary": {
+        "total_net_income_all_drivers": -113702.22,
+        "total_preference_penalty": 194380.0,
+        "total_token_usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "reasoning_tokens": 0,
+          "total_tokens": 0
+        },
+        "failed_driver_count": 0,
+        "failed_drivers": {}
+      },
+      "cost_meaning": "cost = distance_km * cost_per_km",
+      "cost_metric": "net_income = gross_income - cost - preference_penalty"
+    },
+    "run": {
+      "month": "2026-03",
+      "simulate_time_seconds": 50.3,
+      "simulation_duration_days": 31,
+      "completed_steps": 185,
+      "remaining_cargo_count": 0,
+      "driver_completed_steps": {
+        "D001": 87,
+        "D002": 98
+      },
+      "driver_result_files": {
+        "D001": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a3\\actions_202603_D001_20260531_052919.jsonl",
+        "D002": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a3\\actions_202603_D002_20260531_052919.jsonl"
+      },
+      "simulation_max_steps_per_driver": 20000,
+      "driver_max_total_tokens": 5000000,
+      "driver_token_usage": {
+        "D001": 0,
+        "D002": 0
+      },
+      "driver_token_limit_stopped": {},
+      "driver_end_reasons": {
+        "D001": "normal",
+        "D002": "normal"
+      },
+      "driver_simulation_failures": {}
+    },
+    "regret_counts": {
+      "query_too_big": 1,
+      "query_too_small": 4,
+      "long_order_trap": 8,
+      "wait_regret": 7,
+      "reposition_not_recovered": 0,
+      "preference_late_panic": 0
+    }
+  },
+  {
+    "name": "a4",
+    "results_dir": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a4",
+    "net": -113702.22,
+    "penalty": 194380.0,
+    "proxy_score": -308082.22,
+    "failed_driver_count": 0,
+    "simulation_failures": {},
+    "simulation_duration_days": 31,
+    "completed_steps": 185,
+    "counts": {
+      "take_order": 168,
+      "wait": 17,
+      "reposition": 0,
+      "other": 0,
+      "rejected_take": 0
+    },
+    "query_minutes": 2177,
+    "query_minutes_per_take": 12.96,
+    "wait_ratio": 0.0919,
+    "illegal_actions": 0,
+    "feasible_positive_cargo_but_wait": 0,
+    "wait_regret_v2": 8,
+    "max_consecutive_wait": 7,
+    "p95_consecutive_wait": 2,
+    "wait_reasons": {
+      "positive_orders_failed_threshold_or_soft_risk": 10,
+      "no_safe_positive_net_cargo": 7
+    },
+    "hard_blocks": {
+      "below_profit_per_hour_threshold": 1879,
+      "filter_remove_slack_too_short": 2644,
+      "below_direct_net_threshold": 458,
+      "severe_negative_net": 252,
+      "filter_load_window_unreachable": 9680,
+      "filter_not_online": 1202,
+      "filter_normalize_failed": 109,
+      "filter_finish_after_horizon": 36,
+      "high_confidence_preference_violation": 3228
+    },
+    "qwen": {
+      "model_name": "qwen3.5-flash",
+      "compile_calls": 0,
+      "judge_calls": 0,
+      "cache_hits": 0,
+      "cache_misses": 0,
+      "fallback_unknown_count": 0,
+      "api_error_count": 0,
+      "preferences_nonempty_count": 0,
+      "dummy_key_blocked_count": 0,
+      "budget_blocked_count": 0,
+      "token_usage_input": 0,
+      "token_usage_output": 0,
+      "token_usage_total": 0,
+      "last_error_type": ""
+    },
+    "top_rejected": [
+      {
+        "candidate_id": "take:220556",
+        "cargo_id": "220556",
+        "direct_net": 371.77,
+        "profit_per_hour": 7.47,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": -18152.81,
+        "score_components": {
+          "direct_net": 371.77,
+          "profit_per_hour": 7.47,
+          "load_slack_bonus": 80.0,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -80.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -18120.0,
+          "deadhead_penalty": -314.47
+        }
+      },
+      {
+        "candidate_id": "take:220556",
+        "cargo_id": "220556",
+        "direct_net": 358.13,
+        "profit_per_hour": 7.2,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -28177.49,
+        "score_components": {
+          "direct_net": 358.13,
+          "profit_per_hour": 7.2,
+          "load_slack_bonus": 80.0,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -73.59,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -18120.0,
+          "deadhead_penalty": -450.83
+        }
+      },
+      {
+        "candidate_id": "take:46483",
+        "cargo_id": "46483",
+        "direct_net": 358.28,
+        "profit_per_hour": 31.94,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9561.06,
+        "score_components": {
+          "direct_net": 358.28,
+          "profit_per_hour": 31.94,
+          "load_slack_bonus": 16.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -63.5,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:346115",
+        "cargo_id": "346115",
+        "direct_net": 512.57,
+        "profit_per_hour": 43.81,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9679.98,
+        "score_components": {
+          "direct_net": 512.57,
+          "profit_per_hour": 43.81,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -65.25,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -348.94
+        }
+      },
+      {
+        "candidate_id": "take:276733",
+        "cargo_id": "276733",
+        "direct_net": 459.67,
+        "profit_per_hour": 39.86,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9715.97,
+        "score_components": {
+          "direct_net": 459.67,
+          "profit_per_hour": 39.86,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -64.65,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -316.81
+        }
+      },
+      {
+        "candidate_id": "take:349482",
+        "cargo_id": "349482",
+        "direct_net": 211.13,
+        "profit_per_hour": 18.94,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9759.99,
+        "score_components": {
+          "direct_net": 211.13,
+          "profit_per_hour": 18.94,
+          "load_slack_bonus": 16.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -63.26,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:349432",
+        "cargo_id": "349432",
+        "direct_net": 151.47,
+        "profit_per_hour": 15.4,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9798.99,
+        "score_components": {
+          "direct_net": 151.47,
+          "profit_per_hour": 15.4,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -58.48,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:54816",
+        "cargo_id": "54816",
+        "direct_net": 57.48,
+        "profit_per_hour": 10.2,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": -24.6,
+        "score_components": {
+          "direct_net": 57.48,
+          "profit_per_hour": 10.2,
+          "load_slack_bonus": 47.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -50.2,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363528",
+        "cargo_id": "363528",
+        "direct_net": 213.43,
+        "profit_per_hour": 20.13,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9760.94,
+        "score_components": {
+          "direct_net": 213.43,
+          "profit_per_hour": 20.13,
+          "load_slack_bonus": 13.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -68.21,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363401",
+        "cargo_id": "363401",
+        "direct_net": 75.11,
+        "profit_per_hour": 7.18,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9946.61,
+        "score_components": {
+          "direct_net": 75.11,
+          "profit_per_hour": 7.18,
+          "load_slack_bonus": 17.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -67.72,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363171",
+        "cargo_id": "363171",
+        "direct_net": 309.69,
+        "profit_per_hour": 23.98,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -10089.72,
+        "score_components": {
+          "direct_net": 309.69,
+          "profit_per_hour": 23.98,
+          "load_slack_bonus": 21.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -76.61,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -440.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:364280",
+        "cargo_id": "364280",
+        "direct_net": 230.04,
+        "profit_per_hour": 17.88,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -10173.58,
+        "score_components": {
+          "direct_net": 230.04,
+          "profit_per_hour": 17.88,
+          "load_slack_bonus": 17.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -76.43,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -416.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409008",
+        "cargo_id": "409008",
+        "direct_net": 102.53,
+        "profit_per_hour": 11.21,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": -7.89,
+        "score_components": {
+          "direct_net": 102.53,
+          "profit_per_hour": 11.21,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -56.01,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409127",
+        "cargo_id": "409127",
+        "direct_net": 248.44,
+        "profit_per_hour": 23.7,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9696.83,
+        "score_components": {
+          "direct_net": 248.44,
+          "profit_per_hour": 23.7,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -60.84,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409405",
+        "cargo_id": "409405",
+        "direct_net": 225.61,
+        "profit_per_hour": 20.14,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9744.49,
+        "score_components": {
+          "direct_net": 225.61,
+          "profit_per_hour": 20.14,
+          "load_slack_bonus": 12.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -63.44,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:407803",
+        "cargo_id": "407803",
+        "direct_net": 414.11,
+        "profit_per_hour": 32.82,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9798.41,
+        "score_components": {
+          "direct_net": 414.11,
+          "profit_per_hour": 32.82,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -68.58,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -296.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409545",
+        "cargo_id": "409545",
+        "direct_net": 102.81,
+        "profit_per_hour": 9.46,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9904.81,
+        "score_components": {
+          "direct_net": 102.81,
+          "profit_per_hour": 9.46,
+          "load_slack_bonus": 16.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -62.23,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:422890",
+        "cargo_id": "422890",
+        "direct_net": 135.99,
+        "profit_per_hour": 15.14,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": 35.45,
+        "score_components": {
+          "direct_net": 135.99,
+          "profit_per_hour": 15.14,
+          "load_slack_bonus": 14.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -55.4,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:421296",
+        "cargo_id": "421296",
+        "direct_net": 516.33,
+        "profit_per_hour": 52.69,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9286.99,
+        "score_components": {
+          "direct_net": 516.33,
+          "profit_per_hour": 52.69,
+          "load_slack_bonus": 44.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -58.36,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:124041",
+        "cargo_id": "124041",
+        "direct_net": 265.02,
+        "profit_per_hour": 22.27,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9691.58,
+        "score_components": {
+          "direct_net": 265.02,
+          "profit_per_hour": 22.27,
+          "load_slack_bonus": 20.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -65.98,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      }
+    ],
+    "monthly": {
+      "month": "2026-03",
+      "simulate_time_seconds": 33.33,
+      "result_files_count": 2,
+      "drivers": [
+        {
+          "driver_id": "D001",
+          "income": {
+            "gross_income": 61689.39,
+            "distance_km": 12287.96,
+            "cost": 18431.94,
+            "preference_penalty": 108100.0,
+            "net_income": -64842.55
+          },
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日连续休息≥8小时",
+                "penalty": 74400.0,
+                "preference_text": "我这人熬不住连轴转，每天至少连续停车熄火休息满8小时。",
+                "violations": 31
+              },
+              {
+                "rule": "禁接机械设备",
+                "penalty": 6300.0,
+                "preference_text": "接过两次龙门吊底座、机床铸件，死沉还容易砸坏挡板，机械设备这类活儿我干不了，每接一次都要扣钱。",
+                "violations": 3
+              },
+              {
+                "rule": "不接惠州货源",
+                "penalty": 14400.0,
+                "preference_text": "惠州那一路我熟也怕，装货地或卸货地在惠州的货，我一律不接，每接一次都要扣钱。",
+                "violations": 18
+              },
+              {
+                "rule": "每月至少3整天休息",
+                "penalty": 10000.0,
+                "preference_text": "爹妈在老家盼着，三月怎么也得抽三个整天完全歇着（00:00~24:00，车处于静止状态），回去陪陪二老。",
+                "off_days": 0
+              },
+              {
+                "rule": "三四号不进深圳",
+                "penalty": 3000.0,
+                "preference_text": "三月四号五号交警在深圳查车，这天我不往深圳跑，也别给我派进去那边的货。",
+                "violations": 1
+              }
+            ]
+          }
+        },
+        {
+          "driver_id": "D002",
+          "income": {
+            "gross_income": 52575.41,
+            "distance_km": 10103.39,
+            "cost": 15155.09,
+            "preference_penalty": 86280.0,
+            "net_income": -48859.67
+          },
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日0–6点休息",
+                "penalty": 55800.0,
+                "preference_text": "零点以后到早上六点这段我得睡觉，车得停着熄火，雷打不动。",
+                "violations": 31
+              },
+              {
+                "rule": "禁接蔬菜",
+                "penalty": 3400.0,
+                "preference_text": "蔬菜几分钱一斤的路一颠就烂，赔不起损耗，凡是蔬菜货源我一律推掉，每接一次都扣钱。",
+                "violations": 1
+              },
+              {
+                "rule": "月度增城≥4日",
+                "penalty": 6000.0,
+                "preference_text": "我在广州市增城区有家老档口（23.15，113.67）要照应，自然月里装货或卸货在增城的货，起码得接够四个不同的日子，同一天几单也只算一天。",
+                "order_days": 2
+              },
+              {
+                "rule": "赴装货空驶≤55km",
+                "penalty": 1080.0,
+                "preference_text": "看好了单子再动身，接单后赶去装货那一程，空驶超过五十五公里我就不想接，超一次扣120。",
+                "violations": 9
+              },
+              {
+                "rule": "每月至少2整天休息",
+                "penalty": 10000.0,
+                "preference_text": "这月得进修理厂做保养，起码留两个整天停驶检修，那天别给我排活。",
+                "off_days": 0
+              },
+              {
+                "rule": "三月十二号增城盘库",
+                "penalty": 5000.0,
+                "preference_text": "三月十二号增城老档口清库存，当天得到增城区停一趟，花两小时把数目对清楚。",
+                "satisfied": false,
+                "waited_minutes": 0
+              },
+              {
+                "rule": "三月三十一号舅公寿宴",
+                "penalty": 5000.0,
+                "preference_text": "三月三十一号舅公做寿，上午得先过增城区档口捎上寿礼，中午十二点前赶到四会县城（23.32，112.83）赴宴到下午两点。",
+                "satisfied": false
+              }
+            ]
+          }
+        }
+      ],
+      "summary": {
+        "total_net_income_all_drivers": -113702.22,
+        "total_preference_penalty": 194380.0,
+        "total_token_usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "reasoning_tokens": 0,
+          "total_tokens": 0
+        },
+        "failed_driver_count": 0,
+        "failed_drivers": {}
+      },
+      "cost_meaning": "cost = distance_km * cost_per_km",
+      "cost_metric": "net_income = gross_income - cost - preference_penalty"
+    },
+    "run": {
+      "month": "2026-03",
+      "simulate_time_seconds": 33.33,
+      "simulation_duration_days": 31,
+      "completed_steps": 185,
+      "remaining_cargo_count": 0,
+      "driver_completed_steps": {
+        "D001": 87,
+        "D002": 98
+      },
+      "driver_result_files": {
+        "D001": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a4\\actions_202603_D001_20260531_053043.jsonl",
+        "D002": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a4\\actions_202603_D002_20260531_053043.jsonl"
+      },
+      "simulation_max_steps_per_driver": 20000,
+      "driver_max_total_tokens": 5000000,
+      "driver_token_usage": {
+        "D001": 0,
+        "D002": 0
+      },
+      "driver_token_limit_stopped": {},
+      "driver_end_reasons": {
+        "D001": "normal",
+        "D002": "normal"
+      },
+      "driver_simulation_failures": {}
+    },
+    "regret_counts": {
+      "query_too_big": 1,
+      "query_too_small": 4,
+      "long_order_trap": 8,
+      "wait_regret": 7,
+      "reposition_not_recovered": 0,
+      "preference_late_panic": 0
+    }
+  },
+  {
+    "name": "a5",
+    "results_dir": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a5",
+    "net": -113881.81,
+    "penalty": 194580.0,
+    "proxy_score": -308461.81,
+    "failed_driver_count": 0,
+    "simulation_failures": {},
+    "simulation_duration_days": 31,
+    "completed_steps": 183,
+    "counts": {
+      "take_order": 166,
+      "wait": 17,
+      "reposition": 0,
+      "other": 0,
+      "rejected_take": 0
+    },
+    "query_minutes": 2153,
+    "query_minutes_per_take": 12.97,
+    "wait_ratio": 0.0929,
+    "illegal_actions": 0,
+    "feasible_positive_cargo_but_wait": 0,
+    "wait_regret_v2": 8,
+    "max_consecutive_wait": 7,
+    "p95_consecutive_wait": 2,
+    "wait_reasons": {
+      "positive_orders_failed_threshold_or_soft_risk": 10,
+      "no_safe_positive_net_cargo": 7
+    },
+    "hard_blocks": {
+      "below_profit_per_hour_threshold": 1828,
+      "filter_remove_slack_too_short": 2607,
+      "below_direct_net_threshold": 454,
+      "severe_negative_net": 292,
+      "filter_load_window_unreachable": 9493,
+      "filter_not_online": 1187,
+      "filter_normalize_failed": 109,
+      "filter_finish_after_horizon": 36,
+      "high_confidence_preference_violation": 3228
+    },
+    "qwen": {
+      "model_name": "qwen3.5-flash",
+      "compile_calls": 0,
+      "judge_calls": 0,
+      "cache_hits": 0,
+      "cache_misses": 0,
+      "fallback_unknown_count": 0,
+      "api_error_count": 0,
+      "preferences_nonempty_count": 0,
+      "dummy_key_blocked_count": 0,
+      "budget_blocked_count": 0,
+      "token_usage_input": 0,
+      "token_usage_output": 0,
+      "token_usage_total": 0,
+      "last_error_type": ""
+    },
+    "top_rejected": [
+      {
+        "candidate_id": "take:220556",
+        "cargo_id": "220556",
+        "direct_net": 371.77,
+        "profit_per_hour": 7.47,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": -18242.81,
+        "score_components": {
+          "direct_net": 371.77,
+          "profit_per_hour": 7.47,
+          "load_slack_bonus": 80.0,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -80.0,
+          "time_shadow_lite": -90.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -18120.0,
+          "deadhead_penalty": -314.47
+        }
+      },
+      {
+        "candidate_id": "take:220556",
+        "cargo_id": "220556",
+        "direct_net": 358.13,
+        "profit_per_hour": 7.2,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -28267.49,
+        "score_components": {
+          "direct_net": 358.13,
+          "profit_per_hour": 7.2,
+          "load_slack_bonus": 80.0,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -73.59,
+          "time_shadow_lite": -90.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -18120.0,
+          "deadhead_penalty": -450.83
+        }
+      },
+      {
+        "candidate_id": "take:46483",
+        "cargo_id": "46483",
+        "direct_net": 358.28,
+        "profit_per_hour": 31.94,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9576.5,
+        "score_components": {
+          "direct_net": 358.28,
+          "profit_per_hour": 31.94,
+          "load_slack_bonus": 16.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -63.5,
+          "time_shadow_lite": -15.44,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:346115",
+        "cargo_id": "346115",
+        "direct_net": 512.57,
+        "profit_per_hour": 43.81,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9697.74,
+        "score_components": {
+          "direct_net": 512.57,
+          "profit_per_hour": 43.81,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -65.25,
+          "time_shadow_lite": -17.76,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -348.94
+        }
+      },
+      {
+        "candidate_id": "take:276733",
+        "cargo_id": "276733",
+        "direct_net": 459.67,
+        "profit_per_hour": 39.86,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9732.93,
+        "score_components": {
+          "direct_net": 459.67,
+          "profit_per_hour": 39.86,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -64.65,
+          "time_shadow_lite": -16.96,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -316.81
+        }
+      },
+      {
+        "candidate_id": "take:349482",
+        "cargo_id": "349482",
+        "direct_net": 211.13,
+        "profit_per_hour": 18.94,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9775.11,
+        "score_components": {
+          "direct_net": 211.13,
+          "profit_per_hour": 18.94,
+          "load_slack_bonus": 16.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -63.26,
+          "time_shadow_lite": -15.12,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:349432",
+        "cargo_id": "349432",
+        "direct_net": 151.47,
+        "profit_per_hour": 15.4,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9807.79,
+        "score_components": {
+          "direct_net": 151.47,
+          "profit_per_hour": 15.4,
+          "load_slack_bonus": 46.4,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -58.48,
+          "time_shadow_lite": -8.8,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:54816",
+        "cargo_id": "54816",
+        "direct_net": 57.48,
+        "profit_per_hour": 10.2,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": -24.6,
+        "score_components": {
+          "direct_net": 57.48,
+          "profit_per_hour": 10.2,
+          "load_slack_bonus": 47.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -50.2,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363528",
+        "cargo_id": "363528",
+        "direct_net": 213.43,
+        "profit_per_hour": 20.13,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9773.42,
+        "score_components": {
+          "direct_net": 213.43,
+          "profit_per_hour": 20.13,
+          "load_slack_bonus": 13.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -68.21,
+          "time_shadow_lite": -12.48,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363401",
+        "cargo_id": "363401",
+        "direct_net": 75.11,
+        "profit_per_hour": 7.18,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9958.45,
+        "score_components": {
+          "direct_net": 75.11,
+          "profit_per_hour": 7.18,
+          "load_slack_bonus": 17.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -67.72,
+          "time_shadow_lite": -11.84,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:363171",
+        "cargo_id": "363171",
+        "direct_net": 309.69,
+        "profit_per_hour": 23.98,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -10113.32,
+        "score_components": {
+          "direct_net": 309.69,
+          "profit_per_hour": 23.98,
+          "load_slack_bonus": 21.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -76.61,
+          "time_shadow_lite": -23.6,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -440.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:364280",
+        "cargo_id": "364280",
+        "direct_net": 230.04,
+        "profit_per_hour": 17.88,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -10196.94,
+        "score_components": {
+          "direct_net": 230.04,
+          "profit_per_hour": 17.88,
+          "load_slack_bonus": 17.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -76.43,
+          "time_shadow_lite": -23.36,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -416.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409008",
+        "cargo_id": "409008",
+        "direct_net": 102.53,
+        "profit_per_hour": 11.21,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": -13.41,
+        "score_components": {
+          "direct_net": 102.53,
+          "profit_per_hour": 11.21,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -56.01,
+          "time_shadow_lite": -5.52,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409127",
+        "cargo_id": "409127",
+        "direct_net": 248.44,
+        "profit_per_hour": 23.7,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9708.75,
+        "score_components": {
+          "direct_net": 248.44,
+          "profit_per_hour": 23.7,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -60.84,
+          "time_shadow_lite": -11.92,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409405",
+        "cargo_id": "409405",
+        "direct_net": 225.61,
+        "profit_per_hour": 20.14,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9759.85,
+        "score_components": {
+          "direct_net": 225.61,
+          "profit_per_hour": 20.14,
+          "load_slack_bonus": 12.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -63.44,
+          "time_shadow_lite": -15.36,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:407803",
+        "cargo_id": "407803",
+        "direct_net": 414.11,
+        "profit_per_hour": 32.82,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9820.57,
+        "score_components": {
+          "direct_net": 414.11,
+          "profit_per_hour": 32.82,
+          "load_slack_bonus": 20.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -68.58,
+          "time_shadow_lite": -22.16,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -296.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:409545",
+        "cargo_id": "409545",
+        "direct_net": 102.81,
+        "profit_per_hour": 9.46,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9918.57,
+        "score_components": {
+          "direct_net": 102.81,
+          "profit_per_hour": 9.46,
+          "load_slack_bonus": 16.77,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -62.23,
+          "time_shadow_lite": -13.76,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:422890",
+        "cargo_id": "422890",
+        "direct_net": 135.99,
+        "profit_per_hour": 15.14,
+        "hard_filter_reason": "below_profit_per_hour_threshold",
+        "score": 30.73,
+        "score_components": {
+          "direct_net": 135.99,
+          "profit_per_hour": 15.14,
+          "load_slack_bonus": 14.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -55.4,
+          "time_shadow_lite": -4.72,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:421296",
+        "cargo_id": "421296",
+        "direct_net": 516.33,
+        "profit_per_hour": 52.69,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9295.63,
+        "score_components": {
+          "direct_net": 516.33,
+          "profit_per_hour": 52.69,
+          "load_slack_bonus": 44.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -58.36,
+          "time_shadow_lite": -8.64,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:124041",
+        "cargo_id": "124041",
+        "direct_net": 265.02,
+        "profit_per_hour": 22.27,
+        "hard_filter_reason": "high_confidence_preference_violation",
+        "score": -9710.3,
+        "score_components": {
+          "direct_net": 265.02,
+          "profit_per_hour": 22.27,
+          "load_slack_bonus": 20.3,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -65.98,
+          "time_shadow_lite": -18.72,
+          "rest_window_penalty": -0.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      }
+    ],
+    "monthly": {
+      "month": "2026-03",
+      "simulate_time_seconds": 36.56,
+      "result_files_count": 2,
+      "drivers": [
+        {
+          "driver_id": "D001",
+          "income": {
+            "gross_income": 62515.96,
+            "distance_km": 12825.4,
+            "cost": 19238.1,
+            "preference_penalty": 108300.0,
+            "net_income": -65022.14
+          },
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日连续休息≥8小时",
+                "penalty": 74400.0,
+                "preference_text": "我这人熬不住连轴转，每天至少连续停车熄火休息满8小时。",
+                "violations": 31
+              },
+              {
+                "rule": "禁接机械设备",
+                "penalty": 6300.0,
+                "preference_text": "接过两次龙门吊底座、机床铸件，死沉还容易砸坏挡板，机械设备这类活儿我干不了，每接一次都要扣钱。",
+                "violations": 3
+              },
+              {
+                "rule": "不接惠州货源",
+                "penalty": 17600.0,
+                "preference_text": "惠州那一路我熟也怕，装货地或卸货地在惠州的货，我一律不接，每接一次都要扣钱。",
+                "violations": 22
+              },
+              {
+                "rule": "每月至少3整天休息",
+                "penalty": 10000.0,
+                "preference_text": "爹妈在老家盼着，三月怎么也得抽三个整天完全歇着（00:00~24:00，车处于静止状态），回去陪陪二老。",
+                "off_days": 0
+              },
+              {
+                "rule": "三四号不进深圳",
+                "penalty": 0.0,
+                "preference_text": "三月四号五号交警在深圳查车，这天我不往深圳跑，也别给我派进去那边的货。",
+                "violations": 0
+              }
+            ]
+          }
+        },
+        {
+          "driver_id": "D002",
+          "income": {
+            "gross_income": 52575.41,
+            "distance_km": 10103.39,
+            "cost": 15155.09,
+            "preference_penalty": 86280.0,
+            "net_income": -48859.67
+          },
+          "token_usage": {
+            "prompt_tokens": 0,
+            "completion_tokens": 0,
+            "reasoning_tokens": 0,
+            "total_tokens": 0
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日0–6点休息",
+                "penalty": 55800.0,
+                "preference_text": "零点以后到早上六点这段我得睡觉，车得停着熄火，雷打不动。",
+                "violations": 31
+              },
+              {
+                "rule": "禁接蔬菜",
+                "penalty": 3400.0,
+                "preference_text": "蔬菜几分钱一斤的路一颠就烂，赔不起损耗，凡是蔬菜货源我一律推掉，每接一次都扣钱。",
+                "violations": 1
+              },
+              {
+                "rule": "月度增城≥4日",
+                "penalty": 6000.0,
+                "preference_text": "我在广州市增城区有家老档口（23.15，113.67）要照应，自然月里装货或卸货在增城的货，起码得接够四个不同的日子，同一天几单也只算一天。",
+                "order_days": 2
+              },
+              {
+                "rule": "赴装货空驶≤55km",
+                "penalty": 1080.0,
+                "preference_text": "看好了单子再动身，接单后赶去装货那一程，空驶超过五十五公里我就不想接，超一次扣120。",
+                "violations": 9
+              },
+              {
+                "rule": "每月至少2整天休息",
+                "penalty": 10000.0,
+                "preference_text": "这月得进修理厂做保养，起码留两个整天停驶检修，那天别给我排活。",
+                "off_days": 0
+              },
+              {
+                "rule": "三月十二号增城盘库",
+                "penalty": 5000.0,
+                "preference_text": "三月十二号增城老档口清库存，当天得到增城区停一趟，花两小时把数目对清楚。",
+                "satisfied": false,
+                "waited_minutes": 0
+              },
+              {
+                "rule": "三月三十一号舅公寿宴",
+                "penalty": 5000.0,
+                "preference_text": "三月三十一号舅公做寿，上午得先过增城区档口捎上寿礼，中午十二点前赶到四会县城（23.32，112.83）赴宴到下午两点。",
+                "satisfied": false
+              }
+            ]
+          }
+        }
+      ],
+      "summary": {
+        "total_net_income_all_drivers": -113881.81,
+        "total_preference_penalty": 194580.0,
+        "total_token_usage": {
+          "prompt_tokens": 0,
+          "completion_tokens": 0,
+          "reasoning_tokens": 0,
+          "total_tokens": 0
+        },
+        "failed_driver_count": 0,
+        "failed_drivers": {}
+      },
+      "cost_meaning": "cost = distance_km * cost_per_km",
+      "cost_metric": "net_income = gross_income - cost - preference_penalty"
+    },
+    "run": {
+      "month": "2026-03",
+      "simulate_time_seconds": 36.56,
+      "simulation_duration_days": 31,
+      "completed_steps": 183,
+      "remaining_cargo_count": 0,
+      "driver_completed_steps": {
+        "D001": 85,
+        "D002": 98
+      },
+      "driver_result_files": {
+        "D001": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a5\\actions_202603_D001_20260531_053045.jsonl",
+        "D002": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a5\\actions_202603_D002_20260531_053045.jsonl"
+      },
+      "simulation_max_steps_per_driver": 20000,
+      "driver_max_total_tokens": 5000000,
+      "driver_token_usage": {
+        "D001": 0,
+        "D002": 0
+      },
+      "driver_token_limit_stopped": {},
+      "driver_end_reasons": {
+        "D001": "normal",
+        "D002": "normal"
+      },
+      "driver_simulation_failures": {}
+    },
+    "regret_counts": {
+      "query_too_big": 1,
+      "query_too_small": 4,
+      "long_order_trap": 7,
+      "wait_regret": 7,
+      "reposition_not_recovered": 0,
+      "preference_late_panic": 0
+    }
+  },
+  {
+    "name": "a6",
+    "results_dir": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a6",
+    "net": 5067.69,
+    "penalty": 38140.0,
+    "proxy_score": -33072.31,
+    "failed_driver_count": 0,
+    "simulation_failures": {},
+    "simulation_duration_days": 31,
+    "completed_steps": 252,
+    "counts": {
+      "take_order": 89,
+      "wait": 163,
+      "reposition": 0,
+      "other": 0,
+      "rejected_take": 0
+    },
+    "query_minutes": 3306,
+    "query_minutes_per_take": 37.15,
+    "wait_ratio": 0.6468,
+    "illegal_actions": 0,
+    "feasible_positive_cargo_but_wait": 0,
+    "wait_regret_v2": 104,
+    "max_consecutive_wait": 6,
+    "p95_consecutive_wait": 4,
+    "wait_reasons": {
+      "daily_rest_guard": 58,
+      "positive_orders_failed_threshold_or_soft_risk": 91,
+      "periodic_full_rest_guard": 4,
+      "no_safe_positive_net_cargo": 10
+    },
+    "hard_blocks": {
+      "rest_window_overlap": 10193,
+      "filter_remove_slack_too_short": 4004,
+      "below_profit_per_hour_threshold": 509,
+      "below_direct_net_threshold": 218,
+      "filter_not_online": 2126,
+      "filter_load_window_unreachable": 14373,
+      "filter_normalize_failed": 150,
+      "severe_negative_net": 72,
+      "filter_finish_after_horizon": 56
+    },
+    "qwen": {
+      "model_name": "qwen3.5-flash",
+      "compile_calls": 5,
+      "judge_calls": 0,
+      "cache_hits": 2,
+      "cache_misses": 5,
+      "fallback_unknown_count": 0,
+      "api_error_count": 0,
+      "preferences_nonempty_count": 7,
+      "dummy_key_blocked_count": 0,
+      "budget_blocked_count": 0,
+      "token_usage_input": 1848,
+      "token_usage_output": 28133,
+      "token_usage_total": 29981,
+      "last_error_type": ""
+    },
+    "top_rejected": [
+      {
+        "candidate_id": "take:220556",
+        "cargo_id": "220556",
+        "direct_net": 371.77,
+        "profit_per_hour": 7.47,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -53058.81,
+        "score_components": {
+          "direct_net": 371.77,
+          "profit_per_hour": 7.47,
+          "load_slack_bonus": 80.0,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -90.0,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -18120.0,
+          "deadhead_penalty": -314.47
+        }
+      },
+      {
+        "candidate_id": "take:309533",
+        "cargo_id": "309533",
+        "direct_net": 91.74,
+        "profit_per_hour": 18.11,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -13451.21,
+        "score_components": {
+          "direct_net": 91.74,
+          "profit_per_hour": 18.11,
+          "load_slack_bonus": 0.63,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -3600.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:308012",
+        "cargo_id": "308012",
+        "direct_net": 339.48,
+        "profit_per_hour": 64.87,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -13808.41,
+        "score_components": {
+          "direct_net": 339.48,
+          "profit_per_hour": 64.87,
+          "load_slack_bonus": 8.63,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -4400.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:309452",
+        "cargo_id": "309452",
+        "direct_net": 47.22,
+        "profit_per_hour": 8.83,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -14892.85,
+        "score_components": {
+          "direct_net": 47.22,
+          "profit_per_hour": 8.83,
+          "load_slack_bonus": 0.63,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -4960.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:308407",
+        "cargo_id": "308407",
+        "direct_net": 145.7,
+        "profit_per_hour": 24.02,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -18173.6,
+        "score_components": {
+          "direct_net": 145.7,
+          "profit_per_hour": 24.02,
+          "load_slack_bonus": 0.63,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -8400.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:223623",
+        "cargo_id": "223623",
+        "direct_net": 270.72,
+        "profit_per_hour": 43.31,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -18851.39,
+        "score_components": {
+          "direct_net": 270.72,
+          "profit_per_hour": 43.31,
+          "load_slack_bonus": 0.63,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -9280.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:226381",
+        "cargo_id": "226381",
+        "direct_net": 79.83,
+        "profit_per_hour": 17.54,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -23942.76,
+        "score_components": {
+          "direct_net": 79.83,
+          "profit_per_hour": 17.54,
+          "load_slack_bonus": 3.23,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -14080.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:308012",
+        "cargo_id": "308012",
+        "direct_net": 339.48,
+        "profit_per_hour": 64.87,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -26773.81,
+        "score_components": {
+          "direct_net": 339.48,
+          "profit_per_hour": 64.87,
+          "load_slack_bonus": 3.23,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -17360.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:224629",
+        "cargo_id": "224629",
+        "direct_net": 868.43,
+        "profit_per_hour": 84.73,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -33816.23,
+        "score_components": {
+          "direct_net": 868.43,
+          "profit_per_hour": 84.73,
+          "load_slack_bonus": 3.23,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -10.8,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:191",
+        "cargo_id": "191",
+        "direct_net": 374.04,
+        "profit_per_hour": 37.72,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34497.05,
+        "score_components": {
+          "direct_net": 374.04,
+          "profit_per_hour": 37.72,
+          "load_slack_bonus": 3.23,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -9.2,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:222753",
+        "cargo_id": "222753",
+        "direct_net": 244.64,
+        "profit_per_hour": 35.12,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34621.66,
+        "score_components": {
+          "direct_net": 244.64,
+          "profit_per_hour": 35.12,
+          "load_slack_bonus": 9.23,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:222753",
+        "cargo_id": "222753",
+        "direct_net": 244.64,
+        "profit_per_hour": 52.99,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -31715.56,
+        "score_components": {
+          "direct_net": 244.64,
+          "profit_per_hour": 52.99,
+          "load_slack_bonus": 3.83,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -22160.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:224688",
+        "cargo_id": "224688",
+        "direct_net": 506.85,
+        "profit_per_hour": 42.71,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34355.02,
+        "score_components": {
+          "direct_net": 506.85,
+          "profit_per_hour": 42.71,
+          "load_slack_bonus": 1.83,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -18.56,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:225262",
+        "cargo_id": "225262",
+        "direct_net": 417.39,
+        "profit_per_hour": 38.12,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34438.47,
+        "score_components": {
+          "direct_net": 417.39,
+          "profit_per_hour": 38.12,
+          "load_slack_bonus": 21.83,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -14.16,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:309223",
+        "cargo_id": "309223",
+        "direct_net": 740.17,
+        "profit_per_hour": 56.72,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34545.36,
+        "score_components": {
+          "direct_net": 740.17,
+          "profit_per_hour": 56.72,
+          "load_slack_bonus": 31.83,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -24.24,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -504.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:225213",
+        "cargo_id": "225213",
+        "direct_net": 227.41,
+        "profit_per_hour": 21.12,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34701.56,
+        "score_components": {
+          "direct_net": 227.41,
+          "profit_per_hour": 21.12,
+          "load_slack_bonus": 15.83,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -13.28,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:229393",
+        "cargo_id": "229393",
+        "direct_net": 555.4,
+        "profit_per_hour": 70.45,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -27490.66,
+        "score_components": {
+          "direct_net": 555.4,
+          "profit_per_hour": 70.45,
+          "load_slack_bonus": 8.13,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -18320.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:314042",
+        "cargo_id": "314042",
+        "direct_net": 292.25,
+        "profit_per_hour": 35.71,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -29940.91,
+        "score_components": {
+          "direct_net": 292.25,
+          "profit_per_hour": 35.71,
+          "load_slack_bonus": 8.13,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.88,
+          "rest_window_penalty": -19760.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -607.27
+        }
+      },
+      {
+        "candidate_id": "take:311990",
+        "cargo_id": "311990",
+        "direct_net": 419.73,
+        "profit_per_hour": 36.24,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34466.39,
+        "score_components": {
+          "direct_net": 419.73,
+          "profit_per_hour": 36.24,
+          "load_slack_bonus": 2.13,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -17.2,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:314947",
+        "cargo_id": "314947",
+        "direct_net": 54.64,
+        "profit_per_hour": 5.34,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34948.59,
+        "score_components": {
+          "direct_net": 54.64,
+          "profit_per_hour": 5.34,
+          "load_slack_bonus": 2.13,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -10.72,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      }
+    ],
+    "monthly": {
+      "month": "2026-03",
+      "simulate_time_seconds": 237.48,
+      "result_files_count": 2,
+      "drivers": [
+        {
+          "driver_id": "D001",
+          "income": {
+            "gross_income": 30593.92,
+            "distance_km": 5805.26,
+            "cost": 8707.89,
+            "preference_penalty": 18500.0,
+            "net_income": 3386.03
+          },
+          "token_usage": {
+            "prompt_tokens": 638,
+            "completion_tokens": 10888,
+            "reasoning_tokens": 10076,
+            "total_tokens": 11526
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日连续休息≥8小时",
+                "penalty": 0.0,
+                "preference_text": "我这人熬不住连轴转，每天至少连续停车熄火休息满8小时。",
+                "violations": 0
+              },
+              {
+                "rule": "禁接机械设备",
+                "penalty": 2100.0,
+                "preference_text": "接过两次龙门吊底座、机床铸件，死沉还容易砸坏挡板，机械设备这类活儿我干不了，每接一次都要扣钱。",
+                "violations": 1
+              },
+              {
+                "rule": "不接惠州货源",
+                "penalty": 6400.0,
+                "preference_text": "惠州那一路我熟也怕，装货地或卸货地在惠州的货，我一律不接，每接一次都要扣钱。",
+                "violations": 8
+              },
+              {
+                "rule": "每月至少3整天休息",
+                "penalty": 10000.0,
+                "preference_text": "爹妈在老家盼着，三月怎么也得抽三个整天完全歇着（00:00~24:00，车处于静止状态），回去陪陪二老。",
+                "off_days": 2
+              },
+              {
+                "rule": "三四号不进深圳",
+                "penalty": 0.0,
+                "preference_text": "三月四号五号交警在深圳查车，这天我不往深圳跑，也别给我派进去那边的货。",
+                "violations": 0
+              }
+            ]
+          }
+        },
+        {
+          "driver_id": "D002",
+          "income": {
+            "gross_income": 29699.85,
+            "distance_km": 5585.46,
+            "cost": 8378.19,
+            "preference_penalty": 19640.0,
+            "net_income": 1681.66
+          },
+          "token_usage": {
+            "prompt_tokens": 1210,
+            "completion_tokens": 17245,
+            "reasoning_tokens": 15618,
+            "total_tokens": 18455
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日0–6点休息",
+                "penalty": 0.0,
+                "preference_text": "零点以后到早上六点这段我得睡觉，车得停着熄火，雷打不动。",
+                "violations": 0
+              },
+              {
+                "rule": "禁接蔬菜",
+                "penalty": 3400.0,
+                "preference_text": "蔬菜几分钱一斤的路一颠就烂，赔不起损耗，凡是蔬菜货源我一律推掉，每接一次都扣钱。",
+                "violations": 1
+              },
+              {
+                "rule": "月度增城≥4日",
+                "penalty": 6000.0,
+                "preference_text": "我在广州市增城区有家老档口（23.15，113.67）要照应，自然月里装货或卸货在增城的货，起码得接够四个不同的日子，同一天几单也只算一天。",
+                "order_days": 1
+              },
+              {
+                "rule": "赴装货空驶≤55km",
+                "penalty": 240.0,
+                "preference_text": "看好了单子再动身，接单后赶去装货那一程，空驶超过五十五公里我就不想接，超一次扣120。",
+                "violations": 2
+              },
+              {
+                "rule": "每月至少2整天休息",
+                "penalty": 0.0,
+                "preference_text": "这月得进修理厂做保养，起码留两个整天停驶检修，那天别给我排活。",
+                "off_days": 2
+              },
+              {
+                "rule": "三月十二号增城盘库",
+                "penalty": 5000.0,
+                "preference_text": "三月十二号增城老档口清库存，当天得到增城区停一趟，花两小时把数目对清楚。",
+                "satisfied": false,
+                "waited_minutes": 0
+              },
+              {
+                "rule": "三月三十一号舅公寿宴",
+                "penalty": 5000.0,
+                "preference_text": "三月三十一号舅公做寿，上午得先过增城区档口捎上寿礼，中午十二点前赶到四会县城（23.32，112.83）赴宴到下午两点。",
+                "satisfied": false
+              }
+            ]
+          }
+        }
+      ],
+      "summary": {
+        "total_net_income_all_drivers": 5067.69,
+        "total_preference_penalty": 38140.0,
+        "total_token_usage": {
+          "prompt_tokens": 1848,
+          "completion_tokens": 28133,
+          "reasoning_tokens": 25694,
+          "total_tokens": 29981
+        },
+        "failed_driver_count": 0,
+        "failed_drivers": {}
+      },
+      "cost_meaning": "cost = distance_km * cost_per_km",
+      "cost_metric": "net_income = gross_income - cost - preference_penalty"
+    },
+    "run": {
+      "month": "2026-03",
+      "simulate_time_seconds": 237.48,
+      "simulation_duration_days": 31,
+      "completed_steps": 252,
+      "remaining_cargo_count": 0,
+      "driver_completed_steps": {
+        "D001": 125,
+        "D002": 127
+      },
+      "driver_result_files": {
+        "D001": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a6\\actions_202603_D001_20260531_053043.jsonl",
+        "D002": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a6\\actions_202603_D002_20260531_053043.jsonl"
+      },
+      "simulation_max_steps_per_driver": 20000,
+      "driver_max_total_tokens": 5000000,
+      "driver_token_usage": {
+        "D001": 11526,
+        "D002": 18455
+      },
+      "driver_token_limit_stopped": {},
+      "driver_end_reasons": {
+        "D001": "normal",
+        "D002": "normal"
+      },
+      "driver_simulation_failures": {}
+    },
+    "regret_counts": {
+      "query_too_big": 6,
+      "query_too_small": 4,
+      "long_order_trap": 0,
+      "wait_regret": 103,
+      "reposition_not_recovered": 0,
+      "preference_late_panic": 0
+    }
+  },
+  {
+    "name": "a7",
+    "results_dir": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a7",
+    "net": 5067.69,
+    "penalty": 38140.0,
+    "proxy_score": -33072.31,
+    "failed_driver_count": 0,
+    "simulation_failures": {},
+    "simulation_duration_days": 31,
+    "completed_steps": 252,
+    "counts": {
+      "take_order": 89,
+      "wait": 163,
+      "reposition": 0,
+      "other": 0,
+      "rejected_take": 0
+    },
+    "query_minutes": 3306,
+    "query_minutes_per_take": 37.15,
+    "wait_ratio": 0.6468,
+    "illegal_actions": 0,
+    "feasible_positive_cargo_but_wait": 0,
+    "wait_regret_v2": 104,
+    "max_consecutive_wait": 6,
+    "p95_consecutive_wait": 4,
+    "wait_reasons": {
+      "daily_rest_guard": 58,
+      "positive_orders_failed_threshold_or_soft_risk": 91,
+      "periodic_full_rest_guard": 4,
+      "no_safe_positive_net_cargo": 10
+    },
+    "hard_blocks": {
+      "rest_window_overlap": 10193,
+      "filter_remove_slack_too_short": 4004,
+      "below_direct_net_threshold": 142,
+      "filter_not_online": 2126,
+      "filter_load_window_unreachable": 14373,
+      "filter_normalize_failed": 150,
+      "severe_negative_net": 72,
+      "filter_finish_after_horizon": 56
+    },
+    "qwen": {
+      "model_name": "qwen3.5-flash",
+      "compile_calls": 5,
+      "judge_calls": 0,
+      "cache_hits": 2,
+      "cache_misses": 5,
+      "fallback_unknown_count": 0,
+      "api_error_count": 0,
+      "preferences_nonempty_count": 7,
+      "dummy_key_blocked_count": 0,
+      "budget_blocked_count": 0,
+      "token_usage_input": 1848,
+      "token_usage_output": 30775,
+      "token_usage_total": 32623,
+      "last_error_type": ""
+    },
+    "top_rejected": [
+      {
+        "candidate_id": "take:220556",
+        "cargo_id": "220556",
+        "direct_net": 371.77,
+        "profit_per_hour": 7.47,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -53058.81,
+        "score_components": {
+          "direct_net": 371.77,
+          "profit_per_hour": 7.47,
+          "load_slack_bonus": 80.0,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -90.0,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -18120.0,
+          "deadhead_penalty": -314.47
+        }
+      },
+      {
+        "candidate_id": "take:309533",
+        "cargo_id": "309533",
+        "direct_net": 91.74,
+        "profit_per_hour": 18.11,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -13451.21,
+        "score_components": {
+          "direct_net": 91.74,
+          "profit_per_hour": 18.11,
+          "load_slack_bonus": 0.63,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -3600.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:308012",
+        "cargo_id": "308012",
+        "direct_net": 339.48,
+        "profit_per_hour": 64.87,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -13808.41,
+        "score_components": {
+          "direct_net": 339.48,
+          "profit_per_hour": 64.87,
+          "load_slack_bonus": 8.63,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -4400.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:309452",
+        "cargo_id": "309452",
+        "direct_net": 47.22,
+        "profit_per_hour": 8.83,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -14892.85,
+        "score_components": {
+          "direct_net": 47.22,
+          "profit_per_hour": 8.83,
+          "load_slack_bonus": 0.63,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -4960.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:308407",
+        "cargo_id": "308407",
+        "direct_net": 145.7,
+        "profit_per_hour": 24.02,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -18173.6,
+        "score_components": {
+          "direct_net": 145.7,
+          "profit_per_hour": 24.02,
+          "load_slack_bonus": 0.63,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -8400.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:223623",
+        "cargo_id": "223623",
+        "direct_net": 270.72,
+        "profit_per_hour": 43.31,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -18851.39,
+        "score_components": {
+          "direct_net": 270.72,
+          "profit_per_hour": 43.31,
+          "load_slack_bonus": 0.63,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -9280.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:226381",
+        "cargo_id": "226381",
+        "direct_net": 79.83,
+        "profit_per_hour": 17.54,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -23942.76,
+        "score_components": {
+          "direct_net": 79.83,
+          "profit_per_hour": 17.54,
+          "load_slack_bonus": 3.23,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -14080.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:308012",
+        "cargo_id": "308012",
+        "direct_net": 339.48,
+        "profit_per_hour": 64.87,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -26773.81,
+        "score_components": {
+          "direct_net": 339.48,
+          "profit_per_hour": 64.87,
+          "load_slack_bonus": 3.23,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -17360.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:224629",
+        "cargo_id": "224629",
+        "direct_net": 868.43,
+        "profit_per_hour": 84.73,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -33816.23,
+        "score_components": {
+          "direct_net": 868.43,
+          "profit_per_hour": 84.73,
+          "load_slack_bonus": 3.23,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -10.8,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:191",
+        "cargo_id": "191",
+        "direct_net": 374.04,
+        "profit_per_hour": 37.72,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34497.05,
+        "score_components": {
+          "direct_net": 374.04,
+          "profit_per_hour": 37.72,
+          "load_slack_bonus": 3.23,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -9.2,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:222753",
+        "cargo_id": "222753",
+        "direct_net": 244.64,
+        "profit_per_hour": 35.12,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34621.66,
+        "score_components": {
+          "direct_net": 244.64,
+          "profit_per_hour": 35.12,
+          "load_slack_bonus": 9.23,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:222753",
+        "cargo_id": "222753",
+        "direct_net": 244.64,
+        "profit_per_hour": 52.99,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -31715.56,
+        "score_components": {
+          "direct_net": 244.64,
+          "profit_per_hour": 52.99,
+          "load_slack_bonus": 3.83,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -22160.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:224688",
+        "cargo_id": "224688",
+        "direct_net": 506.85,
+        "profit_per_hour": 42.71,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34355.02,
+        "score_components": {
+          "direct_net": 506.85,
+          "profit_per_hour": 42.71,
+          "load_slack_bonus": 1.83,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -18.56,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:225262",
+        "cargo_id": "225262",
+        "direct_net": 417.39,
+        "profit_per_hour": 38.12,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34438.47,
+        "score_components": {
+          "direct_net": 417.39,
+          "profit_per_hour": 38.12,
+          "load_slack_bonus": 21.83,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -14.16,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:309223",
+        "cargo_id": "309223",
+        "direct_net": 740.17,
+        "profit_per_hour": 56.72,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34545.36,
+        "score_components": {
+          "direct_net": 740.17,
+          "profit_per_hour": 56.72,
+          "load_slack_bonus": 31.83,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -24.24,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -504.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:225213",
+        "cargo_id": "225213",
+        "direct_net": 227.41,
+        "profit_per_hour": 21.12,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34701.56,
+        "score_components": {
+          "direct_net": 227.41,
+          "profit_per_hour": 21.12,
+          "load_slack_bonus": 15.83,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -13.28,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:229393",
+        "cargo_id": "229393",
+        "direct_net": 555.4,
+        "profit_per_hour": 70.45,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -27490.66,
+        "score_components": {
+          "direct_net": 555.4,
+          "profit_per_hour": 70.45,
+          "load_slack_bonus": 8.13,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.0,
+          "rest_window_penalty": -18320.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:314042",
+        "cargo_id": "314042",
+        "direct_net": 292.25,
+        "profit_per_hour": 35.71,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -29940.91,
+        "score_components": {
+          "direct_net": 292.25,
+          "profit_per_hour": 35.71,
+          "load_slack_bonus": 8.13,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -0.88,
+          "rest_window_penalty": -19760.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -607.27
+        }
+      },
+      {
+        "candidate_id": "take:311990",
+        "cargo_id": "311990",
+        "direct_net": 419.73,
+        "profit_per_hour": 36.24,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34466.39,
+        "score_components": {
+          "direct_net": 419.73,
+          "profit_per_hour": 36.24,
+          "load_slack_bonus": 2.13,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -17.2,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      },
+      {
+        "candidate_id": "take:314947",
+        "cargo_id": "314947",
+        "direct_net": 54.64,
+        "profit_per_hour": 5.34,
+        "hard_filter_reason": "rest_window_overlap",
+        "score": -34948.59,
+        "score_components": {
+          "direct_net": 54.64,
+          "profit_per_hour": 5.34,
+          "load_slack_bonus": 2.13,
+          "twohop_lite": 0.0,
+          "preference_soft_penalty": -16.0,
+          "time_shadow_lite": -10.72,
+          "rest_window_penalty": -25000.0,
+          "duration_penalty": -0.0,
+          "deadhead_penalty": -0.0
+        }
+      }
+    ],
+    "monthly": {
+      "month": "2026-03",
+      "simulate_time_seconds": 261.26,
+      "result_files_count": 2,
+      "drivers": [
+        {
+          "driver_id": "D001",
+          "income": {
+            "gross_income": 30593.92,
+            "distance_km": 5805.26,
+            "cost": 8707.89,
+            "preference_penalty": 18500.0,
+            "net_income": 3386.03
+          },
+          "token_usage": {
+            "prompt_tokens": 638,
+            "completion_tokens": 12685,
+            "reasoning_tokens": 11884,
+            "total_tokens": 13323
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日连续休息≥8小时",
+                "penalty": 0.0,
+                "preference_text": "我这人熬不住连轴转，每天至少连续停车熄火休息满8小时。",
+                "violations": 0
+              },
+              {
+                "rule": "禁接机械设备",
+                "penalty": 2100.0,
+                "preference_text": "接过两次龙门吊底座、机床铸件，死沉还容易砸坏挡板，机械设备这类活儿我干不了，每接一次都要扣钱。",
+                "violations": 1
+              },
+              {
+                "rule": "不接惠州货源",
+                "penalty": 6400.0,
+                "preference_text": "惠州那一路我熟也怕，装货地或卸货地在惠州的货，我一律不接，每接一次都要扣钱。",
+                "violations": 8
+              },
+              {
+                "rule": "每月至少3整天休息",
+                "penalty": 10000.0,
+                "preference_text": "爹妈在老家盼着，三月怎么也得抽三个整天完全歇着（00:00~24:00，车处于静止状态），回去陪陪二老。",
+                "off_days": 2
+              },
+              {
+                "rule": "三四号不进深圳",
+                "penalty": 0.0,
+                "preference_text": "三月四号五号交警在深圳查车，这天我不往深圳跑，也别给我派进去那边的货。",
+                "violations": 0
+              }
+            ]
+          }
+        },
+        {
+          "driver_id": "D002",
+          "income": {
+            "gross_income": 29699.85,
+            "distance_km": 5585.46,
+            "cost": 8378.19,
+            "preference_penalty": 19640.0,
+            "net_income": 1681.66
+          },
+          "token_usage": {
+            "prompt_tokens": 1210,
+            "completion_tokens": 18090,
+            "reasoning_tokens": 16323,
+            "total_tokens": 19300
+          },
+          "calculation_aborted": false,
+          "validation_error": null,
+          "preference_check": {
+            "rules": [
+              {
+                "rule": "每日0–6点休息",
+                "penalty": 0.0,
+                "preference_text": "零点以后到早上六点这段我得睡觉，车得停着熄火，雷打不动。",
+                "violations": 0
+              },
+              {
+                "rule": "禁接蔬菜",
+                "penalty": 3400.0,
+                "preference_text": "蔬菜几分钱一斤的路一颠就烂，赔不起损耗，凡是蔬菜货源我一律推掉，每接一次都扣钱。",
+                "violations": 1
+              },
+              {
+                "rule": "月度增城≥4日",
+                "penalty": 6000.0,
+                "preference_text": "我在广州市增城区有家老档口（23.15，113.67）要照应，自然月里装货或卸货在增城的货，起码得接够四个不同的日子，同一天几单也只算一天。",
+                "order_days": 1
+              },
+              {
+                "rule": "赴装货空驶≤55km",
+                "penalty": 240.0,
+                "preference_text": "看好了单子再动身，接单后赶去装货那一程，空驶超过五十五公里我就不想接，超一次扣120。",
+                "violations": 2
+              },
+              {
+                "rule": "每月至少2整天休息",
+                "penalty": 0.0,
+                "preference_text": "这月得进修理厂做保养，起码留两个整天停驶检修，那天别给我排活。",
+                "off_days": 2
+              },
+              {
+                "rule": "三月十二号增城盘库",
+                "penalty": 5000.0,
+                "preference_text": "三月十二号增城老档口清库存，当天得到增城区停一趟，花两小时把数目对清楚。",
+                "satisfied": false,
+                "waited_minutes": 0
+              },
+              {
+                "rule": "三月三十一号舅公寿宴",
+                "penalty": 5000.0,
+                "preference_text": "三月三十一号舅公做寿，上午得先过增城区档口捎上寿礼，中午十二点前赶到四会县城（23.32，112.83）赴宴到下午两点。",
+                "satisfied": false
+              }
+            ]
+          }
+        }
+      ],
+      "summary": {
+        "total_net_income_all_drivers": 5067.69,
+        "total_preference_penalty": 38140.0,
+        "total_token_usage": {
+          "prompt_tokens": 1848,
+          "completion_tokens": 30775,
+          "reasoning_tokens": 28207,
+          "total_tokens": 32623
+        },
+        "failed_driver_count": 0,
+        "failed_drivers": {}
+      },
+      "cost_meaning": "cost = distance_km * cost_per_km",
+      "cost_metric": "net_income = gross_income - cost - preference_penalty"
+    },
+    "run": {
+      "month": "2026-03",
+      "simulate_time_seconds": 261.26,
+      "simulation_duration_days": 31,
+      "completed_steps": 252,
+      "remaining_cargo_count": 0,
+      "driver_completed_steps": {
+        "D001": 125,
+        "D002": 127
+      },
+      "driver_result_files": {
+        "D001": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a7\\actions_202603_D001_20260531_053043.jsonl",
+        "D002": "C:\\budostudy\\only_for_codex\\thelatstcargo\\runs\\score_rescue_ablation\\a7\\actions_202603_D002_20260531_053043.jsonl"
+      },
+      "simulation_max_steps_per_driver": 20000,
+      "driver_max_total_tokens": 5000000,
+      "driver_token_usage": {
+        "D001": 13323,
+        "D002": 19300
+      },
+      "driver_token_limit_stopped": {},
+      "driver_end_reasons": {
+        "D001": "normal",
+        "D002": "normal"
+      },
+      "driver_simulation_failures": {}
+    },
+    "regret_counts": {
+      "query_too_big": 6,
+      "query_too_small": 4,
+      "long_order_trap": 0,
+      "wait_regret": 103,
+      "reposition_not_recovered": 0,
+      "preference_late_panic": 0
+    }
+  }
+]

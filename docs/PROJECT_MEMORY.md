@@ -1,5 +1,14 @@
 # PROJECT MEMORY
 
+## Score Rescue Memory
+
+- The 20260529 tournament build is a failed reference, not a success: negative net, high wait ratio, very low take count and zero Qwen calls.
+- Rescue mode must stay simple and current-observed: fixed current query, post-query World refresh, current_actionable filtering, direct positive net scoring and deterministic certificates.
+- Wait-lock forensic traces are first-class evidence. Every wait in rescue mode needs a machine-readable reason and the rejected top take candidates.
+- Hard blocks are intentionally narrow. Unknown preference, time shadow, endgame and two-hop risk are soft capped costs unless a high-confidence irreversible preference violation or legal/actionability issue exists.
+- Qwen is a preference DSL compiler only. Missing or dummy API keys are forensic fallback evidence, not successful model use.
+- Final rescue handoff evidence is centralized in `reports/*score_rescue*.md`, `reports/regret_dashboard_v2.md`, `reports/qwen_preference_compile_report.md` and `reports/score_rescue_final_report.md`.
+
 ## 长期目标
 
 实现 CROWN-Y Tournament Build，不做 Max 版。主线是 P0/P0++ 合规与稳定，P1 使用 Time Shadow、Preference Certificate、Visible two-hop、Resource-pressure Endgame、Scout Query、Payback-gated Reposition 与 Regret Dashboard。
@@ -33,4 +42,3 @@
 - `query_cargo` 推进时间，不能用 query 前状态过滤。
 - 本地评测 round bug 当前基座已有坐标保护，`tools/fix_eval_round_bug.py` 会检查。
 - 远端 GitHub refs 查询失败，后续 push 可能受远端可访问性阻塞，最终报告必须记录。
-

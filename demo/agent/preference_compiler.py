@@ -7,10 +7,15 @@ import json
 import re
 from typing import Any
 
+from simkit.ports import SimulationApiPort
+
+from . import config, qwen_preference_compiler
+from .llm_budget import LLMBudgetManager
 from .schemas import CompiledPreferenceRule, CompiledPreferenceSet, DriverStatus
 
 NUMBER_RE = re.compile(r"[-+]?\d+(?:\.\d+)?")
 CLOCK_RE = re.compile(r"\b\d{1,2}:\d{2}(?::\d{2})?\b")
+_COMPILE_BUDGET = LLMBudgetManager()
 
 
 def hash_preferences(preferences: tuple[Any, ...] | list[Any]) -> str:
@@ -93,16 +98,35 @@ def _compile_shape(content: str, payload: dict[str, Any]) -> tuple[str, str, dic
 
 def compile_if_changed(
     *,
+    api: SimulationApiPort | None = None,
     status: DriverStatus,
     pref_hash: str,
     prev_rules: CompiledPreferenceSet | None,
 ) -> CompiledPreferenceSet:
     if prev_rules is not None and prev_rules.pref_hash == pref_hash:
         return prev_rules
+    amount_payloads = [_amount_payload(item) for item in status.preferences]
+    if config.ENABLE_QWEN_PREFERENCE_COMPILER:
+        cached = qwen_preference_compiler.has_cached(pref_hash)
+        if _COMPILE_BUDGET.allow_compile(status.driver_id, pref_hash, cached=cached):
+            before = qwen_preference_compiler.STATS.compile_calls
+            qwen_rules = qwen_preference_compiler.compile_with_qwen(
+                api=api,
+                pref_hash=pref_hash,
+                preferences=status.preferences,
+                fallback_amounts=amount_payloads,
+            )
+            if qwen_preference_compiler.STATS.compile_calls > before:
+                _COMPILE_BUDGET.record_compile(status.driver_id)
+        else:
+            qwen_preference_compiler.record_budget_blocked()
+            qwen_rules = None
+        if qwen_rules is not None:
+            return CompiledPreferenceSet(pref_hash=pref_hash, rules=qwen_rules)
     rules: list[CompiledPreferenceRule] = []
     for idx, item in enumerate(status.preferences):
         evidence = _preference_content(item)
-        amount_payload = _amount_payload(item)
+        amount_payload = amount_payloads[idx]
         kind, scope, condition, repairability, confidence = _compile_shape(evidence, amount_payload)
         rules.append(
             CompiledPreferenceRule(

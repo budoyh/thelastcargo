@@ -61,6 +61,17 @@ def _certificate_for(option: CandidateOption, observed_ids: set[str]) -> ActionC
 def reposition_payback_allowed(option: CandidateOption, world: World) -> bool:
     if option.action_type != "reposition":
         return True
+    if option.trace.get("micro_reposition"):
+        if option.deadhead_km > config.RESCUE_MICRO_REPOSITION_MAX_KM:
+            option.action_cert.reasons.append("micro_reposition_too_far") if option.action_cert else None
+            return False
+        if world.endgame.intensity >= config.ENDGAME_HIGH:
+            option.action_cert.reasons.append("endgame_high") if option.action_cert else None
+            return False
+        if option.pref_cert and option.pref_cert.high_confidence_irreversible_violation:
+            option.action_cert.reasons.append("preference_damage") if option.action_cert else None
+            return False
+        return True
     expected_gain = float(option.trace.get("expected_gain", 0.0))
     empty_cost = abs(option.direct_money)
     payback_p50 = float(option.trace.get("payback_time_p50", 10**9))

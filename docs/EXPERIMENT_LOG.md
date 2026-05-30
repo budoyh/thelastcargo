@@ -1,5 +1,13 @@
 # EXPERIMENT LOG
 
+## EXP-006 Score Rescue Workstream
+
+- branch: `crown-y-score-rescue`
+- baseline failure reference: 20260529 31-day run had net `-18953.97`, preference penalty `24700`, take `13`, wait `1806`, query minutes `8499`, wait_regret `1797`, Qwen runtime calls `0`.
+- implemented rescue line: SafeProfitGreedy query, post-query World refresh, RescueScorer, wait-lock forensic trace, repeated-wait loop breaker, current-visible micro-reposition candidate, capped soft preference/time/two-hop scoring, Qwen preference DSL compiler.
+- final evidence files: `reports/baseline_comparison.md`, `reports/score_rescue_ablation.md`, `reports/score_forensic_audit.md`, `reports/regret_dashboard_v2.md`, `reports/qwen_preference_compile_report.md`, `reports/subagent_reviews_score_rescue.md`, `reports/score_rescue_final_report.md`.
+- final result is determined only by `reports/score_rescue_final_report.md`; negative-net or wait-heavy rescue variants remain forensic failures.
+
 ## EXP-001 Unit and Compliance Baseline
 
 - time: 2026-05-31 local
