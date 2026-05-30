@@ -191,7 +191,7 @@ Note: the current 20260529 income script does not match the old 20260509 prefere
 
 | reviewer | initial result | remediation |
 |---|---|---|
-| Prompt-Adherence | re-review blocked only on final report commit/push closure | final report prepared; implementation commit made; preference certificate strengthened; reposition default OFF; stability audit generated; final commit/push closure pending below |
+| Prompt-Adherence | re-review blocked only before final commit/push closure | final report prepared; implementation commit made; preference certificate strengthened; reposition default OFF; stability audit generated; final report is now committed and branch pushed |
 | Compliance | allowed: audit P0=0 | kept audit green after edits |
 | Safety & Runtime | blocked: fallback wait horizon overflow and trace audit fields | wait/fallback/finalize horizon clamp; trace certificate fields; regression tests |
 | Regret & Ablation | blocked: weak regret report and reposition evidence | fixed payback recovery logic; full ablation/regret tables; reposition OFF |
