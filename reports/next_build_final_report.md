@@ -7,7 +7,8 @@ DO NOT SUBMIT: score-push threshold not reached.
 - Stop condition: `DO_NOT_SUBMIT_WITH_FRONTIER_EVIDENCE`.
 - Branch: `crown-y-next-build`.
 - Base rescue commit: `0f2af10bd3a35754ee198ee83c053a6d17797714`.
-- Final handoff commit: recorded by `git rev-parse HEAD` after the final commit/push step.
+- Implementation audit commit: `7fd0653` (`Run CROWN-Y next build frontier audit`).
+- Final handoff commit: the branch HEAD after the report-record commit; verify with `git rev-parse HEAD`.
 - Reason: the best 20260529 official net is `2240.98`, below the required `40000` score-push gate and below the rescue reference `5067.69`.
 
 ## Environment
