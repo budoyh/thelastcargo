@@ -75,6 +75,33 @@ def _compile_shape(content: str, payload: dict[str, Any]) -> tuple[str, str, dic
     numbers = _numeric_values(content)
     has_clock = bool(CLOCK_RE.search(content))
     targets = _coordinate_targets(content)
+    lower = content.lower()
+    off_day_terms = (
+        "off day",
+        "free day",
+        "complete day",
+        "full day",
+        "no orders",
+        "no order",
+        "整天",
+        "自然月",
+        "不接单",
+    )
+    field_terms = (
+        "cargo category",
+        "cargo label",
+        "cargo type",
+        "cargo name",
+        "pickup city",
+        "dropoff city",
+        "start city",
+        "end city",
+        "品类",
+        "货源",
+        "装货地",
+        "卸货地",
+        "城市",
+    )
     amount = max(0.0, float(payload.get("amount", 0.0) or 0.0))
     cap = payload.get("cap")
     kind = "unknown"
@@ -91,6 +118,16 @@ def _compile_shape(content: str, payload: dict[str, Any]) -> tuple[str, str, dic
         scope = "day"
         repairability = "repairable_until_deadline"
         repair_actions = ("wait",)
+    elif any(term in lower for term in off_day_terms):
+        kind = "quota_constraint"
+        scope = "whole_period"
+        repairability = "repairable_by_quota"
+        repair_actions = ("full_offday_wait", "wait")
+    elif any(term in lower for term in field_terms):
+        kind = "cargo_field_constraint"
+        scope = "whole_period"
+        repairability = "irreversible_after_action"
+        repair_actions = ("avoid_take",)
     elif numbers:
         kind = "distance_budget"
         scope = "whole_period"
@@ -106,6 +143,10 @@ def _compile_shape(content: str, payload: dict[str, Any]) -> tuple[str, str, dic
         "penalty_cap": cap,
         "target_coordinates": targets,
     }
+    if kind == "quota_constraint":
+        plausible_counts = [int(v) for v in numbers if 0 < v <= 31 and float(v).is_integer()]
+        condition["required_count"] = min(plausible_counts) if plausible_counts else 1
+        condition["quota_subject"] = "off_day"
     confidence = 0.34
     if amount > 0:
         confidence += 0.16
@@ -120,6 +161,75 @@ def _compile_shape(content: str, payload: dict[str, Any]) -> tuple[str, str, dic
     if repairability == "partially_repairable":
         repairability = "repairable_by_quota"
     return kind, scope, condition, repairability, min(0.82, confidence), repair_actions
+
+
+def _predicate_spec(
+    *,
+    kind: str,
+    scope: str,
+    condition: dict[str, Any],
+    amount_payload: dict[str, Any],
+    evidence: str,
+) -> dict[str, Any]:
+    amount = float(amount_payload.get("amount", 0.0) or 0.0)
+    cap = amount_payload.get("cap")
+    evidence_hash = hashlib.sha256(evidence.encode("utf-8")).hexdigest()[:16] if evidence else ""
+    if kind == "location_relation":
+        predicate_type = "location_visit"
+        fields = ("position_after",)
+        operator = "near_target_then_wait"
+        values = tuple(condition.get("target_coordinates") or ())
+        coordinate_target = condition.get("target_coordinates") or "unknown"
+        unresolved = "" if values else "unresolved_location_target"
+    elif kind == "time_window_constraint":
+        predicate_type = "continuous_wait"
+        fields = ("wait_interval", "action_interval")
+        operator = "ge_continuous_minutes"
+        values = tuple(condition.get("time_window_minutes") or ())
+        coordinate_target = "unknown"
+        unresolved = ""
+    elif kind == "distance_budget":
+        predicate_type = "pickup_deadhead_limit"
+        fields = ("pickup_deadhead_km",)
+        operator = "<="
+        values = tuple(v for v in (condition.get("numeric_min"), condition.get("numeric_max")) if v is not None)
+        coordinate_target = "unknown"
+        unresolved = ""
+    elif kind == "quota_constraint":
+        predicate_type = "off_day_quota"
+        fields = ("day_action_count",)
+        operator = ">="
+        values = (condition.get("required_count", "unknown"),)
+        coordinate_target = "unknown"
+        unresolved = ""
+    elif kind == "cargo_field_constraint":
+        predicate_type = "cargo_field_match"
+        fields = ("cargo_name", "start_city", "end_city")
+        operator = "in_observed_vocab"
+        values = ()
+        coordinate_target = "unknown"
+        unresolved = "needs_observed_vocab_link"
+    else:
+        predicate_type = "unknown"
+        fields = ()
+        operator = "unknown"
+        values = ()
+        coordinate_target = "unknown"
+        unresolved = "no_executable_predicate"
+    return {
+        "predicate_type": predicate_type,
+        "fields": fields,
+        "operator": operator,
+        "values": values,
+        "time_scope": scope,
+        "deadline": condition.get("deadline_day", "unknown"),
+        "counter": condition.get("required_count", "unknown"),
+        "coordinate_target": coordinate_target,
+        "penalty_amount": amount,
+        "penalty_cap": cap if isinstance(cap, float) else None,
+        "evidence_hash": evidence_hash,
+        "unresolved_reason": unresolved,
+    }
 
 
 def compile_if_changed(
@@ -154,6 +264,7 @@ def compile_if_changed(
         evidence = _preference_content(item)
         amount_payload = amount_payloads[idx]
         kind, scope, condition, repairability, confidence, repair_actions = _compile_shape(evidence, amount_payload)
+        spec = _predicate_spec(kind=kind, scope=scope, condition=condition, amount_payload=amount_payload, evidence=evidence)
         rules.append(
             CompiledPreferenceRule(
                 rule_id=f"pref_{idx}",
@@ -165,6 +276,7 @@ def compile_if_changed(
                 evidence=evidence,
                 confidence=confidence,
                 repair_action_kinds=repair_actions,
+                **spec,
             )
         )
     return CompiledPreferenceSet(pref_hash=pref_hash, rules=tuple(rules))

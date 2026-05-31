@@ -87,6 +87,7 @@ LEARNED_OOD_SHRINK = 0.2
 LLM_MAX_COMPILE_CALLS_PER_DRIVER = 12
 LLM_MAX_JUDGE_CALLS_PER_DRIVER = 0
 LLM_MAX_JUDGE_CALLS_PER_DAY = 0
+LLM_MAX_LINKER_CALLS_TOTAL = 4
 LLM_TIMEOUT_SECONDS = 3.0
 
 RESCUE_QUERY_K_DEFAULT = 120
@@ -119,6 +120,7 @@ ENABLE_NEXT_DYNAMIC_QUERY_K = False
 ENABLE_NEXT_NO_QUERY_REST_BLOCK = False
 ENABLE_NEXT_OBSERVATION_REPOSITION = False
 ENABLE_NEXT_PREFERENCE_STATE_MACHINE = False
+ENABLE_PCE_REPAIR_FIRST = False
 
 _VARIANT = os.environ.get("CROWN_Y_VARIANT", "").strip().lower()
 RESCUE_VARIANT = _VARIANT
@@ -163,6 +165,12 @@ if _VARIANT in {
     "dynamic_query_reposition",
     "preference_state_machine",
     "next_best",
+    "predicate_compiler_only",
+    "predicate_vocab_linker",
+    "predicate_repair_planner",
+    "predicate_repair_verifier",
+    "pce_repair_first",
+    "pce_final",
 }:
     ENABLE_RESCUE_SCORER = True
     ENABLE_SCOUT_THEN_DEEPEN = False
@@ -232,6 +240,32 @@ if _VARIANT in {"preference_state_machine", "next_best"}:
     ENABLE_NEXT_PREFERENCE_STATE_MACHINE = True
     ENABLE_RESCUE_MICRO_REPOSITION = True
     RESCUE_FULL_REST_PERIOD_DAYS = 10
+
+if _VARIANT in {
+    "predicate_compiler_only",
+    "predicate_vocab_linker",
+    "predicate_repair_planner",
+    "predicate_repair_verifier",
+    "pce_repair_first",
+    "pce_final",
+}:
+    ENABLE_QWEN_PREFERENCE_COMPILER = True
+    ENABLE_RESCUE_PREFERENCE_SOFT = True
+    ENABLE_NEXT_MARGINAL_PREF = True
+    ENABLE_NEXT_DYNAMIC_QUERY_K = True
+    RESCUE_DIRECT_NET_FLOOR = 1.0
+    RESCUE_PROFIT_PER_HOUR_FLOOR = 0.0
+    RESCUE_QUERY_K_DEFAULT = 200
+
+if _VARIANT in {"predicate_repair_planner", "predicate_repair_verifier", "pce_repair_first", "pce_final"}:
+    ENABLE_RESCUE_REST_GUARD = True
+    ENABLE_NEXT_NO_QUERY_REST_BLOCK = True
+    ENABLE_NEXT_PREFERENCE_STATE_MACHINE = True
+    ENABLE_PCE_REPAIR_FIRST = True
+
+if _VARIANT in {"pce_repair_first", "pce_final"}:
+    ENABLE_RESCUE_MICRO_REPOSITION = True
+    ENABLE_NEXT_OBSERVATION_REPOSITION = True
 
 if _VARIANT in {"best_rescue", "a7"}:
     RESCUE_QUERY_K_DEFAULT = 120

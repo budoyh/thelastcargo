@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import hashlib
 import os
 import re
 import urllib.error
@@ -27,6 +28,27 @@ ALLOWED_KINDS = {
 ALLOWED_SCOPES = {"single_action", "day", "rolling_window", "month", "date_specific", "whole_period", "unknown"}
 ALLOWED_REPAIR = {"irreversible", "irreversible_after_action", "repairable_until_deadline", "repairable_by_quota", "always_soft", "unknown"}
 ALLOWED_REPAIR_ACTIONS = {"wait", "reposition_to_target", "take_towards_target", "avoid_take", "none", "unknown"}
+ALLOWED_PREDICATE_TYPES = {
+    "cargo_field_match",
+    "action_time_overlap",
+    "continuous_wait",
+    "off_day_quota",
+    "pickup_deadhead_limit",
+    "location_visit",
+    "route_sequence",
+    "count_distinct_days",
+    "unknown",
+}
+ALLOWED_OPERATORS = {
+    "contains_any",
+    "<=",
+    "overlaps",
+    "ge_continuous_minutes",
+    "count_distinct_days_ge",
+    "near_target_then_wait",
+    "sequence_before_deadline",
+    "unknown",
+}
 
 
 @dataclass
@@ -40,6 +62,10 @@ class CompileStats:
     preferences_nonempty_count: int = 0
     dummy_key_blocked_count: int = 0
     budget_blocked_count: int = 0
+    linker_calls: int = 0
+    auditor_calls: int = 0
+    timeout_count: int = 0
+    budget_exhausted_count: int = 0
     token_usage_input: int = 0
     token_usage_output: int = 0
     token_usage_total: int = 0
@@ -64,15 +90,17 @@ def _active_api_key() -> tuple[str, str, str]:
 
 def _prompt(preferences: tuple[Any, ...] | list[Any]) -> str:
     return (
-        "Compile runtime driver preferences into abstract JSON DSL only. "
-        "Do not choose actions. Use only abstract fields: time windows, counts, "
-        "location relations, sequence, rest, reward/penalty, evidence span, confidence, "
-        "deadline hints, repair window hints, and repair_action_kinds. "
-        "When the preference states a count, date/day, clock window, or coordinate-like target, "
-        "put abstract parsed values in condition keys such as required_count, date_day, "
-        "deadline_day, time_window_minutes, and target_coordinates. "
-        "repair_action_kinds must be abstract labels only from wait, reposition_to_target, "
-        "take_towards_target, avoid_take, none, unknown. "
+        "Compile runtime driver preferences into executable predicate JSON only. "
+        "Do not choose actions. Use only abstract schema fields. Each rule needs "
+        "predicate_type, fields, operator, values, time_scope, deadline, counter, "
+        "coordinate_target, repair_action_kinds, penalty_amount, penalty_cap, "
+        "confidence, evidence_hash, and unresolved_reason. predicate_type must be "
+        "one of cargo_field_match, action_time_overlap, continuous_wait, "
+        "off_day_quota, pickup_deadhead_limit, location_visit, route_sequence, "
+        "count_distinct_days, unknown. values may include runtime values from "
+        "preference evidence only; unresolved rules must use predicate_type unknown. "
+        "repair_action_kinds must use abstract labels only from wait, "
+        "reposition_to_target, take_towards_target, avoid_take, none, unknown. "
         "Return a JSON object with key rules. Preferences: "
         + json.dumps(list(preferences), ensure_ascii=False, sort_keys=True)
     )
@@ -147,6 +175,38 @@ def _repair_actions(raw: dict[str, Any]) -> tuple[str, ...]:
     return tuple(out or ("unknown",))
 
 
+def _tuple_strings(value: Any, allowed: set[str] | None = None) -> tuple[str, ...]:
+    if isinstance(value, str):
+        items = [value]
+    elif isinstance(value, list):
+        items = [str(item) for item in value]
+    else:
+        items = []
+    out: list[str] = []
+    for item in items:
+        normalized = item.strip()
+        if allowed is not None and normalized not in allowed:
+            continue
+        if normalized not in out:
+            out.append(normalized)
+    return tuple(out)
+
+
+def _evidence_hash(raw: dict[str, Any]) -> str:
+    value = raw.get("evidence_hash")
+    if isinstance(value, str) and len(value.strip()) >= 8:
+        return value.strip()[:24]
+    evidence = str(raw.get("evidence", ""))
+    return hashlib.sha256(evidence.encode("utf-8")).hexdigest()[:16] if evidence else ""
+
+
+def _float_or_default(value: Any, default: float) -> float:
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return default
+
+
 def _rule_from_payload(idx: int, raw: dict[str, Any], fallback_amount: dict[str, Any]) -> CompiledPreferenceRule:
     kind = str(raw.get("kind", "unknown")).strip()
     scope = str(raw.get("scope", "unknown")).strip()
@@ -154,6 +214,14 @@ def _rule_from_payload(idx: int, raw: dict[str, Any], fallback_amount: dict[str,
     if repair == "irreversible":
         repair = "irreversible_after_action"
     reward = raw.get("reward_or_penalty")
+    penalty_amount = _float_or_default(raw.get("penalty_amount"), _float_or_default(fallback_amount.get("amount"), 0.0))
+    cap_raw = raw.get("penalty_cap", fallback_amount.get("cap"))
+    try:
+        penalty_cap = None if cap_raw is None else float(cap_raw)
+    except (TypeError, ValueError):
+        penalty_cap = None
+    predicate_type = str(raw.get("predicate_type", raw.get("kind", "unknown"))).strip()
+    operator = str(raw.get("operator", "unknown")).strip()
     confidence = raw.get("confidence", 0.0)
     try:
         conf = max(0.0, min(1.0, float(confidence)))
@@ -169,6 +237,18 @@ def _rule_from_payload(idx: int, raw: dict[str, Any], fallback_amount: dict[str,
         evidence=str(raw.get("evidence", "")),
         confidence=conf,
         repair_action_kinds=_repair_actions(raw),
+        predicate_type=predicate_type if predicate_type in ALLOWED_PREDICATE_TYPES else "unknown",
+        fields=_tuple_strings(raw.get("fields")),
+        operator=operator if operator in ALLOWED_OPERATORS else "unknown",
+        values=tuple(raw.get("values", ())) if isinstance(raw.get("values"), list) else tuple(),
+        time_scope=str(raw.get("time_scope", scope if scope in ALLOWED_SCOPES else "unknown")),
+        deadline=raw.get("deadline", "unknown"),
+        counter=raw.get("counter", "unknown"),
+        coordinate_target=raw.get("coordinate_target", raw.get("target_coordinates", "unknown")),
+        penalty_amount=penalty_amount,
+        penalty_cap=penalty_cap,
+        evidence_hash=_evidence_hash(raw),
+        unresolved_reason=str(raw.get("unresolved_reason", "")),
     )
 
 
@@ -178,8 +258,17 @@ def has_cached(pref_hash: str) -> bool:
 
 def record_budget_blocked() -> None:
     STATS.budget_blocked_count += 1
+    STATS.budget_exhausted_count += 1
     STATS.fallback_unknown_count += 1
     STATS.last_error_type = "compile_budget_exhausted"
+
+
+def record_linker_call() -> None:
+    STATS.linker_calls += 1
+
+
+def record_auditor_call() -> None:
+    STATS.auditor_calls += 1
 
 
 def compile_with_qwen(
@@ -238,6 +327,8 @@ def compile_with_qwen(
         STATS.api_error_count += 1
         STATS.fallback_unknown_count += 1
         STATS.last_error_type = exc.__class__.__name__
+        if exc.__class__.__name__.lower().endswith("timeout"):
+            STATS.timeout_count += 1
         return None
 
 
@@ -249,10 +340,15 @@ def stats_payload() -> dict[str, Any]:
         "cache_hits": STATS.cache_hits,
         "cache_misses": STATS.cache_misses,
         "fallback_unknown_count": STATS.fallback_unknown_count,
+        "fallback_count": STATS.fallback_unknown_count,
         "api_error_count": STATS.api_error_count,
         "preferences_nonempty_count": STATS.preferences_nonempty_count,
         "dummy_key_blocked_count": STATS.dummy_key_blocked_count,
         "budget_blocked_count": STATS.budget_blocked_count,
+        "linker_calls": STATS.linker_calls,
+        "auditor_calls": STATS.auditor_calls,
+        "timeout_count": STATS.timeout_count,
+        "budget_exhausted_count": STATS.budget_exhausted_count,
         "token_usage_input": STATS.token_usage_input,
         "token_usage_output": STATS.token_usage_output,
         "token_usage_total": STATS.token_usage_total,

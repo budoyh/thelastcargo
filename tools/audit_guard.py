@@ -18,6 +18,26 @@ BLOCKED_IMPORT_PREFIXES = ("server", "bench", "calc_monthly_income")
 BLOCKED_STATE_IMPORTS = ("simkit.cargo_repository", "simkit.driver_state_manager")
 ID_PATTERN = re.compile(r"(['\"])(D\\d{3}|C\\d{3,}|cargo_[^'\"]+)\\1")
 COORD_TABLE_PATTERN = re.compile(r"\[(?:\s*[-+]?\d{1,3}\.\d{3,}\s*,\s*[-+]?\d{1,3}\.\d{3,}\s*,?){3,}\s*\]")
+ORACLE_ARTIFACT_MARKERS = (
+    "reports/oracle_gap.csv",
+    "reports/predicate_eval.csv",
+    "reports/pce_experiments.csv",
+    "reports/action_forensics.csv",
+    "tools/offline_",
+    "tools/exact_marginal_penalty_dataset.py",
+    "tools/money_trajectory_repair.py",
+    "full_info_trajectory",
+    "money_repair_trajectory",
+)
+PCE_REPORTS = (
+    "pce_final_report.md",
+    "pce_experiments.csv",
+    "oracle_gap.csv",
+    "predicate_eval.csv",
+    "action_forensics.csv",
+)
+RAW_ID_PATTERN = re.compile(r"\b(?:D\d{3}|C\d{3,}|cargo_[0-9A-Fa-f]{6,}|cargo-[A-Za-z0-9_-]+)\b")
+RAW_COORD_PATTERN = re.compile(r"(?<![\w.-])-?\d{1,2}\.\d{4,}\s*,\s*-?\d{2,3}\.\d{4,}(?![\w.-])")
 FORBIDDEN_TERM_HASHES = {
     "5974c91c514b3c069594619015dc3a63d26e0eaeea21e4a6e572fc9bf599157b",
     "710e6b10f5d6fc3558261af1d831346a17727f2de4c8dbff923117e08fad7676",
@@ -48,6 +68,13 @@ def iter_scanned_files() -> list[Path]:
         if path.is_file():
             files.append(path)
     return sorted(files)
+
+
+def iter_pce_report_files() -> list[Path]:
+    reports = ROOT / "reports"
+    if not reports.exists():
+        return []
+    return sorted(path for name in PCE_REPORTS if (path := reports / name).is_file())
 
 
 def _line_for_offset(text: str, offset: int) -> int:
@@ -82,6 +109,55 @@ def scan_text(path: Path, text: str) -> list[Finding]:
     if COORD_TABLE_PATTERN.search(text):
         match = COORD_TABLE_PATTERN.search(text)
         findings.append(Finding("P1", path, _line_for_offset(text, match.start()), "coordinate_table_risk", "large coordinate literal table"))
+    return findings
+
+
+def scan_runtime_oracle_boundary(path: Path, text: str) -> list[Finding]:
+    findings: list[Finding] = []
+    try:
+        path.relative_to(AGENT_DIR)
+    except ValueError:
+        return findings
+    normalized = text.replace("\\", "/")
+    for marker in ORACLE_ARTIFACT_MARKERS:
+        idx = normalized.find(marker)
+        if idx >= 0:
+            findings.append(
+                Finding(
+                    "P0",
+                    path,
+                    _line_for_offset(normalized, idx),
+                    "runtime_oracle_artifact_reference",
+                    marker,
+                )
+            )
+    return findings
+
+
+def scan_pce_report_redaction(path: Path, text: str) -> list[Finding]:
+    findings: list[Finding] = []
+    if path.name not in PCE_REPORTS:
+        return findings
+    for match in RAW_ID_PATTERN.finditer(text):
+        findings.append(
+            Finding(
+                "P0",
+                path,
+                _line_for_offset(text, match.start()),
+                "pce_report_raw_id",
+                "raw id redaction required",
+            )
+        )
+    for match in RAW_COORD_PATTERN.finditer(text):
+        findings.append(
+            Finding(
+                "P0",
+                path,
+                _line_for_offset(text, match.start()),
+                "pce_report_raw_coordinate",
+                "raw coordinate redaction required",
+            )
+        )
     return findings
 
 
@@ -132,6 +208,11 @@ def run_scan() -> list[Finding]:
         text = path.read_text(encoding="utf-8", errors="ignore")
         findings.extend(scan_text(path, text))
         findings.extend(scan_imports(path, text))
+        findings.extend(scan_runtime_oracle_boundary(path, text))
+    for path in iter_pce_report_files():
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        findings.extend(scan_text(path, text))
+        findings.extend(scan_pce_report_redaction(path, text))
     findings.extend(check_config())
     return findings
 

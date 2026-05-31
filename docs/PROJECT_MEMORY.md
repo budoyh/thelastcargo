@@ -1,5 +1,18 @@
 # PROJECT MEMORY
 
+## CROWN-PCE Oracle Gap Memory
+
+- Active branch is `crown-pce-oracle-gap`; this branch continues from the existing Next Build work rather than rebuilding from scratch.
+- Current evidence says legal runs, Qwen calls, and complete reports are not enough: the 20260529 Next Build frontier topped out at official net `2240.98`, while rescue reference was `5067.69`.
+- Dominant failure is the high-gross/high-penalty versus strict-preference/low-gross split. CROWN-PCE must first prove the reachable score space with offline oracles, then close the executable preference predicate gap.
+- Score Accountant conclusion from prior evidence: official net already equals gross income minus distance cost minus preference penalty. Do not use any net-minus-penalty proxy.
+- PCE final stop states are `PCE_STRONG_SUCCESS`, `PCE_PARTIAL_SUCCESS`, `DO_NOT_SUBMIT_WITH_ORACLE_EVIDENCE`, or `EXTERNAL_BLOCKER`.
+- PCE final artifacts are limited to `reports/pce_final_report.md`, `reports/pce_experiments.csv`, `reports/oracle_gap.csv`, `reports/predicate_eval.csv`, and `reports/action_forensics.csv`.
+- Runtime P0 boundary remains strict: only `SimulationApiPort`, no raw data reads, no `server.*` or `bench.*`, no future information, no hardcoded driver/cargo/place/route/fixed-coordinate features, no Destination Shadow Query, no remembered-cargo take after `no_query`.
+- Qwen3.5-Flash remains ON for non-empty preferences when available, but only for Preference Compiler v2, Observed Vocabulary Linker, and gated Candidate Auditor. It must not choose final actions.
+- Protected example terms and scenario shortcut words must remain redacted in committed files.
+- Offline oracle and label tools may read public debug data and official scoring code, but runtime must not read or reference oracle artifacts, exact-label outputs, money-repair trajectories, full-info trajectories, raw ids, static places, fixed coordinates, fixed routes, or future availability.
+
 ## Next Build v4 Memory
 
 - Starting branch for this work is `crown-y-score-rescue` at `0f2af10`; work branch is `crown-y-next-build`.

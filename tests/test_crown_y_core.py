@@ -20,6 +20,9 @@ from agent import (  # noqa: E402
     learned_ranker,
     llm_preference_judge,
     micro_reposition,
+    observed_vocab_linker,
+    candidate_preference_verifier,
+    preference_repair_planner,
     preference_repair,
     preference_monitor,
     qwen_preference_compiler,
@@ -960,3 +963,58 @@ def test_preference_repair_uses_runtime_dsl_target(monkeypatch):
     )
     take = candidate_generator.build_options(world2, visible, "d1")[0]
     assert preference_repair.take_repair_bonus(take, world2) > 0
+
+
+def test_fallback_compiler_emits_executable_predicate_spec():
+    world1, _, _ = build_world(preferences=[{"content": "limit 55 km", "penalty_amount": 120}])
+    rule = world1.rules.rules[0]
+    assert rule.predicate_type == "pickup_deadhead_limit"
+    assert rule.operator == "<="
+    assert "pickup_deadhead_km" in rule.fields
+    assert rule.evidence_hash
+
+
+def test_observed_vocab_linker_uses_current_visible_vocab_only():
+    world1, _, _ = build_world(preferences=[{"content": "abstract alpha", "penalty_amount": 100}])
+    visible = cargo_filter.normalize_and_filter(
+        raw_cargos=[cargo_item("A") | {"cargo": cargo_item("A")["cargo"] | {"cargo_name": "alpha"}}],
+        world=world1,
+        source_scope=CURRENT_ACTIONABLE,
+        decision_id="d1",
+    )
+    links = observed_vocab_linker.link_current_observed_vocab(
+        api=None,
+        pref_hash=world1.pref_hash,
+        preferences=world1.status.preferences,
+        rules=world1.rules.rules,
+        visible=visible,
+    )
+    assert links
+    assert links[0].source == "current_observed_vocab"
+    assert links[0].value_hash
+
+
+def test_candidate_verifier_prices_deadhead_predicate():
+    world1, _, _ = build_world(preferences=[{"content": "limit 55 km", "penalty_amount": 120}])
+    option = CandidateOption(
+        id="take:long-deadhead",
+        action_type="take_order",
+        decision_id="d1",
+        direct_money=500,
+        occupied_minutes=120,
+        deadhead_km=70,
+        haul_km=10,
+        finish_minutes=120,
+    )
+    checks = candidate_preference_verifier.verify_candidate(option, world1, tuple())
+    assert any(item.marginal_effect == "violates" and item.predicted_marginal_penalty > 0 for item in checks)
+
+
+def test_pce_repair_planner_builds_no_query_rest_block(monkeypatch):
+    monkeypatch.setattr(config, "ENABLE_PCE_REPAIR_FIRST", True)
+    world1, _, _ = build_world(now=0, preferences=[{"content": "abstract rest", "penalty_amount": 1000}])
+    repairs = preference_repair_planner.build_repair_candidates(world1, "d1")
+    assert repairs
+    assert repairs[0].action_type == "wait"
+    assert repairs[0].trace["repair_kind"] == "no_query_rest_block"
+    assert repairs[0].trace["action_certificate_required"] is True

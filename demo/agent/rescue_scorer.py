@@ -79,6 +79,13 @@ def hard_block_reason(option: CandidateOption, min_direct: float, min_per_hour: 
 def rescue_operating_block(option: CandidateOption, world: World) -> str | None:
     if option.action_type != "take_order" or not config.ENABLE_RESCUE_REST_GUARD or not world.status.preferences:
         return None
+    if config.ENABLE_PCE_REPAIR_FIRST:
+        start = world.status.simulation_progress_minutes
+        next_boundary = ((start // 1440) + 1) * 1440
+        if option.finish_minutes > next_boundary:
+            return "pce_daily_repair_boundary"
+        if _rest_window_overlap_minutes(start, option.finish_minutes) > 0:
+            return "pce_rest_window_overlap"
     if config.ENABLE_NEXT_MARGINAL_PREF:
         return None
     start = world.status.simulation_progress_minutes
@@ -227,7 +234,7 @@ def wait_forensic(chosen: CandidateOption, options: list[CandidateOption], stats
         top_rejected.append(
             {
                 "candidate_id": option.id,
-                "cargo_id": option.cargo.cargo_id if option.cargo else None,
+                "cargo_id": None,
                 "candidate_hash": hashlib.sha256(option.id.encode("utf-8")).hexdigest()[:12],
                 "cargo_id_hash": cargo_hash,
                 "direct_net": round(option.direct_money, 2),

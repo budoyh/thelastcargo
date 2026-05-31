@@ -50,6 +50,9 @@ class NormalizedCargo:
     load_start_minutes: int | None
     load_end_minutes: int | None
     haul_distance_km: float
+    cargo_name: str = ""
+    start_city: str = ""
+    end_city: str = ""
 
 
 @dataclass(frozen=True)
@@ -63,6 +66,18 @@ class CompiledPreferenceRule:
     evidence: str
     confidence: float
     repair_action_kinds: tuple[str, ...] = ()
+    predicate_type: str = "unknown"
+    fields: tuple[str, ...] = ()
+    operator: str = "unknown"
+    values: tuple[Any, ...] = ()
+    time_scope: str = "unknown"
+    deadline: Any = "unknown"
+    counter: Any = "unknown"
+    coordinate_target: Any = "unknown"
+    penalty_amount: float = 0.0
+    penalty_cap: float | None = None
+    evidence_hash: str = ""
+    unresolved_reason: str = ""
 
 
 @dataclass(frozen=True)

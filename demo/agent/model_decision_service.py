@@ -16,7 +16,10 @@ from . import (
     learned_ranker,
     llm_preference_judge,
     micro_reposition,
+    candidate_preference_verifier,
+    observed_vocab_linker,
     preference_repair,
+    preference_repair_planner,
     preference_monitor,
     query_policy,
     qwen_preference_compiler,
@@ -205,9 +208,22 @@ class ModelDecisionService:
         repair = preference_repair.build_repair_candidate(world_after_query, decision_id)
         if repair is not None:
             options.append(repair)
+        if config.ENABLE_PCE_REPAIR_FIRST:
+            options.extend(preference_repair_planner.build_repair_candidates(world_after_query, decision_id))
+            vocab_links = observed_vocab_linker.link_current_observed_vocab(
+                api=self._api,
+                pref_hash=world_after_query.pref_hash,
+                preferences=world_after_query.status.preferences,
+                rules=world_after_query.rules.rules,
+                visible=visible,
+            )
+        else:
+            vocab_links = tuple()
         observed_ids = {cargo.cargo_id for cargo in visible}
         options = safety.pre_filter_and_attach_action_certificate(options, world_after_query, observed_ids)
         options, rescue_stats = rescue_scorer.score_options(options, world_after_query, runtime.wait_lock)
+        if config.ENABLE_PCE_REPAIR_FIRST:
+            options = candidate_preference_verifier.apply_to_options(options, world_after_query, vocab_links)
         rest_option, rest_reason = self._rescue_rest_option(runtime, world_after_query, decision_id)
         chosen = rest_option if rest_option is not None else rescue_scorer.choose(options, rescue_stats, runtime.wait_lock)
         action = safety.finalize(chosen, world_after_query)

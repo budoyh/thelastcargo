@@ -1,5 +1,16 @@
 # EXPERIMENT LOG
 
+## EXP-008 CROWN-PCE Oracle Gap Start
+
+- branch: `crown-pce-oracle-gap`
+- start point: current `crown-y-next-build` worktree with prior Next Build evidence retained.
+- stop states: `PCE_STRONG_SUCCESS`, `PCE_PARTIAL_SUCCESS`, `DO_NOT_SUBMIT_WITH_ORACLE_EVIDENCE`, or `EXTERNAL_BLOCKER`.
+- known 20260529 evidence: best Next Build frontier official net `2240.98`; rescue reference official net `5067.69`.
+- required order: score accountant and redaction guard, offline oracle gap, marginal predicate labels, executable predicate compiler, observed vocabulary linker, candidate verifier, repair planner, runtime repair-first probe, 0529/0509/synthetic verification.
+- score accounting rule: official net already includes preference penalty; no double-count proxy.
+- final PCE report set: `reports/pce_final_report.md`, `reports/pce_experiments.csv`, `reports/oracle_gap.csv`, `reports/predicate_eval.csv`, `reports/action_forensics.csv`.
+- protected literal policy: write `literal banned terms redacted`, `scenario shortcuts redacted`, or `raw value redacted`; do not commit literal scanner lists.
+
 ## EXP-007 Next Build v4 Start
 
 - branch: `crown-y-next-build`

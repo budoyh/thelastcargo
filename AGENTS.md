@@ -1,5 +1,11 @@
 # CROWN-Y Tournament Build Rules
 
+- Current build is CROWN-PCE Oracle Gap Build on branch `crown-pce-oracle-gap`.
+- CROWN-PCE stop states are only `PCE_STRONG_SUCCESS`, `PCE_PARTIAL_SUCCESS`, `DO_NOT_SUBMIT_WITH_ORACLE_EVIDENCE`, or `EXTERNAL_BLOCKER`.
+- Do not frame test pass, legal action logs, Qwen availability, report completeness, or low positive score as success.
+- PCE final artifacts are limited to `reports/pce_final_report.md`, `reports/pce_experiments.csv`, `reports/oracle_gap.csv`, `reports/predicate_eval.csv`, and `reports/action_forensics.csv`.
+- Score accounting must use official net directly: `official_net = gross_income - distance_cost - preference_penalty`. Never use a proxy that subtracts preference penalty twice.
+- Before runtime strategy changes, produce offline oracle evidence, predicate evaluation evidence, and a redaction/compliance scan.
 - Build CROWN-Y Tournament Build only; do not build CROWN-Y Max.
 - Runtime agent code may use only the injected `SimulationApiPort` for state, cargo, history and model calls. It must not read raw data files or import server, bench or income-calculation internals.
 - Every `query_cargo` call must be followed by `refresh_world`; filtering, scoring and action certificates must use the post-query `World`.
@@ -35,3 +41,19 @@
 - `SCORE_PUSH_STRONG_SUCCESS` additionally requires 20260529 official net at least `70000`, preference penalty below `15000` or a rule-level unavoidable-penalty explanation, and value-positive reposition or strong no-reposition counterfactual evidence.
 - If score thresholds are not met after diagnostics and Pareto search, the first line of `reports/next_build_final_report.md` must be `DO NOT SUBMIT: score-push threshold not reached.` and the status must be `DO_NOT_SUBMIT_WITH_FRONTIER_EVIDENCE`.
 - Cloud or local heavy compute must stay isolated to this project, avoid disrupting other users or local stability, and use GPU resources only when materially useful.
+
+## CROWN-PCE Long-Lived Rules
+
+- Runtime code under `demo/agent` must not read raw datasets, import `server.*`, `bench.*`, scoring internals, or use future cargo availability.
+- Runtime code must not hardcode driver ids, cargo ids, static place names, fixed route sequences, fixed coordinates, offline heatmaps, or scenario shortcuts.
+- Protected example terms and scenario shortcut words are read-only context; repository files must refer to them only as `literal banned terms redacted`, `scenario shortcuts redacted`, or `raw value redacted`.
+- Qwen3.5-Flash Preference Compiler must stay ON for non-empty preferences when an API path is available. Use `SimulationApiPort.model_chat_completion` first, then the compatible endpoint with env priority `DASHSCOPE_API_KEY`, `BAILIAN_API_KEY`, `ALIYUN_API_KEY`; never print keys and never treat dummy keys as success.
+- Qwen roles are limited to Preference Compiler v2, Observed Vocabulary Linker, and gated Candidate Auditor. Qwen must not output the final action.
+- Preference Compiler v2 must emit executable predicate specs or mark rules unresolved. Unresolved rules are soft risk only and must not hard block.
+- Observed Vocabulary Linker may use only the current query result's visible vocabulary. Reports and caches committed to git must hash or redact values.
+- Candidate Preference Verifier must label top candidates as predicate match yes/no/unknown and marginal effect violates/repairs/neutral/reduces_repairability/unknown before scoring high-impact choices.
+- Repair candidates are first-class actions. Each repair action needs avoided penalty, repair value, lost profit, deadline, feasibility, confidence, and an action certificate.
+- Preference reposition can bypass the generic market payback gate only when runtime preference target evidence and repair value cover cost. Targets must come from runtime preference evidence or current visible clusters; no geocoding or static target tables.
+- Offline oracle, exact-label, and money-repair artifacts are diagnostic only. Runtime code must not import, read, cache, or reference reports, oracle trajectories, exact-label files, cargo ids, driver ids, static places, fixed coordinates, fixed routes, or future availability.
+- Required reviewers: prompt adherence, compliance/future-info, oracle/score-accounting, predicate compiler, marginal penalty dataset, runtime planner, code/test, and final audit. If true subagents are unavailable, perform read-only simulated reviews and record them in the final report.
+- Cloud or local heavy compute must remain isolated to this project, avoid disrupting other users or local stability, and use GPU only when materially useful.

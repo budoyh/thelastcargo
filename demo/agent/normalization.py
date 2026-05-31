@@ -78,6 +78,9 @@ def normalize_cargo_item(
         load_start_minutes=load_start,
         load_end_minutes=load_end,
         haul_distance_km=haversine_km(start_lat, start_lng, end_lat, end_lng),
+        cargo_name=str(cargo.get("cargo_name", "") or ""),
+        start_city=str(start.get("city", "") or ""),
+        end_city=str(end.get("city", "") or ""),
     )
 
 
