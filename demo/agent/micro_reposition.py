@@ -20,15 +20,17 @@ def build_candidate(world: World, visible: list[NormalizedCargo], decision_id: s
         return None
     weights = [max(1.0, c.price_yuan / max(1, c.cost_time_minutes)) for c in ranked]
     weight_sum = sum(weights)
+    best_visible_value = max((c.price_yuan - 1.5 * (c.pickup_distance_km + c.haul_distance_km) for c in ranked), default=0.0)
     target_lat = sum(c.start_lat * w for c, w in zip(ranked, weights)) / weight_sum
     target_lng = sum(c.start_lng * w for c, w in zip(ranked, weights)) / weight_sum
     distance = haversine_km(world.status.current_lat, world.status.current_lng, target_lat, target_lng)
     if distance < config.RESCUE_MICRO_REPOSITION_MIN_KM:
         return None
+    interpolation_ratio = 1.0
     if distance > config.RESCUE_MICRO_REPOSITION_MAX_KM:
-        ratio = config.RESCUE_MICRO_REPOSITION_MAX_KM / distance
-        target_lat = world.status.current_lat + (target_lat - world.status.current_lat) * ratio
-        target_lng = world.status.current_lng + (target_lng - world.status.current_lng) * ratio
+        interpolation_ratio = config.RESCUE_MICRO_REPOSITION_MAX_KM / distance
+        target_lat = world.status.current_lat + (target_lat - world.status.current_lat) * interpolation_ratio
+        target_lng = world.status.current_lng + (target_lng - world.status.current_lng) * interpolation_ratio
         distance = haversine_km(world.status.current_lat, world.status.current_lng, target_lat, target_lng)
     duration = max(1, int(distance / config.REPOSITION_SPEED_KM_PER_HOUR * 60.0 + 0.999999))
     if world.status.simulation_progress_minutes + duration > world.horizon.horizon_minutes:
@@ -48,7 +50,16 @@ def build_candidate(world: World, visible: list[NormalizedCargo], decision_id: s
         {
             "micro_reposition": True,
             "target_source": "current_visible_pickup_cluster",
+            "target_source_kind": "current_actionable_pickup_cluster",
+            "source_scope": "current_actionable",
+            "cluster_count": len(ranked),
+            "interpolation_ratio": interpolation_ratio,
             "distance_km": distance,
+            "empty_drive_cost": abs(distance * config.DEFAULT_COST_PER_KM),
+            "expected_gain_6h": max(0.0, best_visible_value) * 0.18,
+            "expected_gain_12h": max(0.0, best_visible_value) * 0.30,
+            "payback_p50_minutes": 360,
+            "payback_p80_minutes": 720,
             "payback_window_6h": 360,
             "payback_window_12h": 720,
         }

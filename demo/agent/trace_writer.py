@@ -36,6 +36,7 @@ def attach_trace(
     chosen: CandidateOption,
     options: list[CandidateOption] | None = None,
     query_minutes: int,
+    observed_count: int | None = None,
     rescue: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if config.SUBMIT_MODE:
@@ -64,7 +65,9 @@ def attach_trace(
         "trace_level": config.TRACE_LEVEL,
         "decision_id": chosen.decision_id,
         "query_plan": getattr(query_plan, "kind", "unknown"),
+        "query_k": int(getattr(query_plan, "k", 0) or 0),
         "query_minutes": int(query_minutes),
+        "returned_count": int(observed_count if observed_count is not None else len(visible_cargos)),
         "visible_count": len(visible_cargos),
         "time_market": {
             "productive_time_shadow_price": round(world.time_market.productive_time_shadow_price, 4),
@@ -96,6 +99,9 @@ def attach_exception_trace(
         "trace_level": "minimal" if config.SUBMIT_MODE else "full",
         "decision_id": decision_id,
         "query_plan": "exception_fallback",
+        "query_k": 0,
+        "query_minutes": 0,
+        "returned_count": 0,
         "visible_count": 0,
         "chosen": {
             "candidate_id": "exception_fallback_wait",
@@ -124,7 +130,9 @@ def attach_exception_trace(
                 "why_not_reposition": "decision_exception",
                 "why_wait_minutes": int(action.get("params", {}).get("duration_minutes", 0) or 0),
                 "why_wait_won": {"fallback": "exception", "exception_type": reason},
+                "top20_rejected_take": [],
                 "top_5_rejected_take": [],
+                "wait_lock_bug": False,
                 "hard_block_reason_counts": {"decision_exception": 1},
             },
         },

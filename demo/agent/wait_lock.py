@@ -79,6 +79,20 @@ class WaitLockState:
 def query_k(state: WaitLockState, world: World) -> int:
     if world.endgame.remaining_minutes <= config.MIN_WAIT_MINUTES:
         return 0
+    if config.ENABLE_NEXT_DYNAMIC_QUERY_K:
+        if world.endgame.intensity >= config.ENDGAME_HIGH:
+            return 50
+        minute_of_day = world.status.simulation_progress_minutes % 1440
+        rest_window_near = world.status.preferences and minute_of_day < config.RESCUE_DAILY_REST_UNTIL_MINUTE + 90
+        if rest_window_near:
+            return 50
+        if state.consecutive_query_wait >= config.RESCUE_LOOP_BREAK_AFTER_WAITS:
+            return 120
+        if world.memory_view.recent_query_minutes > 120 and world.memory_view.recent_feasible_count < 4:
+            return 50
+        if state.consecutive_wait >= 2 and not world.debt_market.emergency:
+            return 120
+        return min(100, config.RESCUE_QUERY_K_DEFAULT)
     if state.consecutive_query_wait >= config.RESCUE_LOOP_BREAK_AFTER_WAITS:
         return config.RESCUE_QUERY_K_HIGH
     return config.RESCUE_QUERY_K_DEFAULT

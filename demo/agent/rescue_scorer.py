@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass
 from typing import Any
 
-from . import config, preference_monitor, visible_rollout
+from . import config, preference_monitor, preference_repair, visible_rollout
 from .schemas import CandidateOption, World
 from .wait_lock import WaitLockState, lowered_thresholds, wait_score_penalty
 
@@ -78,6 +79,8 @@ def hard_block_reason(option: CandidateOption, min_direct: float, min_per_hour: 
 def rescue_operating_block(option: CandidateOption, world: World) -> str | None:
     if option.action_type != "take_order" or not config.ENABLE_RESCUE_REST_GUARD or not world.status.preferences:
         return None
+    if config.ENABLE_NEXT_MARGINAL_PREF:
+        return None
     start = world.status.simulation_progress_minutes
     if _rest_window_overlap_minutes(start, option.finish_minutes) > 0:
         return "rest_window_overlap"
@@ -112,6 +115,7 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
             else:
                 safe_positive_count += 1
             slack_bonus = min(80.0, _load_slack(option, world) / 30.0)
+            repair_bonus = preference_repair.take_repair_bonus(option, world)
             soft_pref = 0.0
             if config.ENABLE_RESCUE_PREFERENCE_SOFT and option.pref_cert:
                 soft_pref = min(config.RESCUE_SOFT_RISK_CAP, option.pref_cert.violation_debt + option.pref_cert.unknown_risk * 4.0)
@@ -124,15 +128,21 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
             if config.ENABLE_RESCUE_TIME_SHADOW_LITE:
                 time_penalty = min(config.RESCUE_TIME_COST_CAP, max(0, option.occupied_minutes - 480) * 0.08)
             rest_penalty = 0.0
-            if config.ENABLE_RESCUE_REST_GUARD and world.status.preferences:
+            if (config.ENABLE_RESCUE_REST_GUARD or config.ENABLE_NEXT_MARGINAL_PREF) and world.status.preferences:
                 overlap = _rest_window_overlap_minutes(world.status.simulation_progress_minutes, option.finish_minutes)
-                rest_penalty = min(25_000.0, overlap * 80.0)
+                if config.ENABLE_NEXT_MARGINAL_PREF:
+                    rest_penalty = min(3_500.0, overlap * 9.0)
+                    if _scheduled_full_rest_overlap(world.status.simulation_progress_minutes, option.finish_minutes):
+                        rest_penalty += 850.0
+                else:
+                    rest_penalty = min(25_000.0, overlap * 80.0)
             duration_penalty = max(0.0, option.occupied_minutes - 720) * 8.0
             deadhead_penalty = max(0.0, option.deadhead_km - 55.0) * 15.0
             score = (
                 option.direct_money
                 + per_hour * 4.0
                 + slack_bonus
+                + repair_bonus
                 + twohop
                 - soft_pref
                 - time_penalty
@@ -150,6 +160,7 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
                     "direct_net": option.direct_money,
                     "profit_per_hour": per_hour,
                     "load_slack_bonus": slack_bonus,
+                    "preference_repair_bonus": repair_bonus,
                     "twohop_lite": twohop,
                     "preference_soft_penalty": -soft_pref,
                     "time_shadow_lite": -time_penalty,
@@ -161,17 +172,31 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
             option.trace["hard_block_reason"] = reason or ""
         elif option.action_type == "wait":
             penalty = wait_score_penalty(state)
-            option.score = -penalty
-            option.score_components.update({"repeated_wait_penalty": -penalty})
+            repair_value = float(option.trace.get("expected_repair_value", 0.0)) if option.trace.get("preference_repair") else 0.0
+            option.score = repair_value - penalty
+            option.score_components.update({"repeated_wait_penalty": -penalty, "preference_repair_value": repair_value})
         elif option.action_type == "reposition":
-            option.score = -abs(option.direct_money) - 40.0
-            option.score_components.update({"micro_reposition_cost": option.score})
+            repair_value = float(option.trace.get("expected_repair_value", 0.0)) if option.trace.get("preference_repair") else 0.0
+            option.score = repair_value - abs(option.direct_money) - 40.0
+            option.score_components.update({"micro_reposition_cost": -abs(option.direct_money) - 40.0, "preference_repair_value": repair_value})
     return options, RescueStats(positive_count, safe_positive_count, best_net, best_per_hour, hard_counts)
 
 
 def choose(options: list[CandidateOption], stats: RescueStats, state: WaitLockState) -> CandidateOption:
     take_options = [o for o in options if o.action_type == "take_order"]
     viable = [o for o in take_options if not o.trace.get("hard_block_reason")]
+    repair_options = [
+        o for o in options
+        if o.action_type in {"reposition", "wait"}
+        and o.trace.get("preference_repair")
+        and not (o.action_cert and not o.action_cert.safe)
+        and o.score > 250.0
+    ]
+    if repair_options:
+        best_take_score = max((o.score for o in viable), default=-10**9)
+        best_repair = max(repair_options, key=lambda o: o.score)
+        if best_repair.score > best_take_score + 180.0:
+            return best_repair
     if viable:
         return max(viable, key=lambda o: o.score)
     if state.consecutive_wait >= config.RESCUE_FORCE_TAKE_AFTER_WAITS:
@@ -193,14 +218,21 @@ def choose(options: list[CandidateOption], stats: RescueStats, state: WaitLockSt
 
 def wait_forensic(chosen: CandidateOption, options: list[CandidateOption], stats: RescueStats, state: WaitLockState) -> dict[str, Any]:
     takes = sorted((o for o in options if o.action_type == "take_order"), key=lambda o: o.score, reverse=True)
+    repos = sorted((o for o in options if o.action_type == "reposition"), key=lambda o: o.score, reverse=True)
     top_rejected = []
-    for option in takes[:5]:
+    for option in takes[:20]:
+        cargo_hash = ""
+        if option.cargo and option.cargo.cargo_id:
+            cargo_hash = hashlib.sha256(option.cargo.cargo_id.encode("utf-8")).hexdigest()[:12]
         top_rejected.append(
             {
                 "candidate_id": option.id,
                 "cargo_id": option.cargo.cargo_id if option.cargo else None,
+                "candidate_hash": hashlib.sha256(option.id.encode("utf-8")).hexdigest()[:12],
+                "cargo_id_hash": cargo_hash,
                 "direct_net": round(option.direct_money, 2),
                 "profit_per_hour": round(profit_per_hour(option), 2),
+                "preference_debt": round(option.pref_cert.violation_debt, 2) if option.pref_cert else 0.0,
                 "hard_filter_reason": option.trace.get("hard_block_reason", ""),
                 "score": round(option.score, 2),
                 "score_components": {k: round(float(v), 2) for k, v in option.score_components.items()},
@@ -212,13 +244,22 @@ def wait_forensic(chosen: CandidateOption, options: list[CandidateOption], stats
         reason = "positive_orders_failed_threshold_or_soft_risk"
     else:
         reason = "no_safe_positive_net_cargo"
-    return {
+    best_take_score = takes[0].score if takes else None
+    best_repo_score = repos[0].score if repos else None
+    contributes_rest = chosen.id.startswith("rescue_rest:") or "rest" in reason
+    contributes_market = stats.positive_count == 0
+    wait_lock_bug = bool(stats.safe_positive_count > 0 and not contributes_rest and not contributes_market)
+    payload = {
         "wait_reason": reason,
         "best_available_order": top_rejected[0] if top_rejected else None,
+        "best_take_id_hash": top_rejected[0]["cargo_id_hash"] if top_rejected else "",
+        "best_take_pref_debt": top_rejected[0]["preference_debt"] if top_rejected else 0.0,
+        "best_take_delta_official_net_estimate": round(best_take_score - chosen.score, 2) if best_take_score is not None else 0.0,
+        "best_reposition_delta_estimate": round(best_repo_score - chosen.score, 2) if best_repo_score is not None else 0.0,
         "best_order_net": round(stats.best_order_net, 2),
         "best_order_per_hour": round(stats.best_order_per_hour, 2),
         "why_not_take": reason,
-        "why_not_reposition": "micro_reposition_unavailable_or_disabled",
+        "why_not_reposition": "micro_reposition_unavailable_or_disabled" if not repos else "top_reposition_score_not_selected",
         "why_wait_minutes": chosen.duration_minutes,
         "why_wait_won": {
             "chosen_score": round(chosen.score, 2),
@@ -226,6 +267,15 @@ def wait_forensic(chosen: CandidateOption, options: list[CandidateOption], stats
             "positive_count": stats.positive_count,
             "consecutive_wait": state.consecutive_wait,
         },
+        "contributes_continuous_rest": contributes_rest,
+        "contributes_full_rest_day": chosen.id.startswith("rescue_rest:periodic_full_rest_guard"),
+        "contributes_appointment": False,
+        "contributes_market_timing": contributes_market,
+        "contributes_endgame_safety": False,
+        "wait_lock_bug": wait_lock_bug,
+        "top_reposition_candidate": dict(repos[0].trace) if repos else {},
+        "top20_rejected_take": top_rejected,
         "top_5_rejected_take": top_rejected,
         "hard_block_reason_counts": dict(stats.hard_block_reason_counts),
     }
+    return payload

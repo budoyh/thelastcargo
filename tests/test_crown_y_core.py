@@ -20,6 +20,7 @@ from agent import (  # noqa: E402
     learned_ranker,
     llm_preference_judge,
     micro_reposition,
+    preference_repair,
     preference_monitor,
     qwen_preference_compiler,
     query_policy,
@@ -35,7 +36,7 @@ from agent.model_decision_service import ModelDecisionService  # noqa: E402
 from agent.memory import DriverMemory  # noqa: E402
 from agent.normalization import normalize_cargo_item  # noqa: E402
 from agent.preference_compiler import hash_preferences  # noqa: E402
-from agent.schemas import CURRENT_ACTIONABLE, SHADOW_LIQUIDITY_ONLY, CandidateOption  # noqa: E402
+from agent.schemas import CURRENT_ACTIONABLE, SHADOW_LIQUIDITY_ONLY, CandidateOption, CompiledPreferenceRule, CompiledPreferenceSet  # noqa: E402
 from tools import audit_guard  # noqa: E402
 
 
@@ -562,6 +563,10 @@ def test_wait_forensic_contains_required_fields(monkeypatch):
     assert "best_order_net" in forensic
     assert "best_order_per_hour" in forensic
     assert forensic["top_5_rejected_take"]
+    assert forensic["top20_rejected_take"]
+    assert "best_take_delta_official_net_estimate" in forensic
+    assert "best_reposition_delta_estimate" in forensic
+    assert "wait_lock_bug" in forensic
     assert "score_components" in forensic["top_5_rejected_take"][0]
 
 
@@ -708,6 +713,7 @@ def test_qwen_compiler_calls_model_for_new_pref_hash(monkeypatch):
                                             "reward_or_penalty": {"amount": 10, "direction": "penalty"},
                                             "evidence": "abstract",
                                             "confidence": 0.3,
+                                            "repair_action_kinds": ["wait"],
                                         }
                                     ]
                                 }
@@ -729,6 +735,7 @@ def test_qwen_compiler_calls_model_for_new_pref_hash(monkeypatch):
     )
     assert rules is not None
     assert api.calls == 1
+    assert rules[0].repair_action_kinds == ("wait",)
     assert qwen_preference_compiler.STATS.compile_calls == before + 1
 
 
@@ -841,3 +848,115 @@ def test_qwen_irreversible_repairability_reaches_certificate(monkeypatch):
     )
     cert = preference_monitor.certify(option, world2)
     assert cert.high_confidence_irreversible_violation
+
+
+def test_score_accountant_no_double_count_and_redacts_preferences(tmp_path):
+    from tools import score_accountant
+
+    run_dir = tmp_path / "20260529" / "money_greedy_no_pref"
+    run_dir.mkdir(parents=True)
+    monthly = {
+        "drivers": [
+            {
+                "driver_id": "D_TEST",
+                "income": {
+                    "gross_income": 1000.0,
+                    "cost": 250.0,
+                    "preference_penalty": 100.0,
+                    "net_income": 650.0,
+                },
+                "calculation_aborted": False,
+                "preference_check": {
+                    "rules": [
+                        {
+                            "rule": "raw rule label",
+                            "preference_text": "private preference text",
+                            "penalty": 100.0,
+                            "violations": 1,
+                        }
+                    ]
+                },
+            }
+        ],
+        "summary": {"total_net_income_all_drivers": 650.0, "total_preference_penalty": 100.0},
+    }
+    (run_dir / "monthly_income_202603.json").write_text(json.dumps(monthly), encoding="utf-8")
+    (run_dir / "run_summary_202603.json").write_text(
+        json.dumps({"simulation_duration_days": 31, "completed_steps": 1, "driver_simulation_failures": {}}),
+        encoding="utf-8",
+    )
+    action_row = {
+        "step": 1,
+        "driver_id": "D_TEST",
+        "step_elapsed_minutes": 10,
+        "query_scan_cost_minutes": 5,
+        "action_exec_cost_minutes": 5,
+        "action": {
+            "action": "wait",
+            "agent_trace": {
+                "query_k": 50,
+                "returned_count": 20,
+                "visible_count": 3,
+                "debt_value": 10,
+                "rescue": {
+                    "positive_count": 2,
+                    "safe_positive_count": 1,
+                    "best_order_net": 88.0,
+                    "best_order_per_hour": 20.0,
+                    "wait_forensic": {
+                        "wait_reason": "unit_wait_reason",
+                        "best_take_id_hash": "abc",
+                        "best_take_delta_official_net_estimate": 12.0,
+                        "best_reposition_delta_estimate": -4.0,
+                        "wait_lock_bug": True,
+                        "top20_rejected_take": [{"cargo_id_hash": "h1", "hard_filter_reason": "soft"}],
+                    },
+                    "qwen": {"compile_calls": 1},
+                },
+            },
+        },
+        "result": {"simulation_progress_minutes": 10},
+    }
+    (run_dir / "actions_202603_D_TEST_unit.jsonl").write_text(json.dumps(action_row) + "\n", encoding="utf-8")
+
+    out_dir = tmp_path / "reports"
+    payload = score_accountant.build_reports(tmp_path, out_dir)
+    assert payload["runs"] == 1
+    score_text = (out_dir / "score_accountant.csv").read_text(encoding="utf-8")
+    ledger_text = (out_dir / "preference_state_ledger.csv").read_text(encoding="utf-8")
+    forensic_text = (out_dir / "forensics_samples.csv").read_text(encoding="utf-8")
+    assert "True" in score_text
+    assert "private preference text" not in ledger_text
+    assert "raw rule label" not in ledger_text
+    assert "unit_wait_reason" in forensic_text
+
+
+def test_preference_repair_uses_runtime_dsl_target(monkeypatch):
+    from dataclasses import replace
+
+    monkeypatch.setattr(config, "ENABLE_NEXT_PREFERENCE_STATE_MACHINE", True)
+    world1, _, _ = build_world()
+    rule = CompiledPreferenceRule(
+        rule_id="runtime_target",
+        kind="location_relation",
+        scope="date_specific",
+        condition={"target_coordinates": [{"lat": 23.2, "lng": 113.2}], "date_day": 1},
+        repairability="repairable_until_deadline",
+        reward_or_penalty={"amount": 5000, "direction": "penalty"},
+        evidence="abstract",
+        confidence=0.9,
+        repair_action_kinds=("reposition_to_target", "take_towards_target"),
+    )
+    world2 = replace(world1, rules=CompiledPreferenceSet(pref_hash="runtime", rules=(rule,)))
+    option = preference_repair.build_repair_candidate(world2, "d1")
+    assert option is not None
+    assert option.action_type == "reposition"
+    assert option.trace["target_source_kind"] == "runtime_preference_dsl_target"
+    visible = cargo_filter.normalize_and_filter(
+        raw_cargos=[cargo_item(price=700, start_lat=23.19, start_lng=113.19, cost=60)],
+        world=world2,
+        source_scope=CURRENT_ACTIONABLE,
+        decision_id="d1",
+    )
+    take = candidate_generator.build_options(world2, visible, "d1")[0]
+    assert preference_repair.take_repair_bonus(take, world2) > 0

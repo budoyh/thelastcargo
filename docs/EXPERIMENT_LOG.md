@@ -1,5 +1,15 @@
 # EXPERIMENT LOG
 
+## EXP-007 Next Build v4 Start
+
+- branch: `crown-y-next-build`
+- start point: `crown-y-score-rescue` commit `0f2af10`
+- rescue baseline reference: 20260529 net `5067.69`, preference penalty `38140.0`, take/wait/reposition `89/163/0`, wait ratio `0.6468`, Qwen compile calls `5`.
+- stage order: setup guardrails, four diagnostics, six minimal strategies, conditional module only for the largest named regret, compact Pareto frontier, final verification.
+- final score gate: official net under `40000` must be reported as `DO_NOT_SUBMIT_WITH_FRONTIER_EVIDENCE`.
+- final artifacts: `reports/next_build_final_report.md`, `reports/next_build_experiments.csv`, `reports/score_accountant.csv`, `reports/preference_state_ledger.csv`, `reports/forensics_samples.csv`.
+- existing report files from older branches are legacy references; Next Build must not add reports outside the five v4 artifacts.
+
 ## EXP-006 Score Rescue Workstream
 
 - branch: `crown-y-score-rescue`

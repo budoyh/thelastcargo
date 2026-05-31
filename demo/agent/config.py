@@ -114,6 +114,11 @@ ENABLE_RESCUE_TWOHOP_LITE = False
 ENABLE_RESCUE_TIME_SHADOW_LITE = False
 ENABLE_RESCUE_REST_GUARD = False
 ENABLE_QWEN_PREFERENCE_COMPILER = False
+ENABLE_NEXT_MARGINAL_PREF = False
+ENABLE_NEXT_DYNAMIC_QUERY_K = False
+ENABLE_NEXT_NO_QUERY_REST_BLOCK = False
+ENABLE_NEXT_OBSERVATION_REPOSITION = False
+ENABLE_NEXT_PREFERENCE_STATE_MACHINE = False
 
 _VARIANT = os.environ.get("CROWN_Y_VARIANT", "").strip().lower()
 RESCUE_VARIANT = _VARIANT
@@ -150,6 +155,14 @@ if _VARIANT in {
     "a6",
     "a7",
     "best_rescue",
+    "money_greedy_no_pref",
+    "strict_pref",
+    "marginal_pref_only",
+    "calendar_rest_only",
+    "dynamic_query_k",
+    "dynamic_query_reposition",
+    "preference_state_machine",
+    "next_best",
 }:
     ENABLE_RESCUE_SCORER = True
     ENABLE_SCOUT_THEN_DEEPEN = False
@@ -173,6 +186,52 @@ if _VARIANT in {"a6", "a7", "best_rescue"}:
     ENABLE_QWEN_PREFERENCE_COMPILER = True
 if _VARIANT in {"a6", "a7", "best_rescue"}:
     ENABLE_RESCUE_REST_GUARD = True
+
+if _VARIANT in {
+    "money_greedy_no_pref",
+    "strict_pref",
+    "marginal_pref_only",
+    "calendar_rest_only",
+    "dynamic_query_k",
+    "dynamic_query_reposition",
+    "preference_state_machine",
+    "next_best",
+}:
+    ENABLE_QWEN_PREFERENCE_COMPILER = True
+    ENABLE_RESCUE_WAIT_PENALTY = True
+    RESCUE_DIRECT_NET_FLOOR = 1.0
+    RESCUE_PROFIT_PER_HOUR_FLOOR = 0.0
+    RESCUE_QUERY_K_DEFAULT = 100
+
+if _VARIANT in {"strict_pref", "next_best"}:
+    ENABLE_RESCUE_PREFERENCE_SOFT = True
+    ENABLE_RESCUE_REST_GUARD = True
+
+if _VARIANT in {"marginal_pref_only", "dynamic_query_k", "dynamic_query_reposition"}:
+    ENABLE_RESCUE_PREFERENCE_SOFT = True
+    ENABLE_NEXT_MARGINAL_PREF = True
+
+if _VARIANT in {"calendar_rest_only"}:
+    ENABLE_RESCUE_REST_GUARD = True
+    ENABLE_NEXT_NO_QUERY_REST_BLOCK = True
+
+if _VARIANT in {"dynamic_query_k", "dynamic_query_reposition"}:
+    ENABLE_NEXT_DYNAMIC_QUERY_K = True
+
+if _VARIANT in {"dynamic_query_reposition"}:
+    ENABLE_RESCUE_MICRO_REPOSITION = True
+    ENABLE_NEXT_OBSERVATION_REPOSITION = True
+
+if _VARIANT in {"preference_state_machine", "next_best"}:
+    ENABLE_RESCUE_PREFERENCE_SOFT = True
+    ENABLE_RESCUE_REST_GUARD = True
+    ENABLE_NEXT_MARGINAL_PREF = True
+    ENABLE_NEXT_DYNAMIC_QUERY_K = True
+    ENABLE_NEXT_NO_QUERY_REST_BLOCK = True
+    ENABLE_NEXT_OBSERVATION_REPOSITION = True
+    ENABLE_NEXT_PREFERENCE_STATE_MACHINE = True
+    ENABLE_RESCUE_MICRO_REPOSITION = True
+    RESCUE_FULL_REST_PERIOD_DAYS = 10
 
 if _VARIANT in {"best_rescue", "a7"}:
     RESCUE_QUERY_K_DEFAULT = 120

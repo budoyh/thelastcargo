@@ -5,6 +5,8 @@ from __future__ import annotations
 import json
 import os
 import re
+import urllib.error
+import urllib.request
 from dataclasses import dataclass
 from typing import Any
 
@@ -24,6 +26,7 @@ ALLOWED_KINDS = {
 }
 ALLOWED_SCOPES = {"single_action", "day", "rolling_window", "month", "date_specific", "whole_period", "unknown"}
 ALLOWED_REPAIR = {"irreversible", "irreversible_after_action", "repairable_until_deadline", "repairable_by_quota", "always_soft", "unknown"}
+ALLOWED_REPAIR_ACTIONS = {"wait", "reposition_to_target", "take_towards_target", "avoid_take", "none", "unknown"}
 
 
 @dataclass
@@ -48,22 +51,28 @@ STATS = CompileStats()
 _CACHE: dict[str, tuple[CompiledPreferenceRule, ...]] = {}
 
 
-def _key_state() -> str:
+def _active_api_key() -> tuple[str, str, str]:
     for name in ("DASHSCOPE_API_KEY", "BAILIAN_API_KEY", "ALIYUN_API_KEY"):
         value = os.environ.get(name, "").strip()
         if value:
             lowered = value.lower()
             if "dummy" in lowered or "not-used" in lowered or "local-" in lowered:
-                return "dummy"
-            return "present"
-    return "missing"
+                return name, "", "dummy"
+            return name, value, "present"
+    return "", "", "missing"
 
 
 def _prompt(preferences: tuple[Any, ...] | list[Any]) -> str:
     return (
         "Compile runtime driver preferences into abstract JSON DSL only. "
         "Do not choose actions. Use only abstract fields: time windows, counts, "
-        "location relations, sequence, rest, reward/penalty, evidence span and confidence. "
+        "location relations, sequence, rest, reward/penalty, evidence span, confidence, "
+        "deadline hints, repair window hints, and repair_action_kinds. "
+        "When the preference states a count, date/day, clock window, or coordinate-like target, "
+        "put abstract parsed values in condition keys such as required_count, date_day, "
+        "deadline_day, time_window_minutes, and target_coordinates. "
+        "repair_action_kinds must be abstract labels only from wait, reposition_to_target, "
+        "take_towards_target, avoid_take, none, unknown. "
         "Return a JSON object with key rules. Preferences: "
         + json.dumps(list(preferences), ensure_ascii=False, sort_keys=True)
     )
@@ -105,6 +114,39 @@ def _content_from_response(resp: dict[str, Any]) -> str:
     return str(message.get("content", "") if isinstance(message, dict) else "")
 
 
+def _dashscope_compatible_completion(payload: dict[str, Any], api_key: str) -> dict[str, Any]:
+    body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+    req = urllib.request.Request(
+        "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+        data=body,
+        headers={
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json",
+        },
+        method="POST",
+    )
+    with urllib.request.urlopen(req, timeout=3.0) as resp:
+        raw = resp.read().decode("utf-8")
+    data = json.loads(raw)
+    return data if isinstance(data, dict) else {}
+
+
+def _repair_actions(raw: dict[str, Any]) -> tuple[str, ...]:
+    value = raw.get("repair_action_kinds", ())
+    if isinstance(value, str):
+        items = [value]
+    elif isinstance(value, list):
+        items = [str(item) for item in value]
+    else:
+        items = []
+    out = []
+    for item in items:
+        normalized = item.strip()
+        if normalized in ALLOWED_REPAIR_ACTIONS and normalized not in out:
+            out.append(normalized)
+    return tuple(out or ("unknown",))
+
+
 def _rule_from_payload(idx: int, raw: dict[str, Any], fallback_amount: dict[str, Any]) -> CompiledPreferenceRule:
     kind = str(raw.get("kind", "unknown")).strip()
     scope = str(raw.get("scope", "unknown")).strip()
@@ -126,6 +168,7 @@ def _rule_from_payload(idx: int, raw: dict[str, Any], fallback_amount: dict[str,
         reward_or_penalty=reward if isinstance(reward, dict) else fallback_amount,
         evidence=str(raw.get("evidence", "")),
         confidence=conf,
+        repair_action_kinds=_repair_actions(raw),
     )
 
 
@@ -153,7 +196,7 @@ def compile_with_qwen(
         STATS.cache_hits += 1
         return _CACHE[pref_hash]
     STATS.cache_misses += 1
-    state = _key_state()
+    _, api_key, state = _active_api_key()
     if state == "missing":
         STATS.fallback_unknown_count += 1
         STATS.last_error_type = "api_key_missing"
@@ -162,10 +205,6 @@ def compile_with_qwen(
         STATS.dummy_key_blocked_count += 1
         STATS.fallback_unknown_count += 1
         STATS.last_error_type = "dummy_key_blocked"
-        return None
-    if api is None or not hasattr(api, "model_chat_completion"):
-        STATS.fallback_unknown_count += 1
-        STATS.last_error_type = "api_method_unavailable"
         return None
     payload = {
         "model": STATS.last_model_name,
@@ -177,7 +216,10 @@ def compile_with_qwen(
     }
     try:
         STATS.compile_calls += 1
-        resp = api.model_chat_completion(payload)
+        if api is not None and hasattr(api, "model_chat_completion"):
+            resp = api.model_chat_completion(payload)
+        else:
+            resp = _dashscope_compatible_completion(payload, api_key)
         _usage_from_response(resp)
         data = _extract_json(_content_from_response(resp))
         rules_raw = data.get("rules", []) if isinstance(data, dict) else []

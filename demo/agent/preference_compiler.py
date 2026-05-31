@@ -15,6 +15,7 @@ from .schemas import CompiledPreferenceRule, CompiledPreferenceSet, DriverStatus
 
 NUMBER_RE = re.compile(r"[-+]?\d+(?:\.\d+)?")
 CLOCK_RE = re.compile(r"\b\d{1,2}:\d{2}(?::\d{2})?\b")
+COORD_PAIR_RE = re.compile(r"(?<!\d)(-?\d{1,2}\.\d+)\D{1,18}(-?\d{2,3}\.\d+)(?!\d)")
 _COMPILE_BUDGET = LLMBudgetManager()
 
 
@@ -55,24 +56,46 @@ def _numeric_values(content: str) -> list[float]:
     return values
 
 
-def _compile_shape(content: str, payload: dict[str, Any]) -> tuple[str, str, dict[str, Any], str, float]:
+def _coordinate_targets(content: str) -> list[dict[str, float]]:
+    targets: list[dict[str, float]] = []
+    for match in COORD_PAIR_RE.finditer(content):
+        try:
+            lat = float(match.group(1))
+            lng = float(match.group(2))
+        except ValueError:
+            continue
+        if -90.0 <= lat <= 90.0 and -180.0 <= lng <= 180.0:
+            targets.append({"lat": lat, "lng": lng})
+    return targets[:3]
+
+
+def _compile_shape(content: str, payload: dict[str, Any]) -> tuple[str, str, dict[str, Any], str, float, tuple[str, ...]]:
     if not content:
-        return "unknown", "unknown", {}, "unknown", 0.0
+        return "unknown", "unknown", {}, "unknown", 0.0, ("unknown",)
     numbers = _numeric_values(content)
     has_clock = bool(CLOCK_RE.search(content))
+    targets = _coordinate_targets(content)
     amount = max(0.0, float(payload.get("amount", 0.0) or 0.0))
     cap = payload.get("cap")
     kind = "unknown"
-    scope = "monthly"
+    scope = "whole_period"
     repairability = "unknown"
-    if has_clock:
-        kind = "time_window"
-        scope = "time"
-        repairability = "partially_repairable"
+    repair_actions: tuple[str, ...] = ("unknown",)
+    if targets:
+        kind = "location_relation"
+        scope = "whole_period"
+        repairability = "repairable_until_deadline"
+        repair_actions = ("reposition_to_target", "take_towards_target")
+    elif has_clock:
+        kind = "time_window_constraint"
+        scope = "day"
+        repairability = "repairable_until_deadline"
+        repair_actions = ("wait",)
     elif numbers:
-        kind = "quantitative_limit"
-        scope = "route_or_time"
+        kind = "distance_budget"
+        scope = "whole_period"
         repairability = "irreversible_after_action" if amount >= 5000.0 else "partially_repairable"
+        repair_actions = ("avoid_take", "take_towards_target")
     condition = {
         "numeric_count": len(numbers),
         "numeric_min": min(numbers) if numbers else None,
@@ -81,6 +104,7 @@ def _compile_shape(content: str, payload: dict[str, Any]) -> tuple[str, str, dic
         "evidence_length": len(content),
         "penalty_amount": amount,
         "penalty_cap": cap,
+        "target_coordinates": targets,
     }
     confidence = 0.34
     if amount > 0:
@@ -93,7 +117,9 @@ def _compile_shape(content: str, payload: dict[str, Any]) -> tuple[str, str, dic
         confidence += 0.08
     if isinstance(cap, float) and amount > 0 and cap <= amount * 2.0:
         confidence += 0.04
-    return kind, scope, condition, repairability, min(0.82, confidence)
+    if repairability == "partially_repairable":
+        repairability = "repairable_by_quota"
+    return kind, scope, condition, repairability, min(0.82, confidence), repair_actions
 
 
 def compile_if_changed(
@@ -127,7 +153,7 @@ def compile_if_changed(
     for idx, item in enumerate(status.preferences):
         evidence = _preference_content(item)
         amount_payload = amount_payloads[idx]
-        kind, scope, condition, repairability, confidence = _compile_shape(evidence, amount_payload)
+        kind, scope, condition, repairability, confidence, repair_actions = _compile_shape(evidence, amount_payload)
         rules.append(
             CompiledPreferenceRule(
                 rule_id=f"pref_{idx}",
@@ -138,6 +164,7 @@ def compile_if_changed(
                 reward_or_penalty=amount_payload,
                 evidence=evidence,
                 confidence=confidence,
+                repair_action_kinds=repair_actions,
             )
         )
     return CompiledPreferenceSet(pref_hash=pref_hash, rules=tuple(rules))

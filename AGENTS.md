@@ -20,3 +20,18 @@
 - Unknown preference risk, time shadow, endgame and two-hop signals are capped soft costs; they must not hard-kill safe positive cargo.
 - Qwen preference compilation is allowed only as DSL compilation through `SimulationApiPort.model_chat_completion`; it must not output actions, and missing/dummy keys must be reported as fallback rather than success.
 - Rescue success requires the hard score gate in `reports/score_rescue_final_report.md`; negative net, extreme wait ratio or zero Qwen calls with preferences must be reported as forensic failure.
+
+## Next Build v4 Rules
+
+- Branch work starts from `crown-y-score-rescue` on `crown-y-next-build`; final status is score-gated, not test/report-gated.
+- Diagnose before modules: score accounting, wait counterfactuals, query survivability, and preference state ledger must exist before broad strategy changes.
+- Runtime P0 boundaries remain strict: no future information, no raw data runtime reads, no `server.*` imports in `demo/agent`, no driver/cargo/location/route/fixed-coordinate special cases, and no Destination Shadow Query.
+- `take_order` must come only from the current post-query `current_actionable` observed set; `no_query` cannot take remembered cargo.
+- Do not copy literal banned terms or example scenario shortcuts into repository files; use redacted generic phrasing only.
+- Qwen3.5-Flash preference compilation is required for non-empty preferences when an API path is available; never print keys and never treat dummy keys as success.
+- Final Next Build handoff artifacts are limited to five files: `reports/next_build_final_report.md`, `reports/next_build_experiments.csv`, `reports/score_accountant.csv`, `reports/preference_state_ledger.csv`, and `reports/forensics_samples.csv`.
+- Required stop states are `SCORE_PUSH_SUCCESS`, `SCORE_PUSH_STRONG_SUCCESS`, `DO_NOT_SUBMIT_WITH_FRONTIER_EVIDENCE`, or `EXTERNAL_BLOCKER`; below-threshold score must not be presented as success.
+- `SCORE_PUSH_SUCCESS` requires 31 days, 0 simulation failures, 0 income aborts, 0 illegal actions, 0 rejected takes, Score Accountant no-double-count conclusion, Qwen compile calls when preferences exist, complete instruction files, committed/pushed branch, 20260529 official net at least `40000`, preference penalty below `25000`, 0509 above rescue reference without new failures, and Pareto frontier evidence.
+- `SCORE_PUSH_STRONG_SUCCESS` additionally requires 20260529 official net at least `70000`, preference penalty below `15000` or a rule-level unavoidable-penalty explanation, and value-positive reposition or strong no-reposition counterfactual evidence.
+- If score thresholds are not met after diagnostics and Pareto search, the first line of `reports/next_build_final_report.md` must be `DO NOT SUBMIT: score-push threshold not reached.` and the status must be `DO_NOT_SUBMIT_WITH_FRONTIER_EVIDENCE`.
+- Cloud or local heavy compute must stay isolated to this project, avoid disrupting other users or local stability, and use GPU resources only when materially useful.

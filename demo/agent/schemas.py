@@ -62,6 +62,7 @@ class CompiledPreferenceRule:
     reward_or_penalty: dict[str, Any]
     evidence: str
     confidence: float
+    repair_action_kinds: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -193,4 +194,3 @@ class CandidateOption:
     action_cert: ActionCertificate | None = None
     rollout: RolloutValue = field(default_factory=RolloutValue)
     trace: dict[str, Any] = field(default_factory=dict)
-

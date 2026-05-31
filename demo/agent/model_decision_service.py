@@ -16,6 +16,7 @@ from . import (
     learned_ranker,
     llm_preference_judge,
     micro_reposition,
+    preference_repair,
     preference_monitor,
     query_policy,
     qwen_preference_compiler,
@@ -99,6 +100,7 @@ class ModelDecisionService:
                 chosen=chosen,
                 options=options,
                 query_minutes=query_minutes,
+                observed_count=len(observed),
             )
             runtime.prev_world = world_after_query
             self._logger.info(
@@ -122,8 +124,64 @@ class ModelDecisionService:
             )
 
     def _decide_rescue(self, driver_id: str, runtime: DriverRuntime, world0: World, decision_id: str) -> dict[str, Any]:
+        pre_rest_option, pre_rest_reason = self._rescue_rest_option(runtime, world0, decision_id)
+        if config.ENABLE_NEXT_NO_QUERY_REST_BLOCK and pre_rest_option is not None:
+            action = safety.finalize(pre_rest_option, world0)
+            stats = rescue_scorer.RescueStats(0, 0, 0.0, 0.0, {})
+            wait_forensic = rescue_scorer.wait_forensic(pre_rest_option, [pre_rest_option], stats, runtime.wait_lock)
+            wait_forensic.update(
+                {
+                    "wait_reason": pre_rest_reason,
+                    "why_not_take": "no_query_rest_block",
+                    "why_not_reposition": "no_query_rest_block",
+                    "contributes_continuous_rest": True,
+                    "contributes_full_rest_day": pre_rest_reason == "periodic_full_rest_guard",
+                    "contributes_market_timing": False,
+                    "wait_lock_bug": False,
+                    "no_query_rest_block_used": True,
+                }
+            )
+            action = trace_writer.attach_trace(
+                action,
+                world=world0,
+                query_plan=query_policy.QueryPlan(kind="no_query_rest_block", k=0, reason=config.RESCUE_VARIANT),
+                visible_cargos=[],
+                chosen=pre_rest_option,
+                options=[pre_rest_option],
+                query_minutes=0,
+                observed_count=0,
+                rescue={
+                    "variant": config.RESCUE_VARIANT,
+                    "wait_lock": runtime.wait_lock.snapshot(),
+                    "query_k": 0,
+                    "returned_count": 0,
+                    "actionable_after_query": 0,
+                    "positive_net_count": 0,
+                    "missed_window_risk": 0,
+                    "query_reward": 0.0,
+                    "positive_count": 0,
+                    "safe_positive_count": 0,
+                    "best_order_net": 0.0,
+                    "best_order_per_hour": 0.0,
+                    "hard_block_reason_counts": {},
+                    "filter_rejection_counts": {},
+                    "wait_forensic": wait_forensic,
+                    "qwen": qwen_preference_compiler.stats_payload(),
+                },
+            )
+            runtime.prev_world = world0
+            runtime.wait_lock.record(
+                "wait",
+                0,
+                0,
+                pre_rest_reason,
+                day=day_index(world0.status.simulation_progress_minutes),
+                wait_minutes=int((action.get("params") or {}).get("duration_minutes", 0) or 0),
+            )
+            return action
         k = query_k(runtime.wait_lock, world0)
-        plan = query_policy.QueryPlan(kind="rescue_fixed_query" if k else "no_query", k=k, reason=config.RESCUE_VARIANT)
+        kind = "rescue_dynamic_query" if config.ENABLE_NEXT_DYNAMIC_QUERY_K and k else ("rescue_fixed_query" if k else "no_query")
+        plan = query_policy.QueryPlan(kind=kind, k=k, reason=config.RESCUE_VARIANT)
         observed: list[dict[str, Any]] = []
         world_after_query = world0
         query_minutes = 0
@@ -144,6 +202,9 @@ class ModelDecisionService:
         micro = micro_reposition.build_candidate(world_after_query, visible, decision_id, runtime.wait_lock)
         if micro is not None:
             options.append(micro)
+        repair = preference_repair.build_repair_candidate(world_after_query, decision_id)
+        if repair is not None:
+            options.append(repair)
         observed_ids = {cargo.cargo_id for cargo in visible}
         options = safety.pre_filter_and_attach_action_certificate(options, world_after_query, observed_ids)
         options, rescue_stats = rescue_scorer.score_options(options, world_after_query, runtime.wait_lock)
@@ -157,6 +218,10 @@ class ModelDecisionService:
                 wait_forensic["wait_reason"] = rest_reason
                 wait_forensic["why_not_take"] = "rest_guard_after_query"
                 wait_forensic["why_not_reposition"] = "rest_guard_after_query"
+                wait_forensic["contributes_continuous_rest"] = True
+                wait_forensic["contributes_full_rest_day"] = rest_reason == "periodic_full_rest_guard"
+                wait_forensic["contributes_market_timing"] = False
+                wait_forensic["wait_lock_bug"] = False
                 wait_forensic["why_wait_won"] = {
                     "rest_guard": rest_reason,
                     "safe_positive_count": rescue_stats.safe_positive_count,
@@ -178,9 +243,16 @@ class ModelDecisionService:
             chosen=chosen,
             options=options,
             query_minutes=query_minutes,
+            observed_count=len(observed),
             rescue={
                 "variant": config.RESCUE_VARIANT,
                 "wait_lock": runtime.wait_lock.snapshot(),
+                "query_k": k,
+                "returned_count": len(observed),
+                "actionable_after_query": len(visible),
+                "positive_net_count": rescue_stats.positive_count,
+                "missed_window_risk": int(filter_rejections.get("remove_slack_too_short", 0)) + int(filter_rejections.get("load_window_unreachable", 0)),
+                "query_reward": round(float(rescue_stats.best_order_net) - float(query_minutes) * 1.5, 2),
                 "positive_count": rescue_stats.positive_count,
                 "safe_positive_count": rescue_stats.safe_positive_count,
                 "best_order_net": rescue_stats.best_order_net,

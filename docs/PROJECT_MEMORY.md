@@ -1,5 +1,15 @@
 # PROJECT MEMORY
 
+## Next Build v4 Memory
+
+- Starting branch for this work is `crown-y-score-rescue` at `0f2af10`; work branch is `crown-y-next-build`.
+- Rescue baseline is legal but not a score-push submission: 20260529 net `5067.69`, preference penalty `38140.0`, take/wait/reposition `89/163/0`, wait ratio `0.6468`, Qwen compile calls `5`.
+- Next Build v4 must diagnose score accounting, wait counterfactuals, query survivability, and preference state before enabling larger strategy modules.
+- Final status is score-gated: under `40000` 20260529 official net must be `DO_NOT_SUBMIT_WITH_FRONTIER_EVIDENCE`, not success.
+- Final artifacts for this build are limited to five Next Build files under `reports/`.
+- Existing tournament/rescue reports are legacy references. The Next Build final handoff must be exactly the five v4 artifacts, with no new scattered reports.
+- Literal banned terms and example scenario shortcuts must remain redacted in repository files.
+
 ## Score Rescue Memory
 
 - The 20260529 tournament build is a failed reference, not a success: negative net, high wait ratio, very low take count and zero Qwen calls.
