@@ -13,6 +13,7 @@ from typing import Any
 
 from simkit.ports import SimulationApiPort
 
+from . import config
 from .schemas import CompiledPreferenceRule
 
 ALLOWED_KINDS = {
@@ -281,6 +282,11 @@ def compile_with_qwen(
     if not preferences:
         return None
     STATS.preferences_nonempty_count += 1
+    if config.DISABLE_RUNTIME_QWEN:
+        STATS.budget_blocked_count += 1
+        STATS.fallback_unknown_count += 1
+        STATS.last_error_type = "runtime_qwen_disabled"
+        return None
     if pref_hash in _CACHE:
         STATS.cache_hits += 1
         return _CACHE[pref_hash]
@@ -304,6 +310,7 @@ def compile_with_qwen(
             {"role": "user", "content": _prompt(preferences)},
         ],
         "temperature": 0,
+        "max_tokens": STATS.last_model_name and 512,
     }
     try:
         STATS.compile_calls += 1

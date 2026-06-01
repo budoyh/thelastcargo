@@ -95,8 +95,9 @@ LEARNED_OOD_SHRINK = 0.2
 LLM_MAX_COMPILE_CALLS_PER_DRIVER = 12
 LLM_MAX_JUDGE_CALLS_PER_DRIVER = 0
 LLM_MAX_JUDGE_CALLS_PER_DAY = 0
-LLM_MAX_LINKER_CALLS_TOTAL = 4
+LLM_MAX_LINKER_CALLS_TOTAL = 1
 LLM_TIMEOUT_SECONDS = 3.0
+LLM_MAX_OUTPUT_TOKENS = 512
 
 RESCUE_QUERY_K_DEFAULT = 120
 RESCUE_QUERY_K_HIGH = 200
@@ -129,8 +130,16 @@ ENABLE_NEXT_NO_QUERY_REST_BLOCK = False
 ENABLE_NEXT_OBSERVATION_REPOSITION = False
 ENABLE_NEXT_PREFERENCE_STATE_MACHINE = False
 ENABLE_PCE_REPAIR_FIRST = False
+ENABLE_PTT_FIREWALL = False
+ENABLE_PTT_LINKER = False
+ENABLE_PTT_AUDITOR = False
+DISABLE_RUNTIME_QWEN = os.environ.get("CROWN_Y_DISABLE_RUNTIME_QWEN", "").strip() == "1"
+PTT_MAX_AUDITOR_CALLS_TOTAL = 1
+PTT_SOFT_RISK_MULTIPLIER = 0.45
+PTT_MASSIVE_PENALTY_MULTIPLIER = 2.5
+PTT_UNKNOWN_HIGH_PENALTY_SCALE = 1200.0
 
-_VARIANT = os.environ.get("CROWN_Y_VARIANT", "best_rescue").strip().lower()
+_VARIANT = os.environ.get("CROWN_Y_VARIANT", "preference_firewall_profit").strip().lower()
 RESCUE_VARIANT = _VARIANT
 if _VARIANT in {"a", "baseline", "safe_greedy"}:
     ENABLE_TIME_SHADOW = False
@@ -183,6 +192,7 @@ if _VARIANT in {
     "delta_mpc_delta_only",
     "delta_mpc_macro",
     "delta_mpc_fallback",
+    "preference_firewall_profit",
 }:
     ENABLE_RESCUE_SCORER = True
     ENABLE_SCOUT_THEN_DEEPEN = False
@@ -192,19 +202,19 @@ if _VARIANT in {
     ENABLE_REPOSITION = False
     TIME_SHADOW_MODE = "rescue_lite"
 
-if _VARIANT in {"a1", "a2", "a3", "a4", "a5", "a6", "a7", "best_rescue"}:
+if _VARIANT in {"a1", "a2", "a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit"}:
     ENABLE_RESCUE_WAIT_PENALTY = True
-if _VARIANT in {"a2", "a3", "a4", "a5", "a6", "a7", "best_rescue"}:
+if _VARIANT in {"a2", "a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit"}:
     ENABLE_RESCUE_MICRO_REPOSITION = True
-if _VARIANT in {"a3", "a4", "a5", "a6", "a7", "best_rescue"}:
+if _VARIANT in {"a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit"}:
     ENABLE_RESCUE_PREFERENCE_SOFT = True
-if _VARIANT in {"a4", "a5", "a6", "a7", "best_rescue"}:
+if _VARIANT in {"a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit"}:
     ENABLE_RESCUE_TWOHOP_LITE = True
-if _VARIANT in {"a5", "a6", "a7", "best_rescue"}:
+if _VARIANT in {"a5", "a6", "a7", "best_rescue", "preference_firewall_profit"}:
     ENABLE_RESCUE_TIME_SHADOW_LITE = True
-if _VARIANT in {"a6", "a7", "best_rescue"}:
+if _VARIANT in {"a6", "a7", "best_rescue", "preference_firewall_profit"}:
     ENABLE_QWEN_PREFERENCE_COMPILER = True
-if _VARIANT in {"a6", "a7", "best_rescue"}:
+if _VARIANT in {"a6", "a7", "best_rescue", "preference_firewall_profit"}:
     ENABLE_RESCUE_REST_GUARD = True
 
 if _VARIANT in {
@@ -315,6 +325,23 @@ if _VARIANT == "delta_mpc_fallback":
     RESCUE_QUERY_K_DEFAULT = 120
     RESCUE_DAILY_REST_UNTIL_MINUTE = _int_env("CROWN_Y_REST_UNTIL_MINUTE", 9 * 60, 0, 12 * 60)
     RESCUE_FULL_REST_PERIOD_DAYS = _int_env("CROWN_Y_FULL_REST_PERIOD_DAYS", 15, 0, 31)
+
+if _VARIANT == "preference_firewall_profit":
+    ENABLE_PTT_FIREWALL = True
+    ENABLE_PTT_LINKER = True
+    ENABLE_PTT_AUDITOR = True
+    ENABLE_QWEN_PREFERENCE_COMPILER = True
+    ENABLE_RESCUE_PREFERENCE_SOFT = True
+    ENABLE_RESCUE_REST_GUARD = True
+    ENABLE_NEXT_NO_QUERY_REST_BLOCK = True
+    ENABLE_RESCUE_MICRO_REPOSITION = True
+    ENABLE_RESCUE_TWOHOP_LITE = True
+    ENABLE_RESCUE_TIME_SHADOW_LITE = True
+    RESCUE_QUERY_K_DEFAULT = 120
+    RESCUE_DIRECT_NET_FLOOR = 1.0
+    RESCUE_PROFIT_PER_HOUR_FLOOR = 0.0
+    RESCUE_DAILY_REST_UNTIL_MINUTE = _int_env("CROWN_Y_REST_UNTIL_MINUTE", 9 * 60, 0, 12 * 60)
+    RESCUE_FULL_REST_PERIOD_DAYS = _int_env("CROWN_Y_FULL_REST_PERIOD_DAYS", 12, 0, 31)
 
 if _VARIANT in {"best_rescue", "a7"}:
     RESCUE_QUERY_K_DEFAULT = 120

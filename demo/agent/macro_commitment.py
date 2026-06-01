@@ -1,4 +1,4 @@
-"""Macro repair commitment controller for Delta-MPC."""
+"""Macro repair commitment controller for PTT runtime repair tasks."""
 
 from __future__ import annotations
 
@@ -143,6 +143,9 @@ def record_selection(
         return None
     if option.action_type != "reposition":
         return active
+    if option.deadhead_km > 120.0:
+        stats.macro_aborted_count += 1
+        return active
     required = int(_float_trace(option, "required_duration", 120.0))
     if required <= 0:
         required = 120
@@ -182,6 +185,9 @@ def next_committed_option(
         return None, None
     if active.target_lat is not None and active.target_lng is not None:
         distance = haversine_km(world.status.current_lat, world.status.current_lng, active.target_lat, active.target_lng)
+        if distance > 120.0:
+            stats.macro_aborted_count += 1
+            return None, None
         if distance > 5.0:
             duration = max(1, int(distance / config.REPOSITION_SPEED_KM_PER_HOUR * 60.0 + 0.999999))
             if now + duration > world.horizon.horizon_minutes:

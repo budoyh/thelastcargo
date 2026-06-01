@@ -157,6 +157,8 @@ def link_current_observed_vocab(
         return _CACHE[key]
     qwen_preference_compiler.STATS.cache_misses += 1
     if (
+        not config.DISABLE_RUNTIME_QWEN
+        and
         api is not None
         and hasattr(api, "model_chat_completion")
         and qwen_preference_compiler.STATS.linker_calls < config.LLM_MAX_LINKER_CALLS_TOTAL
@@ -171,6 +173,7 @@ def link_current_observed_vocab(
                         {"role": "user", "content": _prompt(preferences, rules, vocab)},
                     ],
                     "temperature": 0,
+                    "max_tokens": 256,
                 }
             )
             qwen_preference_compiler._usage_from_response(resp)
@@ -182,7 +185,7 @@ def link_current_observed_vocab(
         except Exception as exc:  # pragma: no cover - remote API failures vary.
             qwen_preference_compiler.STATS.api_error_count += 1
             qwen_preference_compiler.STATS.last_error_type = exc.__class__.__name__
-    elif api is not None and hasattr(api, "model_chat_completion"):
+    elif api is not None and hasattr(api, "model_chat_completion") and not config.DISABLE_RUNTIME_QWEN:
         qwen_preference_compiler.STATS.budget_exhausted_count += 1
     links = _deterministic_links(preferences, rules, vocab)
     if not links:

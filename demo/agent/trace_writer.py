@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from typing import Any
 
 from . import action_scorer, config
@@ -13,11 +14,13 @@ def _cert_payload(option: CandidateOption) -> dict[str, Any]:
     action_cert = option.action_cert
     cargo_id = action_cert.cargo_id if action_cert else (option.cargo.cargo_id if option.cargo else None)
     source_scope = action_cert.source_scope if action_cert else (option.cargo.source_scope if option.cargo else None)
+    cargo_hash = hashlib.sha256(cargo_id.encode("utf-8")).hexdigest()[:12] if cargo_id else None
     return {
         "candidate_id": option.id,
         "action_type": option.action_type,
         "cert_decision_id": action_cert.decision_id if action_cert else option.decision_id,
-        "cargo_id": cargo_id,
+        "cargo_id": None,
+        "cargo_id_hash": cargo_hash,
         "source_scope": source_scope,
         "action_safe": bool(action_cert.safe) if action_cert else False,
         "action_reasons": list(action_cert.reasons) if action_cert else [],
@@ -77,6 +80,7 @@ def attach_trace(
         "endgame_intensity": round(world.endgame.intensity, 4),
         "debt_value": round(world.debt_market.debt_value, 4),
         "chosen": _cert_payload(chosen),
+        "top5_ptt_decomposition": action_scorer.top_decompositions(options or [chosen], chosen),
         "top5_delta_mpc_decomposition": action_scorer.top_decompositions(options or [chosen], chosen),
         "reposition_gate": dict(chosen.trace) if chosen.action_type == "reposition" else {},
         "reposition_candidates": reposition_candidates,

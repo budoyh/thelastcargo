@@ -1,42 +1,36 @@
-# CROWN-Delta MPC Execution Plan
+# CROWN-PTT-GreedyMPC Execution Plan
 
 ## Success Criteria
 
-- Primary: official-net improvement with scorer-delta evidence.
-- Strong success requires all gates from `agent.md`, including 20260529 official_net at least 45000 and push to `origin/crown-delta-mpc`.
-- Partial success requires official_net at least 20000, preference_penalty below 30000, positive macro completion evidence, clean audits, and 0509 sanity.
-- Otherwise stop as `DO_NOT_SUBMIT_WITH_DELTA_EVIDENCE`.
+- `PTT_SUBMISSION_READY` requires score-hard and semantics-hard gates.
+- Public 20260529 must exceed rescue official_net 5067.69, materially lower preference_penalty below 38140, and keep gross_minus_cost at least 40000.
+- 20260509 must have no catastrophic regression.
+- T01-T18 synthetic behavioral tests must pass.
+- Default package variant must be `preference_firewall_profit`.
 
 ## Work Order
 
-1. Archive old report clutter and keep final `reports/` limited to five Delta-MPC files.
-2. Reuse existing run outputs to build the baseline score table and confirm no double-count score proxy.
-3. Implement cheap official-delta labeler for top regret intervals with explicit validity fields.
-4. Implement Preference Automata interfaces and scorer-semantics adapter.
-5. Add macro repair candidates and macro commitment to runtime.
-6. Add unified top-5 action decomposition.
-7. Run 20260529 31-day evaluation and trigger fallback if worse than rescue.
-8. Run ablations and 20260509 sanity.
-9. Run tests, compile, audit, round-bug check, Qwen smoke, hidden-style synthetic tests.
-10. Generate final five reports, perform final reviewers, commit, and push.
+1. Archive Delta reports and keep final `reports/` limited to five PTT files.
+2. Update `AGENTS.md`, `agent.md`, and `docs/AGENT_WORK/*`.
+3. Add PTT rule schema and compile adapter around existing Qwen compiler.
+4. Add T01-T18 deterministic controllers and ScorerSemanticsAdapter downgrade gate.
+5. Add Preference Firewall and Qwen auditor counters.
+6. Integrate runtime order into rescue core with default `preference_firewall_profit`.
+7. Add hidden-style synthetic tests and PTT report builder.
+8. Run pytest, compileall, audit guard, round bug check, Qwen smoke, synthetic tests.
+9. Run 20260529 and 20260509 31-day evaluations.
+10. Build PTT reports; package only if gates pass, otherwise produce do-not-submit report and optional not-recommended inspection zip.
+11. Commit and push branch.
 
 ## Keep/Kill Policy
 
-- Keep a module only if it improves official net or closes a named official-delta regret without catastrophic 0509 regression.
-- Disable terminal/ranker until official-net ablation proves positive.
-- Disable high-confidence hard blocks unless scorer semantics adapter supports the automaton.
-- Treat invalid replay labels as diagnostics only.
+- Keep deterministic controller/firewall behavior only if it improves official score or provides semantics-safe protection without gross collapse.
+- High-confidence hard blocks require scorer-semantics alignment; otherwise use soft risk.
+- UnknownSoft never hard-blocks.
+- Learned terminal/ranker stays OFF.
 
 ## Known Risks
 
-- The best known public 20260529 offline repair frontier is below the strong target.
-- Existing runtime variants have not proven stable above the partial threshold.
-- Qwen availability may vary; deterministic fallback must remain legal but may not score well.
-- Some official-delta labels may be replay approximations rather than exact official labels.
-
-## Final Execution Status
-
-- Steps 1-10 were executed for this branch.
-- Terminal/ranker remains disabled because no official-net-positive ablation was found.
-- High-lambda automata use remains disabled; automata stay available as diagnostic/soft state.
-- The branch must not be submitted as a scoring success: 20260529 Delta-MPC runtime score is below rescue and below partial/strong thresholds.
+- Implementing all T01-T18 fully may still fail local score gates.
+- Local public preferences may not cover every hidden type; synthetic tests are required but not sufficient for submission readiness.
+- Qwen availability can vary; missing real compile/link/audit on preferences is an external or do-not-submit blocker.

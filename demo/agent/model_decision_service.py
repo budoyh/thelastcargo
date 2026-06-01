@@ -19,9 +19,12 @@ from . import (
     micro_reposition,
     candidate_preference_verifier,
     observed_vocab_linker,
+    preference_controllers,
+    preference_firewall,
     preference_repair,
     preference_repair_planner,
     preference_monitor,
+    ptt_transducer,
     query_policy,
     qwen_preference_compiler,
     rescue_scorer,
@@ -130,6 +133,9 @@ class ModelDecisionService:
             )
 
     def _decide_rescue(self, driver_id: str, runtime: DriverRuntime, world0: World, decision_id: str) -> dict[str, Any]:
+        ptt_rules = ptt_transducer.compile_ptt_rules(self._api, world0) if config.ENABLE_PTT_FIREWALL else tuple()
+        ptt_controllers = preference_controllers.build_controllers(ptt_rules, world0) if ptt_rules else []
+        ptt_firewall_stats = preference_firewall.FirewallStats()
         committed, active_macro = macro_commitment.next_committed_option(
             runtime.active_macro,
             runtime.macro_stats,
@@ -165,6 +171,12 @@ class ModelDecisionService:
                     "filter_rejection_counts": {},
                     "macro": runtime.macro_stats.payload(),
                     "active_macro": runtime.active_macro.payload() if runtime.active_macro else {},
+                    "ptt": {
+                        "rules": len(ptt_rules),
+                        "controllers": len(ptt_controllers),
+                        "firewall": ptt_firewall_stats.payload(),
+                        "stats": ptt_transducer.stats_payload(),
+                    },
                     "qwen": qwen_preference_compiler.stats_payload(),
                 },
             )
@@ -223,6 +235,12 @@ class ModelDecisionService:
                     "filter_rejection_counts": {},
                     "wait_forensic": wait_forensic,
                     "qwen": qwen_preference_compiler.stats_payload(),
+                    "ptt": {
+                        "rules": len(ptt_rules),
+                        "controllers": len(ptt_controllers),
+                        "firewall": ptt_firewall_stats.payload(),
+                        "stats": ptt_transducer.stats_payload(),
+                    },
                     "macro": runtime.macro_stats.payload(),
                     "active_macro": runtime.active_macro.payload() if runtime.active_macro else {},
                 },
@@ -256,7 +274,31 @@ class ModelDecisionService:
         )
         filter_rejections = cargo_filter.rejection_summary(decision_id)
         runtime.memory.update_current_observation(world_after_query, visible, query_minutes)
+        if config.ENABLE_PTT_FIREWALL:
+            ptt_rules = ptt_transducer.compile_ptt_rules(self._api, world_after_query)
+            ptt_controllers = preference_controllers.build_controllers(ptt_rules, world_after_query)
+        if config.ENABLE_PTT_LINKER and world_after_query.status.preferences and visible:
+            ptt_transducer.STATS.linker_call_required_count += 1
+            vocab_links = observed_vocab_linker.link_current_observed_vocab(
+                api=self._api,
+                pref_hash=world_after_query.pref_hash,
+                preferences=world_after_query.status.preferences,
+                rules=world_after_query.rules.rules,
+                visible=visible,
+            )
+            ptt_transducer.STATS.linker_call_count += 1
+        else:
+            vocab_links = tuple()
         options = candidate_generator.build_options(world_after_query, visible, decision_id)
+        if config.ENABLE_PTT_FIREWALL and ptt_controllers:
+            options.extend(
+                preference_firewall.generate_repair_candidates(
+                    controllers=ptt_controllers,
+                    world=world_after_query,
+                    visible_cargos=visible,
+                    decision_id=decision_id,
+                )
+            )
         micro = micro_reposition.build_candidate(world_after_query, visible, decision_id, runtime.wait_lock)
         if micro is not None:
             options.append(micro)
@@ -265,17 +307,30 @@ class ModelDecisionService:
             options.append(repair)
         if config.ENABLE_PCE_REPAIR_FIRST:
             options.extend(preference_repair_planner.build_repair_candidates(world_after_query, decision_id))
-            vocab_links = observed_vocab_linker.link_current_observed_vocab(
-                api=self._api,
-                pref_hash=world_after_query.pref_hash,
-                preferences=world_after_query.status.preferences,
-                rules=world_after_query.rules.rules,
-                visible=visible,
-            )
-        else:
-            vocab_links = tuple()
+            if not vocab_links:
+                vocab_links = observed_vocab_linker.link_current_observed_vocab(
+                    api=self._api,
+                    pref_hash=world_after_query.pref_hash,
+                    preferences=world_after_query.status.preferences,
+                    rules=world_after_query.rules.rules,
+                    visible=visible,
+                )
         observed_ids = {cargo.cargo_id for cargo in visible}
         options = safety.pre_filter_and_attach_action_certificate(options, world_after_query, observed_ids)
+        if config.ENABLE_PTT_FIREWALL and ptt_controllers:
+            options = preference_firewall.apply_firewall(
+                options=options,
+                world=world_after_query,
+                controllers=ptt_controllers,
+                links=vocab_links,
+                stats=ptt_firewall_stats,
+            )
+            preference_firewall.maybe_audit_high_risk(
+                api=self._api,
+                world=world_after_query,
+                options=options,
+                stats=ptt_firewall_stats,
+            )
         options, rescue_stats = rescue_scorer.score_options(options, world_after_query, runtime.wait_lock)
         if config.ENABLE_PCE_REPAIR_FIRST:
             options = candidate_preference_verifier.apply_to_options(options, world_after_query, vocab_links)
@@ -334,6 +389,13 @@ class ModelDecisionService:
                 "wait_forensic": wait_forensic,
                 "macro": runtime.macro_stats.payload(),
                 "active_macro": runtime.active_macro.payload() if runtime.active_macro else {},
+                "ptt": {
+                    "rules": len(ptt_rules),
+                    "controllers": len(ptt_controllers),
+                    "vocab_links": len(vocab_links),
+                    "firewall": ptt_firewall_stats.payload(),
+                    "stats": ptt_transducer.stats_payload(),
+                },
                 "qwen": qwen_preference_compiler.stats_payload(),
             },
         )

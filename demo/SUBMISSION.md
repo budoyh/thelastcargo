@@ -10,8 +10,8 @@
 ## Runtime Entry
 
 - Official evaluation should load `demo/agent/model_decision_service.py`.
-- The default runtime policy is `best_rescue`; no environment variable is required.
-- `CROWN_Y_VARIANT` can still override the policy for local experiments, but the submitted default is the best public-evidence runtime line.
+- The default runtime policy is `preference_firewall_profit`; no environment variable is required.
+- `CROWN_Y_VARIANT` can still override the policy for local experiments, but the submitted default is the Preference Type Transducer plus Preference Firewall profit line.
 
 ## Model Calls
 

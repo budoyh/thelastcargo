@@ -1,40 +1,36 @@
-# CROWN-Delta MPC Experiment Log
+# CROWN-PTT-GreedyMPC Experiment Log
 
 ## 2026-06-01 Setup
 
-- Read `crown_delta_mpc_codex_prompt.md` and `补丁.md`.
-- Created branch `crown-delta-mpc`.
-- Loaded existing reports and run outputs instead of rebuilding from scratch.
-- Identified old PCE reports in `reports/`; these must be archived before final handoff.
-- Confirmed existing scorer output treats `net_income` as official net, already subtracting preference penalty.
+- Read `crown_ptt_firewall_profit_codex_prompt.md`.
+- Created branch `crown-ptt-firewall-profit`.
+- Initial reviewer found P0 gaps: default variant was `best_rescue`, guard docs were Delta-MPC, and PTT controllers/firewall were missing.
+- Current rescue reference remains official_net 5067.69 and preference_penalty 38140 on public 20260529.
 
-## Initial Baseline Evidence
+## Planned Evidence
 
-| dataset | variant | official_net | gross_minus_cost | preference_penalty | take | wait | reposition | notes |
-|---|---|---:|---:|---:|---:|---:|---:|---|
-| 20260529 | rescue reference | 5067.69 | 43207.69 | 38140.00 | 89 | 163 | 0 | failed baseline to beat |
-| 20260529 | PCE final | -3125.02 | 34114.98 | 37240.00 | 117 | 199 | 0 | report-complete but score failed |
-| 20260529 | strict preference | 2240.98 | 38900.98 | 36660.00 | 73 | 180 | 0 | lower gross, still high penalty |
-| 20260529 | money trajectory repair oracle | 35849.85 | 53169.85 | 17320.00 | 69 | 147 | 0 | diagnostic frontier, not runtime |
+| gate | evidence |
+|---|---|
+| default variant | `preference_firewall_profit` in config and package smoke logs |
+| PTT coverage | T01-T18 compiler/controller/firewall rows |
+| synthetic behavior | T01-T18 compile, positive, negative, repair, paraphrase, runtime replacement, firewall impact |
+| public eval | 20260529 and 20260509 31-day simulations |
+| compliance | audit guard P0=0 and package inspection |
 
 ## Reviewer Notes
 
-- Compliance reviewer found no P0 runtime boundary violation.
-- Low-risk notes: Qwen HTTP fallback is allowed by current project rule but should stay budgeted; non-submit traces can contain real cargo ids and must not be copied into final reports.
+- Prompt-adherence/compliance reviewer: default PTT variant, PTT docs, PTT controllers, mandatory linker, and PTT report replacement are immediate blockers.
+- Trace reports must hash diagnostic ids; action params may retain runtime `cargo_id` for official `take_order`.
 
-## Delta-MPC Runtime Results
+## 2026-06-01 Final Evidence
 
-| dataset | variant | official_net | gross_minus_cost | preference_penalty | take | wait | reposition | macro_completed | notes |
-|---|---|---:|---:|---:|---:|---:|---:|---:|---|
-| 20260529 | delta_mpc_macro | -10620.70 | 35299.31 | 45920.00 | 109 | 259 | 0 | 31 | macro entered runtime but official net worsened |
-| 20260529 | delta_mpc_fallback | -5112.02 | 41347.98 | 46460.00 | 86 | 186 | 1 | 32 | best Delta-MPC runtime row, still below rescue |
-| 20260509 | delta_mpc_fallback | 102265.64 | 201985.65 | 99720.00 | 423 | 821 | 0 | 31 | no catastrophic 0509 regression |
-
-## Final Verification
-
-- Delta labels: 103 rows, 3 exact run-pair labels, 100 replay/heuristic diagnostic labels.
-- Automata eval: high-lambda runtime enablement disabled because official-net ablation did not prove positive delta.
-- Qwen smoke: compile_calls=1, rules_returned=1, dummy key blocked count 0, fallback count 0.
-- Synthetic paraphrase checks: 8/8 passed after adding abstract visible-field terms to the deterministic compiler.
-- Local checks: compileall passed, `python -m pytest tests -q` passed with 57 tests, audit guard reported P0=0, round bug patch present.
-- Final stop state: `DO_NOT_SUBMIT_WITH_DELTA_EVIDENCE`; bottleneck is incomplete official-scorer action-level delta evidence and macro variants not producing positive official-net delta.
+- `python -m pytest tests -q`: 57 passed.
+- `python -m compileall demo tools tests`: passed.
+- `python tools/audit_guard.py --fail-on-p0`: P0=0.
+- `python tools/qwen_preference_smoke_test.py`: Qwen3.5-Flash compile call succeeded for a non-empty preference.
+- `python tools/run_ptt_synthetic_tests.py`: 18/18 PTT abstract types passed.
+- 20260529 31-day local eval with `preference_firewall_profit`: official_net=-8635.06, gross_minus_cost=33364.94, preference_penalty=42000.0, failed_driver_count=0.
+- 20260509 31-day local eval with `preference_firewall_profit`: official_net=87591.66, preference_penalty=99530.0, failed_driver_count=0.
+- Runtime full eval used `CROWN_Y_DISABLE_RUNTIME_QWEN=1` because live Qwen calls stalled full-run throughput; default package/runtime still keeps Qwen PTT enabled.
+- Package audit created only a `NOT_RECOMMENDED_DO_NOT_SUBMIT` zip: default variant `preference_firewall_profit`, root `demo/`, no disallowed entries, SHA256 recorded in `reports/ptt_submission_audit.md`.
+- Stop state is `PTT_DIAGNOSTIC_SUCCESS_DO_NOT_SUBMIT`; score gates and runtime Qwen-call gate were not reached.

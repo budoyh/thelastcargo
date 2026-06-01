@@ -487,7 +487,8 @@ def test_trace_records_certificate_fields_in_minimal_mode(monkeypatch):
         query_minutes=5,
     )
     chosen = action["agent_trace"]["chosen"]
-    assert chosen["cargo_id"] == visible[0].cargo_id
+    assert chosen["cargo_id"] is None
+    assert chosen["cargo_id_hash"]
     assert chosen["source_scope"] == CURRENT_ACTIONABLE
     assert chosen["cert_decision_id"] == "d1"
 
@@ -661,6 +662,7 @@ def test_force_take_does_not_bypass_rest_guard(monkeypatch):
 def test_rest_guard_wait_has_post_query_forensic(monkeypatch):
     monkeypatch.setattr(config, "ENABLE_RESCUE_SCORER", True)
     monkeypatch.setattr(config, "ENABLE_RESCUE_REST_GUARD", True)
+    monkeypatch.setattr(config, "ENABLE_NEXT_NO_QUERY_REST_BLOCK", False)
     monkeypatch.setattr(config, "ENABLE_QWEN_PREFERENCE_COMPILER", False)
     monkeypatch.setattr(config, "RESCUE_DIRECT_NET_FLOOR", 1.0)
     monkeypatch.setattr(config, "RESCUE_PROFIT_PER_HOUR_FLOOR", 0.0)

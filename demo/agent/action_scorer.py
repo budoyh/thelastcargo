@@ -1,4 +1,4 @@
-"""Unified Delta-MPC action-value decomposition helpers."""
+"""Unified action-value decomposition helpers."""
 
 from __future__ import annotations
 
@@ -51,6 +51,7 @@ def decompose(option: CandidateOption, *, chosen: bool = False, rank: int | None
     route_value = _component(option, "twohop_lite", "rollout_value", "visible_rollout")
     terminal = _component(option, "terminal_value", "learned_ranker")
     macro_repair = _component(option, "preference_repair_value", "pce_predicted_repair_value")
+    macro_repair += _component(option, "ptt_repair_value")
     if option.trace.get("preference_repair"):
         macro_repair = max(macro_repair, _trace_float(option, "expected_repair_value"))
     pref_cost = -_component(
@@ -58,9 +59,11 @@ def decompose(option: CandidateOption, *, chosen: bool = False, rank: int | None
         "preference_soft_penalty",
         "rest_window_penalty",
         "pce_predicted_marginal_penalty",
+        "ptt_marginal_penalty",
+        "ptt_marginal_penalty_applied",
     )
     broken_macro = -_component(option, "broken_macro_task_cost")
-    lost_window = -_component(option, "lost_repair_window_cost")
+    lost_window = -_component(option, "lost_repair_window_cost", "ptt_lost_repair_window_cost", "ptt_lost_repair_window_applied")
     time_cost = -_component(option, "time_shadow_lite", "duration_penalty")
     query_cost = -_component(option, "query_cost")
     reposition_cost = 0.0
@@ -68,7 +71,7 @@ def decompose(option: CandidateOption, *, chosen: bool = False, rank: int | None
         reposition_cost = abs(option.direct_money)
     reposition_cost += max(0.0, -_component(option, "micro_reposition_cost"))
     execution_risk = -_component(option, "execution_risk", "deadhead_penalty")
-    low_conf = -_component(option, "low_confidence_risk")
+    low_conf = -_component(option, "low_confidence_risk", "ptt_low_confidence_risk", "ptt_low_confidence_applied")
     if option.pref_cert is not None:
         low_conf += max(0.0, option.pref_cert.unknown_risk)
 
@@ -103,10 +106,10 @@ def _why_not_chosen(option: CandidateOption) -> str:
     if reason:
         return str(reason)
     if option.action_type == "reposition":
-        return "lower_delta_mpc_score_or_reposition_gate"
+        return "lower_ptt_score_or_reposition_gate"
     if option.action_type == "wait":
-        return "lower_delta_mpc_score_or_no_macro_commitment"
-    return "lower_delta_mpc_score"
+        return "lower_ptt_score_or_no_macro_commitment"
+    return "lower_ptt_score"
 
 
 def top_decompositions(
