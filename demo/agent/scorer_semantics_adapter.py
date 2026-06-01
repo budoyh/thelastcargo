@@ -8,10 +8,11 @@ from .preference_controllers import ControllerImpact
 from .ptt_types import PTTRule
 
 DIRECT_ACTION_ALIGNED = {
-    "forbidden_cargo_attribute",
     "pickup_deadhead_limit",
-    "haul_distance_limit",
-    "daily_order_count_limit",
+}
+
+COUNTING_ALIGNED = {
+    "full_inactive_day_quota",
 }
 
 SOFT_ONLY = {
@@ -37,8 +38,16 @@ def decision_for_rule(rule: PTTRule) -> SemanticsDecision:
             hard_block_allowed=True,
             massive_penalty_allowed=True,
             counting_unit=rule.counting_unit,
-            probe_status="runtime_direct_metric_aligned",
-            notes="direct runtime metric; no raw scorer import",
+            probe_status="scorer_probe_aligned",
+            notes="scorer micro-probe aligned direct pickup deadhead metric",
+        )
+    if rule.type in COUNTING_ALIGNED and rule.counting_unit in {"capped_count", "month_end", "unknown"}:
+        return SemanticsDecision(
+            hard_block_allowed=True,
+            massive_penalty_allowed=True,
+            counting_unit=rule.counting_unit,
+            probe_status="scorer_probe_aligned",
+            notes="scorer micro-probe aligned capped counting semantics",
         )
     if rule.type in SOFT_ONLY:
         return SemanticsDecision(

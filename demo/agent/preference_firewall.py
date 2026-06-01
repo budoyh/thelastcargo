@@ -151,6 +151,65 @@ def maybe_audit_high_risk(
         option for option in sorted(options, key=lambda item: item.direct_money, reverse=True)
         if (option.trace.get("ptt_firewall") or {}).get("decision") in {"qwen_audit_required", "massive_penalty", "block"}
     ][:limit]
+    if not risky:
+        return
+    if qwen_preference_compiler.STATS.auditor_calls >= config.PTT_MAX_AUDITOR_CALLS_TOTAL:
+        qwen_preference_compiler.STATS.budget_exhausted_count += 1
+        return
+    qwen_preference_compiler.record_auditor_call()
+    ptt_transducer.STATS.auditor_trigger_count += len(risky)
+    try:
+        resp = qwen_preference_compiler._completion_with_retries(
+            api=api,
+            api_key="",
+            use_injected_api=True,
+            payload={
+                "model": qwen_preference_compiler.STATS.last_model_name,
+                "messages": [
+                    {"role": "system", "content": "Return compact valid JSON only; no explanation."},
+                    {
+                        "role": "user",
+                        "content": (
+                            "Audit candidate preference effects. Return JSON {audits:[{candidate_hash,match,effect,confidence}]}. "
+                            "match is yes/no/unknown. effect is violates/repairs/neutral/reduces_repairability/unknown. "
+                            "Do not choose an action. Input is current runtime-only visible data: "
+                            + json.dumps([_audit_payload(world, option) for option in risky], ensure_ascii=False, sort_keys=True)
+                        ),
+                    },
+                ],
+                "temperature": 0,
+                "max_tokens": 192,
+                "enable_thinking": False,
+                "thinking_budget": 0,
+            },
+        )
+        qwen_preference_compiler._usage_from_response(resp)
+        data = qwen_preference_compiler._extract_json(qwen_preference_compiler._content_from_response(resp)) or {}
+        audits = data.get("audits", []) if isinstance(data, dict) else []
+        if not isinstance(audits, list):
+            audits = []
+        by_hash = {str(item.get("candidate_hash", "")): item for item in audits if isinstance(item, dict)}
+        for option in risky:
+            item = by_hash.get(_hash(option.id), {})
+            match = str(item.get("match", "unknown")) if isinstance(item, dict) else "unknown"
+            effect = str(item.get("effect", "unknown")) if isinstance(item, dict) else "unknown"
+            if match == "unknown" or effect == "unknown":
+                ptt_transducer.STATS.auditor_unknown_count += 1
+            option.trace.setdefault("ptt_auditor", []).append(
+                {
+                    "candidate_hash": _hash(option.id),
+                    "match": match if match in {"yes", "no", "unknown"} else "unknown",
+                    "effect": effect if effect in {"violates", "repairs", "neutral", "reduces_repairability", "unknown"} else "unknown",
+                    "confidence": _conf(item.get("confidence", 0.0)) if isinstance(item, dict) else 0.0,
+                }
+            )
+        return
+    except Exception as exc:  # pragma: no cover - remote failures vary.
+        qwen_preference_compiler.STATS.api_error_count += 1
+        qwen_preference_compiler.STATS.last_error_type = exc.__class__.__name__
+        return
+
+    # Unreachable legacy per-candidate path retained only for diff locality.
     for option in risky:
         if qwen_preference_compiler.STATS.auditor_calls >= config.PTT_MAX_AUDITOR_CALLS_TOTAL:
             qwen_preference_compiler.STATS.budget_exhausted_count += 1
@@ -158,8 +217,11 @@ def maybe_audit_high_risk(
         qwen_preference_compiler.record_auditor_call()
         ptt_transducer.STATS.auditor_trigger_count += 1
         try:
-            resp = api.model_chat_completion(
-                {
+            resp = qwen_preference_compiler._completion_with_retries(
+                api=api,
+                api_key="",
+                use_injected_api=True,
+                payload={
                     "model": qwen_preference_compiler.STATS.last_model_name,
                     "messages": [
                         {"role": "system", "content": "Return valid JSON only."},
@@ -168,7 +230,7 @@ def maybe_audit_high_risk(
                             "content": (
                                 "Audit candidate preference effect. Return JSON with match yes/no/unknown, "
                                 "effect violates/repairs/neutral/reduces_repairability, confidence. "
-                                "Do not choose an action. Input is redacted: "
+                                "Do not choose an action. Input is current runtime-only visible data: "
                                 + json.dumps(_audit_payload(world, option), sort_keys=True)
                             ),
                         },
@@ -219,10 +281,20 @@ def _low_confidence_risk(impacts: list[ControllerImpact], rules_by_id: dict[str,
 
 def _audit_payload(world: World, option: CandidateOption) -> dict[str, Any]:
     trace = option.trace.get("ptt_firewall") or {}
+    cargo = option.cargo
+    visible_runtime_fields = {}
+    if cargo is not None:
+        visible_runtime_fields = {
+            "cargo_name": cargo.cargo_name,
+            "start_city": cargo.start_city,
+            "end_city": cargo.end_city,
+        }
     return {
         "pref_hash": _hash(world.pref_hash),
         "candidate_hash": _hash(option.id),
         "action_type": option.action_type,
+        "current_preference_text": world.status.preferences,
+        "visible_runtime_fields": visible_runtime_fields,
         "direct_net_bucket": _bucket(option.direct_money),
         "occupied_minutes": option.occupied_minutes,
         "deadhead_km_bucket": _bucket(option.deadhead_km),

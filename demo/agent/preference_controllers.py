@@ -30,7 +30,7 @@ class ControllerImpact:
 class PreferenceController:
     def __init__(self, rule: PTTRule) -> None:
         self.rule = rule
-        self.progress: dict[str, Any] = {}
+        self._progress: dict[str, Any] = {}
         self.scored_candidate_count = 0
 
     @property
@@ -39,12 +39,15 @@ class PreferenceController:
 
     def update(self, world: World) -> None:
         now = world.status.simulation_progress_minutes
-        self.progress = {
+        self._progress = {
             "day_index": day_index(now),
             "minute_of_day": now % 1440,
             "completed_orders": world.status.completed_order_count,
             "remaining_minutes": remaining_minutes(now, world.horizon.horizon_minutes),
         }
+
+    def progress(self) -> dict[str, Any]:
+        return dict(self._progress)
 
     def satisfied(self) -> bool:
         return False
@@ -59,8 +62,14 @@ class PreferenceController:
         self.scored_candidate_count += 1
         return _impact(self.rule, option, effect="neutral")
 
+    def marginal_penalty(self, option: CandidateOption, world: World, links: tuple[ObservedVocabLink, ...] = tuple()) -> float:
+        return self.marginal_cost(option, world, links).marginal_penalty
+
     def repair_value(self, option: CandidateOption, world: World, links: tuple[ObservedVocabLink, ...]) -> float:
         return self.marginal_cost(option, world, links).repair_value
+
+    def lost_window_cost(self, option: CandidateOption, world: World, links: tuple[ObservedVocabLink, ...] = tuple()) -> float:
+        return self.marginal_cost(option, world, links).lost_repair_window_cost
 
     def generate_repair_candidates(self, world: World, visible_cargos: list[Any], decision_id: str) -> list[CandidateOption]:
         return []
@@ -225,7 +234,7 @@ class DistanceController(PreferenceController):
         if self.rule.type == "haul_distance_limit":
             observed = option.haul_km
         if self.rule.type == "cumulative_deadhead_budget":
-            observed = option.deadhead_km + float(self.progress.get("completed_orders", 0)) * 8.0
+            observed = option.deadhead_km + float(self._progress.get("completed_orders", 0)) * 8.0
         if observed > threshold:
             over = max(0.0, observed - threshold)
             penalty = min(self.rule.penalty_scale() * 2.0, self.rule.penalty_scale() * (0.65 + over / max(1.0, threshold)))

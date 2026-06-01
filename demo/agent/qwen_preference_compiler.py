@@ -66,6 +66,7 @@ class CompileStats:
     linker_calls: int = 0
     auditor_calls: int = 0
     timeout_count: int = 0
+    retry_count: int = 0
     budget_exhausted_count: int = 0
     token_usage_input: int = 0
     token_usage_output: int = 0
@@ -92,6 +93,7 @@ def _active_api_key() -> tuple[str, str, str]:
 def _prompt(preferences: tuple[Any, ...] | list[Any]) -> str:
     return (
         "Compile runtime driver preferences into executable predicate JSON only. "
+        "Return compact JSON only; no explanation. "
         "Do not choose actions. Use only abstract schema fields. Each rule needs "
         "predicate_type, fields, operator, values, time_scope, deadline, counter, "
         "coordinate_target, repair_action_kinds, penalty_amount, penalty_cap, "
@@ -154,7 +156,7 @@ def _dashscope_compatible_completion(payload: dict[str, Any], api_key: str) -> d
         },
         method="POST",
     )
-    with urllib.request.urlopen(req, timeout=3.0) as resp:
+    with urllib.request.urlopen(req, timeout=config.LLM_TIMEOUT_SECONDS) as resp:
         raw = resp.read().decode("utf-8")
     data = json.loads(raw)
     return data if isinstance(data, dict) else {}
@@ -208,6 +210,22 @@ def _float_or_default(value: Any, default: float) -> float:
         return default
 
 
+def _runtime_penalty_from_fallback(fallback_amount: dict[str, Any]) -> tuple[float, float | None, str]:
+    amount_raw = fallback_amount.get("amount")
+    try:
+        amount = float(amount_raw)
+    except (TypeError, ValueError):
+        amount = 0.0
+    if amount <= 0.0 or fallback_amount.get("direction") != "penalty":
+        return float(config.PTT_UNKNOWN_HIGH_PENALTY_SCALE), None, "generic_unknown"
+    cap_raw = fallback_amount.get("cap")
+    try:
+        cap = None if cap_raw is None else float(cap_raw)
+    except (TypeError, ValueError):
+        cap = None
+    return amount, cap, "runtime_preference"
+
+
 def _rule_from_payload(idx: int, raw: dict[str, Any], fallback_amount: dict[str, Any]) -> CompiledPreferenceRule:
     kind = str(raw.get("kind", "unknown")).strip()
     scope = str(raw.get("scope", "unknown")).strip()
@@ -215,12 +233,12 @@ def _rule_from_payload(idx: int, raw: dict[str, Any], fallback_amount: dict[str,
     if repair == "irreversible":
         repair = "irreversible_after_action"
     reward = raw.get("reward_or_penalty")
-    penalty_amount = _float_or_default(raw.get("penalty_amount"), _float_or_default(fallback_amount.get("amount"), 0.0))
-    cap_raw = raw.get("penalty_cap", fallback_amount.get("cap"))
-    try:
-        penalty_cap = None if cap_raw is None else float(cap_raw)
-    except (TypeError, ValueError):
-        penalty_cap = None
+    penalty_amount, penalty_cap, penalty_source = _runtime_penalty_from_fallback(fallback_amount)
+    unresolved = str(raw.get("unresolved_reason", ""))
+    if raw.get("penalty_amount") is not None and penalty_source != "runtime_preference":
+        unresolved = (unresolved + "|qwen_penalty_ignored_without_runtime_source").strip("|")
+    if raw.get("penalty_cap") is not None and penalty_cap is None:
+        unresolved = (unresolved + "|qwen_cap_ignored_without_runtime_source").strip("|")
     predicate_type = str(raw.get("predicate_type", raw.get("kind", "unknown"))).strip()
     operator = str(raw.get("operator", "unknown")).strip()
     confidence = raw.get("confidence", 0.0)
@@ -249,8 +267,29 @@ def _rule_from_payload(idx: int, raw: dict[str, Any], fallback_amount: dict[str,
         penalty_amount=penalty_amount,
         penalty_cap=penalty_cap,
         evidence_hash=_evidence_hash(raw),
-        unresolved_reason=str(raw.get("unresolved_reason", "")),
+        unresolved_reason=unresolved,
     )
+
+
+def _completion_with_retries(
+    *,
+    api: SimulationApiPort | None,
+    payload: dict[str, Any],
+    api_key: str,
+    use_injected_api: bool,
+) -> dict[str, Any]:
+    last_exc: Exception | None = None
+    for attempt in range(3):
+        try:
+            if use_injected_api:
+                return api.model_chat_completion(payload) if api is not None else {}
+            return _dashscope_compatible_completion(payload, api_key)
+        except Exception as exc:  # pragma: no cover - transport errors vary.
+            last_exc = exc
+            if attempt < 2:
+                STATS.retry_count += 1
+    assert last_exc is not None
+    raise last_exc
 
 
 def has_cached(pref_hash: str) -> bool:
@@ -310,14 +349,13 @@ def compile_with_qwen(
             {"role": "user", "content": _prompt(preferences)},
         ],
         "temperature": 0,
-        "max_tokens": STATS.last_model_name and 512,
+        "max_tokens": 512,
+        "enable_thinking": False,
+        "thinking_budget": 0,
     }
     try:
         STATS.compile_calls += 1
-        if use_injected_api:
-            resp = api.model_chat_completion(payload)
-        else:
-            resp = _dashscope_compatible_completion(payload, api_key)
+        resp = _completion_with_retries(api=api, payload=payload, api_key=api_key, use_injected_api=use_injected_api)
         _usage_from_response(resp)
         data = _extract_json(_content_from_response(resp))
         rules_raw = data.get("rules", []) if isinstance(data, dict) else []
@@ -357,6 +395,7 @@ def stats_payload() -> dict[str, Any]:
         "linker_calls": STATS.linker_calls,
         "auditor_calls": STATS.auditor_calls,
         "timeout_count": STATS.timeout_count,
+        "retry_count": STATS.retry_count,
         "budget_exhausted_count": STATS.budget_exhausted_count,
         "token_usage_input": STATS.token_usage_input,
         "token_usage_output": STATS.token_usage_output,

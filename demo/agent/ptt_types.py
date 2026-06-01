@@ -38,10 +38,12 @@ COUNTING_UNITS = {
     "capped_count",
     "month_end",
     "continuous_window",
+    "distinct_days",
+    "sequence",
     "unknown",
 }
 
-TRIGGER_ACTIONS = {"take", "wait", "reposition", "query", "month_end", "unknown"}
+TRIGGER_ACTIONS = {"take", "wait", "reposition", "query", "active", "arrival", "dwell", "month_end", "unknown"}
 
 NUMBER_RE = re.compile(r"[-+]?\d+(?:\.\d+)?")
 CLOCK_RE = re.compile(r"\b\d{1,2}:\d{2}(?::\d{2})?\b")
@@ -155,6 +157,30 @@ def _fallback_penalty_scale(rule_type: str) -> float:
     return 1200.0
 
 
+def _bytecode_for_rule_type(rule_type: str) -> list[dict[str, Any]]:
+    mapping = {
+        "daily_continuous_rest": ["DAILY_WINDOW", "WAIT_COVERAGE", "COUNT_PER_ACTION"],
+        "scheduled_quiet_window": ["DAILY_WINDOW", "INTERVAL_OVERLAP", "WAIT_COVERAGE"],
+        "full_inactive_day_quota": ["FULL_DAY_INACTIVE", "ACTIVE_COVERAGE", "COUNT_CAPPED"],
+        "no_order_day_quota": ["NO_ORDER_DAY", "COUNT_CAPPED"],
+        "forbidden_cargo_attribute": ["FILTER_ACTION", "TAKE_FIELD_MATCH", "COUNT_PER_ACTION"],
+        "required_cargo_attribute_distinct_days": ["TAKE_FIELD_MATCH", "COUNT_DISTINCT_DAY", "ASK_LINKER"],
+        "pickup_deadhead_limit": ["FILTER_ACTION", "PICKUP_DEADHEAD_LE", "COUNT_PER_ACTION"],
+        "haul_distance_limit": ["FILTER_ACTION", "HAUL_DISTANCE_LE", "COUNT_PER_ACTION"],
+        "cumulative_deadhead_budget": ["CUMULATIVE_DISTANCE_BUDGET", "COUNT_CAPPED"],
+        "daily_order_count_limit": ["ORDER_COUNT_LE", "COUNT_PER_ACTION"],
+        "first_order_start_deadline": ["ARRIVE_BEFORE", "ORDER_COUNT_GE"],
+        "location_visit_or_dwell": ["POSITION_NEAR", "DWELL_MINUTES", "REPAIR"],
+        "ordered_multi_stop_task": ["ORDERED_SEQUENCE", "ARRIVE_BEFORE", "DWELL_MINUTES"],
+        "stay_target_window": ["POSITION_NEAR", "DAILY_WINDOW", "DWELL_MINUTES"],
+        "region_avoid_or_require": ["START_END_REGION_MATCH", "ASK_LINKER", "AUDIT_TOP_CANDIDATE"],
+        "runtime_entity_task": ["ASK_LINKER", "TAKE_TOWARDS_TARGET", "REPAIR"],
+        "daily_work_pattern": ["ACTIVE_COVERAGE", "DAILY_WINDOW"],
+        "unknown_soft": ["UNKNOWN_SOFT", "AUDIT_TOP_CANDIDATE"],
+    }
+    return [{"op": op, "args": {}} for op in mapping.get(rule_type, ["UNKNOWN_SOFT"])]
+
+
 def _classify_from_rule(rule: CompiledPreferenceRule, pref_text: str) -> tuple[str, str, str, str, tuple[str, ...]]:
     lower = pref_text.lower()
     if rule.predicate_type == "continuous_wait":
@@ -248,6 +274,8 @@ def from_compiled_rules(world: World, compile_source: str = "deterministic") -> 
                     "fields": list(rule.fields),
                     "operator": rule.operator,
                     "unresolved_reason": rule.unresolved_reason,
+                    "bytecode_program": _bytecode_for_rule_type(rule_type),
+                    "bytecode_ops": [item["op"] for item in _bytecode_for_rule_type(rule_type)],
                 },
             )
         )
@@ -265,6 +293,10 @@ def from_compiled_rules(world: World, compile_source: str = "deterministic") -> 
                     confidence=0.25,
                     source_rule_id=f"pref_{idx}",
                     ptt_compile_source=compile_source,
+                    slots={
+                        "bytecode_program": _bytecode_for_rule_type("unknown_soft"),
+                        "bytecode_ops": [item["op"] for item in _bytecode_for_rule_type("unknown_soft")],
+                    },
                 )
             )
     return tuple(out)

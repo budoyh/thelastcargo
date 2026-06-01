@@ -1,36 +1,48 @@
-# CROWN-PTT-GreedyMPC Execution Plan
+# CROWN-EXACT RBT-MPC Execution Plan
 
-## Success Criteria
+## Stop States
 
-- `PTT_SUBMISSION_READY` requires score-hard and semantics-hard gates.
-- Public 20260529 must exceed rescue official_net 5067.69, materially lower preference_penalty below 38140, and keep gross_minus_cost at least 40000.
-- 20260509 must have no catastrophic regression.
-- T01-T18 synthetic behavioral tests must pass.
-- Default package variant must be `preference_firewall_profit`.
+- `CROWN_EXACT_RECOMMENDED_SUBMISSION`: all score, Qwen, semantics, compliance, reviewer, package, commit, and push gates pass.
+- `CROWN_EXACT_EXPERIMENTAL_SUBMISSION`: explicit experimental gates pass without pretending recommendation.
+- `DO_NOT_SUBMIT_WITH_EXACT_EVIDENCE`: one or more hard gates fail and the final report explains the evidence.
+- `EXTERNAL_BLOCKER`: required external service or true reviewer capability is unavailable.
+
+## Recommended Submission Gates
+
+- 20260529 official_net >= 30000.
+- 20260529 preference_penalty <= 22000.
+- 20260529 gross_minus_cost >= 45000.
+- Full eval has real Qwen compile/cache evidence for non-empty preferences.
+- Controller scored candidates > 0 and scorer-semantics aligned controller evidence > 0.
+- P0 compliance clean: no raw data reads, no server/bench/scorer imports in runtime, no future cargo, current-actionable take only.
+- 20260509 has no catastrophic regression.
+- Package audit confirms root `demo/`, default variant `crown_exact_rbt_mpc`, and no disallowed entries.
+- Reviewer subagents return PASS or their failures are recorded as DO_NOT evidence.
 
 ## Work Order
 
-1. Archive Delta reports and keep final `reports/` limited to five PTT files.
-2. Update `AGENTS.md`, `agent.md`, and `docs/AGENT_WORK/*`.
-3. Add PTT rule schema and compile adapter around existing Qwen compiler.
-4. Add T01-T18 deterministic controllers and ScorerSemanticsAdapter downgrade gate.
-5. Add Preference Firewall and Qwen auditor counters.
-6. Integrate runtime order into rescue core with default `preference_firewall_profit`.
-7. Add hidden-style synthetic tests and PTT report builder.
-8. Run pytest, compileall, audit guard, round bug check, Qwen smoke, synthetic tests.
-9. Run 20260529 and 20260509 31-day evaluations.
-10. Build PTT reports; package only if gates pass, otherwise produce do-not-submit report and optional not-recommended inspection zip.
-11. Commit and push branch.
+1. Keep `best_rescue` legality core as the base; add `crown_exact_rbt_mpc` as the default runtime/package variant.
+2. Archive non-exact final reports and keep `reports/` limited to five exact files.
+3. Add/maintain CROWN-EXACT long-lived records in `AGENTS.md`, `agent.md`, and `docs/AGENT_WORK/*`.
+4. Run Stage 0 baseline table for rescue, previous PTT, money-greedy, strict-pref, and safe-profit.
+5. Run scorer semantics probe and downgrade any unaligned semantics to soft risk.
+6. Run real Qwen RBT compile/cache and observed-vocabulary linking in full eval; do not use smoke as a substitute.
+7. Keep Candidate Auditor, controller scoring, and Visible Graph MPC default OFF unless ablation improves official score or materially reduces penalty without gross collapse.
+8. Run 20260529 and 20260509 31-day exact evaluations with runtime Qwen enabled.
+9. Build package audit; if score gates fail, only produce `NOT_RECOMMENDED_DO_NOT_SUBMIT` inspection zip.
+10. Build final five exact reports, run reviewers, commit, and push.
+
+## Current Result
+
+- Final selected exact strategy did not reach recommendation or experimental gates.
+- 20260529 exact: official_net -163.93, gross_minus_cost 41296.06, preference_penalty 41460.0.
+- 20260509 exact: official_net 86900.14, simulation_failures 0.
+- Real Qwen compile/link evidence exists, but auditor/controller scoring and schema-valid Qwen RBT evidence are insufficient.
+- Current stop state is `DO_NOT_SUBMIT_WITH_EXACT_EVIDENCE`; the package is an inspection package only.
 
 ## Keep/Kill Policy
 
-- Keep deterministic controller/firewall behavior only if it improves official score or provides semantics-safe protection without gross collapse.
-- High-confidence hard blocks require scorer-semantics alignment; otherwise use soft risk.
-- UnknownSoft never hard-blocks.
-- Learned terminal/ranker stays OFF.
-
-## Known Risks
-
-- Implementing all T01-T18 fully may still fail local score gates.
-- Local public preferences may not cover every hidden type; synthetic tests are required but not sufficient for submission readiness.
-- Qwen availability can vary; missing real compile/link/audit on preferences is an external or do-not-submit blocker.
+- Keep only generic, non-driver-specific parameters and modules with official score evidence.
+- Disable modules that reduce official_net below rescue without materially reducing preference_penalty.
+- Never hard-block or apply massive penalties without scorer-semantics alignment.
+- Never use dummy keys, disabled runtime Qwen, synthetic tests, package shape, or zero-illegal status as success.

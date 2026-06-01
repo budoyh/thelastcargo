@@ -71,6 +71,7 @@ def _prompt(preferences: tuple[Any, ...], rules: tuple[CompiledPreferenceRule, .
     ]
     return (
         "Link runtime preference predicates to current observed cargo vocabulary. "
+        "Return compact JSON only; no explanation. "
         "Use only values in observed_vocab. Return JSON with links: field, value, "
         "relation violation|repair|neutral|unknown, confidence, rule_id, evidence_hash. "
         "Do not choose actions. Preferences and vocabulary are runtime input. "
@@ -173,7 +174,9 @@ def link_current_observed_vocab(
                         {"role": "user", "content": _prompt(preferences, rules, vocab)},
                     ],
                     "temperature": 0,
-                    "max_tokens": 256,
+                    "max_tokens": 128,
+                    "enable_thinking": False,
+                    "thinking_budget": 0,
                 }
             )
             qwen_preference_compiler._usage_from_response(resp)

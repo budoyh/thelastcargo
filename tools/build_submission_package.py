@@ -1,4 +1,4 @@
-"""Build a restricted official-style submission ZIP for the PTT runtime."""
+"""Build a restricted official-style submission ZIP for the CROWN-EXACT runtime."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 AGENT_DIR = ROOT / "demo" / "agent"
 SUBMISSION = ROOT / "demo" / "SUBMISSION.md"
-AUDIT_PATH = ROOT / "runs" / "packages" / "ptt_package_audit.json"
+AUDIT_PATH = ROOT / "runs" / "packages" / "exact_package_audit.json"
 
 
 def _default_variant() -> str:
@@ -51,9 +51,9 @@ def main() -> int:
     parser.add_argument("--out", type=Path, default=None)
     args = parser.parse_args()
     default_name = (
-        "crown_ptt_firewall_profit_submission.zip"
+        "crown_exact_rbt_mpc_submission.zip"
         if args.recommended
-        else "crown_ptt_NOT_RECOMMENDED_DO_NOT_SUBMIT.zip"
+        else "crown_exact_NOT_RECOMMENDED_DO_NOT_SUBMIT.zip"
     )
     out = args.out or (ROOT / "runs" / "packages" / default_name)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -89,7 +89,7 @@ def main() -> int:
     ok = (
         audit["contains_demo_agent"]
         and audit["contains_submission_md"]
-        and audit["default_variant"] == "preference_firewall_profit"
+        and audit["default_variant"] == "crown_exact_rbt_mpc"
         and not disallowed
     )
     return 0 if ok else 1

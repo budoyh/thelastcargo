@@ -267,7 +267,7 @@ def wait_forensic(chosen: CandidateOption, options: list[CandidateOption], stats
             cargo_hash = hashlib.sha256(option.cargo.cargo_id.encode("utf-8")).hexdigest()[:12]
         top_rejected.append(
             {
-                "candidate_id": option.id,
+                "candidate_id": None,
                 "cargo_id": None,
                 "candidate_hash": hashlib.sha256(option.id.encode("utf-8")).hexdigest()[:12],
                 "cargo_id_hash": cargo_hash,

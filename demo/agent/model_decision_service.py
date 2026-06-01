@@ -31,6 +31,7 @@ from . import (
     safety,
     time_bid_scorer,
     trace_writer,
+    visible_graph_mpc,
     world as world_module,
 )
 from .llm_budget import LLMBudgetManager
@@ -133,7 +134,7 @@ class ModelDecisionService:
             )
 
     def _decide_rescue(self, driver_id: str, runtime: DriverRuntime, world0: World, decision_id: str) -> dict[str, Any]:
-        ptt_rules = ptt_transducer.compile_ptt_rules(self._api, world0) if config.ENABLE_PTT_FIREWALL else tuple()
+        ptt_rules = ptt_transducer.compile_ptt_rules(self._api, world0) if (config.ENABLE_PTT_FIREWALL or config.ENABLE_EXACT_RBT) else tuple()
         ptt_controllers = preference_controllers.build_controllers(ptt_rules, world0) if ptt_rules else []
         ptt_firewall_stats = preference_firewall.FirewallStats()
         committed, active_macro = macro_commitment.next_committed_option(
@@ -274,7 +275,7 @@ class ModelDecisionService:
         )
         filter_rejections = cargo_filter.rejection_summary(decision_id)
         runtime.memory.update_current_observation(world_after_query, visible, query_minutes)
-        if config.ENABLE_PTT_FIREWALL:
+        if config.ENABLE_PTT_FIREWALL or config.ENABLE_EXACT_RBT:
             ptt_rules = ptt_transducer.compile_ptt_rules(self._api, world_after_query)
             ptt_controllers = preference_controllers.build_controllers(ptt_rules, world_after_query)
         if config.ENABLE_PTT_LINKER and world_after_query.status.preferences and visible:
@@ -332,6 +333,7 @@ class ModelDecisionService:
                 stats=ptt_firewall_stats,
             )
         options, rescue_stats = rescue_scorer.score_options(options, world_after_query, runtime.wait_lock)
+        mpc_stats = visible_graph_mpc.apply_visible_graph_mpc(options, world_after_query, visible)
         if config.ENABLE_PCE_REPAIR_FIRST:
             options = candidate_preference_verifier.apply_to_options(options, world_after_query, vocab_links)
         rest_option, rest_reason = self._rescue_rest_option(runtime, world_after_query, decision_id)
@@ -396,6 +398,7 @@ class ModelDecisionService:
                     "firewall": ptt_firewall_stats.payload(),
                     "stats": ptt_transducer.stats_payload(),
                 },
+                "visible_graph_mpc": mpc_stats.payload(),
                 "qwen": qwen_preference_compiler.stats_payload(),
             },
         )

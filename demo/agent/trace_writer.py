@@ -16,7 +16,8 @@ def _cert_payload(option: CandidateOption) -> dict[str, Any]:
     source_scope = action_cert.source_scope if action_cert else (option.cargo.source_scope if option.cargo else None)
     cargo_hash = hashlib.sha256(cargo_id.encode("utf-8")).hexdigest()[:12] if cargo_id else None
     return {
-        "candidate_id": option.id,
+        "candidate_id": None,
+        "candidate_id_hash": hashlib.sha256(option.id.encode("utf-8")).hexdigest()[:12],
         "action_type": option.action_type,
         "cert_decision_id": action_cert.decision_id if action_cert else option.decision_id,
         "cargo_id": None,

@@ -1,0 +1,11 @@
+primitive_name,rule_hash_or_probe_id,probe_name,trajectory_description_hash,predicted_by_controller,observed_by_official_scorer,penalty_delta,aligned,confidence,enabled_hard,notes
+WAIT_COVERAGE,b1ed9c61bfe3,query_plus_wait_counts_as_wait_span,20f6c9cb2b70,query does not break wait coverage,penalty=0,0.0,True,0.88,False,wait intervals use step_start..step_end
+INTERVAL_OVERLAP,3d610ad8c186,take_during_quiet_window_penalized,f66dd2194ffd,active take violates quiet window,penalty=1000.0,1000.0,True,0.9,False,scheduled rest requires wait coverage across full window
+FULL_DAY_INACTIVE,844bfc8947fb,wait_inactive_reposition_active,6dea819bc644,wait inactive; reposition active,wait_active=0;reposition_active=60,60.0,True,0.92,False,official inactive day counts take/reposition action time only
+NO_ORDER_DAY,150c554c0ee2,full_wait_day_satisfies_off_day,1b4817d2a6b6,no take/reposition satisfies off day,penalty=0.0,0.0,True,0.91,False,query is not active in active_minutes_by_day
+PICKUP_DEADHEAD_LE,89e175b00993,pickup_deadhead_uses_before_to_start,725d0917a761,take over threshold penalized per take,penalty=1000.0,1000.0,True,0.94,True,direct action metric aligned
+COUNT_DISTINCT_DAY,6669d3f1ba06,required_region_counts_action_start_day,fe15bc2617be,accepted matching take repairs distinct-day quota,penalty=0.0,0.0,True,0.86,False,"month-end failed penalty, not per-action hard block"
+COUNT_CAPPED,b4f194a52313,penalty_cap_applies_to_repeated_count,2876ec5d2763,4 violations capped at 2500,penalty=2500.0,2500.0,True,0.95,True,hard only when direct metric also aligned
+COUNT_ONCE_IF_FAILED,339fbed5e1bd,failed_once_not_per_take,cd79520ba57d,failed terminal task charges once,penalty=3000.0,3000.0,True,0.9,False,soft risk until terminal failure is certain
+DWELL_MINUTES,fe91028c3bfd,wait_near_target_satisfies_dwell,6683cb3cc368,arrival then 120 wait repairs dwell,penalty=1000.0,1000.0,False,0.82,False,location primitives remain repair-value only unless exact target slots are present
+ORDERED_SEQUENCE,452e0119369f,single_stop_arrival_satisfies_order_prefix,1ff37a97411f,arrival after previous stop advances sequence,penalty=0.0,0.0,True,0.8,False,sequence is terminal/repair-value only

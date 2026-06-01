@@ -1,10 +1,10 @@
-# CROWN-PTT-GreedyMPC Build Rules
+# CROWN-EXACT RBT-MPC Build Rules
 
-- Active build: CROWN-PTT-GreedyMPC on branch `crown-ptt-firewall-profit`.
-- Stop states are only `PTT_SUBMISSION_READY`, `PTT_DIAGNOSTIC_SUCCESS_DO_NOT_SUBMIT`, or `EXTERNAL_BLOCKER`.
-- Do not present tests passing, legality, Qwen smoke, report completeness, predicate recall, or macro counts as success.
-- Default runtime/package variant must be `preference_firewall_profit`; it must not default to `best_rescue`.
-- The build is Preference Type Transducer, deterministic controllers, action-level Preference Firewall, macro calendar commitments, and profit-greedy freight MPC. Do not build Delta-MPC or TCM Max.
+- Active build: CROWN-EXACT on branch `crown-exact-rbt-mpc`.
+- Stop states are only `CROWN_EXACT_RECOMMENDED_SUBMISSION`, `CROWN_EXACT_EXPERIMENTAL_SUBMISSION`, `DO_NOT_SUBMIT_WITH_EXACT_EVIDENCE`, or `EXTERNAL_BLOCKER`.
+- Do not present tests passing, legality, Qwen smoke, report completeness, synthetic pass, macro counts, or package shape as success.
+- Default runtime/package variant must be `crown_exact_rbt_mpc`; it must not default to `best_rescue` or `preference_firewall_profit`.
+- The build is Rule Bytecode Transducer, scorer-semantic controllers, action-level Preference Firewall, and Visible Opportunity Graph MPC. Do not build Delta-MPC, TCM Max, or another broad rewrite.
 
 ## Runtime Boundary
 
@@ -30,12 +30,12 @@
 - PTT compile pipeline is extract constraints, fill slots, validate executability, critique/repair once, schema validate, and cache.
 - Qwen must not invent penalty amount or cap; missing penalty is marked unknown and priced by generic fallback scale.
 
-## PTT Runtime Order
+## Exact Runtime Order
 
-- Runtime order must be: refresh world, compile/cache PTT rules, update controllers, macro commitments, query, refresh/filter, observed vocabulary linking, candidate generation, Preference Firewall, gated auditor, deterministic scoring, safety finalize.
+- Runtime order must be: refresh world, compile/cache RBT bytecode rules, update controllers, macro commitments, query, refresh/filter, observed vocabulary linking, candidate generation, Preference Firewall, gated auditor, deterministic scoring, optional visible graph MPC, safety finalize.
 - Observed Vocabulary Linker may use only the current query result's visible vocabulary. Committed artifacts must hash or redact values.
 - Preference Firewall runs before profit ranking and must score every take, wait, reposition, and macro candidate with marginal penalty, repair value, lost repair-window cost, failure-probability delta, confidence, and decision.
-- High-confidence per-action violations must be blocked or massively penalized when scorer semantics are aligned. Unverified semantics are soft risk only.
+- High-confidence per-action violations may be blocked or massively penalized only when scorer semantics are aligned and penalty scale is explicit or calibrated. Unverified semantics are soft risk only.
 - Required/repair candidates get repair value. UnknownSoft never hard-blocks high-gross actions but cannot be priced as tiny risk when penalty scale is high.
 
 ## Controller Coverage
@@ -44,31 +44,32 @@
 - Every controller must expose update, satisfied, failed, remaining slack, marginal cost, repair value, generate repair candidates, dynamic lambda, and final penalty lower bound.
 - ScorerSemanticsAdapter gates hard blocks and massive penalties. Unverified controller semantics downgrade to soft risk.
 - Hidden-style behavioral synthetic tests must cover compile, controller state, positive/negative/repair trajectories, paraphrase stability, runtime value replacement, and firewall score impact.
+- Visible Graph MPC is default OFF until ablation proves score uplift or penalty reduction without gross collapse.
 
 ## Reports And Records
 
 - Final `reports/` artifacts are limited to:
-  - `reports/ptt_final_report.md`
-  - `reports/ptt_experiments.csv`
-  - `reports/ptt_compiler_coverage.csv`
-  - `reports/ptt_decision_forensics.csv`
-  - `reports/ptt_submission_audit.md`
+  - `reports/exact_final_report.md`
+  - `reports/exact_experiments.csv`
+  - `reports/scorer_semantics_probe.csv`
+  - `reports/rule_bytecode_coverage.csv`
+  - `reports/decision_forensics.csv`
 - Old reports go under `archive/`; run outputs stay under `runs/`.
 - Durable working records live in `docs/AGENT_WORK/PROJECT_MEMORY.md`, `docs/AGENT_WORK/EXPERIMENT_LOG.md`, and `docs/AGENT_WORK/EXECUTION_PLAN.md`.
-- Reviewer checks are mandatory for prompt adherence, compliance/future-info, PTT semantics, controller/firewall, runtime score, packaging, and final audit. If true subagents are unavailable, perform simulated read-only reviews and record them.
+- Reviewer checks are mandatory for Prompt-Adherence, Compliance/Future-Info, Qwen/RBT, Scorer-Semantics, Planner/Score, and Package Gatekeeper. If true subagents are unavailable, stop as `EXTERNAL_BLOCKER`.
 
 ## Packaging
 
-- Build a recommended submission package only if PTT gates pass.
+- Build a recommended submission package only if CROWN-EXACT gates pass.
 - If an inspection zip is produced after failed gates, its filename must include `NOT_RECOMMENDED_DO_NOT_SUBMIT`.
 - ZIP root must be `demo/`, include `demo/agent/` and `demo/SUBMISSION.md`, and exclude server, data, results, reports, runs, archive, docs, local config, keys, prompts, and pyc files.
-- Package inspection must confirm default variant is `preference_firewall_profit`.
+- Package inspection must confirm default variant is `crown_exact_rbt_mpc`.
 
 ## Verification
 
-- Required checks before final handoff include pytest, compileall, audit guard, round-bug check, Qwen smoke, 20260529 and 20260509 31-day evaluations, PTT synthetic tests, PTT reports, package build/inspection if allowed, commit, and push.
-- `PTT_SUBMISSION_READY` requires score-hard and semantics-hard gates, including 20260529 official net above rescue, preference penalty materially lower than rescue, gross-minus-cost not collapsed, 0509 no catastrophic regression, all T01-T18 tests, default PTT variant, clean package inspection, complete reports, commit, and push.
-- If gates are not met, first line of final report must be `DO NOT SUBMIT: PTT gates not reached.` and stop as `PTT_DIAGNOSTIC_SUCCESS_DO_NOT_SUBMIT`.
+- Required checks before final handoff include pytest, compileall, audit guard, round-bug check, Qwen smoke, scorer semantics probe, baselines, ablation, package audit, reviewer gate, commit, and push.
+- `CROWN_EXACT_RECOMMENDED_SUBMISSION` requires 20260529 official_net >= 30000, preference_penalty <= 22000, gross_minus_cost >= 45000, real Qwen compile/cache hits, scorer-aligned controller evidence, P0 clean, 0509 no catastrophic regression, clean package inspection, complete reports, commit, and push.
+- If gates are not met, first line of final report must be `DO_NOT_SUBMIT_WITH_EXACT_EVIDENCE`.
 
 ## Resource Rules
 

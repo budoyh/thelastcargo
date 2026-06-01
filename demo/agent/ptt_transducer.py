@@ -19,6 +19,44 @@ from .schemas import World
 
 _CACHE: dict[str, tuple[PTTRule, ...]] = {}
 
+RBT_OPS = {
+    "DATE_WINDOW",
+    "DAILY_WINDOW",
+    "INTERVAL_OVERLAP",
+    "WAIT_COVERAGE",
+    "ACTIVE_COVERAGE",
+    "FULL_DAY_INACTIVE",
+    "NO_ORDER_DAY",
+    "FILTER_ACTION",
+    "FIELD_MATCH",
+    "TAKE_FIELD_MATCH",
+    "START_END_REGION_MATCH",
+    "DISTANCE",
+    "PICKUP_DEADHEAD_LE",
+    "HAUL_DISTANCE_LE",
+    "CUMULATIVE_DISTANCE_BUDGET",
+    "ORDER_COUNT_LE",
+    "ORDER_COUNT_GE",
+    "POSITION_NEAR",
+    "ARRIVE_BEFORE",
+    "DWELL_MINUTES",
+    "ORDERED_SEQUENCE",
+    "TAKE_TOWARDS_TARGET",
+    "REPOSITION_TO_TARGET",
+    "COUNT_PER_ACTION",
+    "COUNT",
+    "COUNT_DISTINCT_DAY",
+    "COUNT_ONCE_IF_FAILED",
+    "COUNT_CAPPED",
+    "PENALTY",
+    "PENALTY_AMOUNT",
+    "PENALTY_CAP",
+    "REPAIR",
+    "UNKNOWN_SOFT",
+    "ASK_LINKER",
+    "AUDIT_TOP_CANDIDATE",
+}
+
 
 @dataclass
 class PTTStats:
@@ -50,22 +88,66 @@ def _prompt(preferences: tuple[Any, ...]) -> str:
         "type": list(PTT_TYPES),
         "counting_unit": list(COUNTING_UNITS),
         "trigger_action": list(TRIGGER_ACTIONS),
+        "bytecode_ops": sorted(RBT_OPS),
     }
     return (
-        "Extract runtime preferences into fixed PTT JSON rules. "
-        "Do not choose actions. Do not invent penalty_amount or penalty_cap; "
-        "use null and penalty_source unknown when missing. Pipeline: extract "
-        "constraints, fill slots, validate executability, critique and repair "
-        "once, then return schema-valid JSON only. Values that name runtime "
-        "entities must be redacted or hashed. Return {\"rules\": [...]} with "
-        "fields rule_id,type,scope,field,operator,value_hash,duration_minutes,"
-        "time_window,deadline,count,distance_km,penalty_amount,penalty_cap,"
-        "penalty_source,counting_unit,trigger_action,repair_actions,confidence,"
-        "uncertainty. Allowed schema: "
+        "Compile runtime driver preferences into Rule Bytecode Transducer JSON. "
+        "Return compact JSON only; no explanation. "
+        "Do not choose final actions. Pipeline: extract constraints; fill slots; "
+        "generate bytecode and validate executability; critique and repair JSON once. "
+        "Do not invent penalty_amount or penalty_cap; use null and penalty_source unknown "
+        "when missing from runtime input. Values that name runtime entities may be used "
+        "for reasoning but committed output must use hashes or redaction. Return "
+        "{\"rules\": [...]} with fields rule_id,type,scope,field,operator,value_hash,"
+        "duration_minutes,time_window,deadline,count,distance_km,program,slots,"
+        "penalty_amount,penalty_cap,penalty_source,counting_unit,trigger_action,"
+        "repair_actions,confidence,uncertainty. Allowed schema: "
         + json.dumps(schema, sort_keys=True)
         + " Preferences: "
         + json.dumps(list(preferences), ensure_ascii=False, sort_keys=True)
     )
+
+
+def _sanitize_program(value: Any) -> tuple[dict[str, Any], ...]:
+    if not isinstance(value, list):
+        return tuple()
+    out: list[dict[str, Any]] = []
+    for item in value[:24]:
+        if not isinstance(item, dict):
+            continue
+        op = str(item.get("op", "")).strip()
+        if op not in RBT_OPS:
+            continue
+        args = item.get("args")
+        out.append({"op": op, "args": args if isinstance(args, dict) else {}})
+    return tuple(out)
+
+
+def _type_from_program(program: tuple[dict[str, Any], ...]) -> str:
+    ops = {str(item.get("op", "")) for item in program}
+    if "FULL_DAY_INACTIVE" in ops:
+        return "full_inactive_day_quota"
+    if "NO_ORDER_DAY" in ops:
+        return "no_order_day_quota"
+    if "WAIT_COVERAGE" in ops or "DAILY_WINDOW" in ops:
+        return "daily_continuous_rest"
+    if "TAKE_FIELD_MATCH" in ops or "START_END_REGION_MATCH" in ops:
+        return "forbidden_cargo_attribute"
+    if "PICKUP_DEADHEAD_LE" in ops:
+        return "pickup_deadhead_limit"
+    if "HAUL_DISTANCE_LE" in ops:
+        return "haul_distance_limit"
+    if "CUMULATIVE_DISTANCE_BUDGET" in ops:
+        return "cumulative_deadhead_budget"
+    if "COUNT_DISTINCT_DAY" in ops:
+        return "required_cargo_attribute_distinct_days"
+    if "ORDERED_SEQUENCE" in ops:
+        return "ordered_multi_stop_task"
+    if "POSITION_NEAR" in ops or "DWELL_MINUTES" in ops:
+        return "location_visit_or_dwell"
+    if "ORDER_COUNT_LE" in ops or "ORDER_COUNT_GE" in ops:
+        return "daily_order_count_limit"
+    return "unknown_soft"
 
 
 def _penalty_from_pref(pref: Any) -> tuple[float | None, float | None, str, list[str]]:
@@ -90,7 +172,8 @@ def _penalty_from_pref(pref: Any) -> tuple[float | None, float | None, str, list
 
 
 def _rule_from_payload(idx: int, raw: dict[str, Any], pref: Any, pref_hash: str) -> PTTRule | None:
-    rule_type = str(raw.get("type", "unknown_soft")).strip()
+    program = _sanitize_program(raw.get("program"))
+    rule_type = str(raw.get("type") or _type_from_program(program)).strip()
     if rule_type not in PTT_TYPES:
         STATS.schema_mismatch_count += 1
         return None
@@ -124,6 +207,13 @@ def _rule_from_payload(idx: int, raw: dict[str, Any], pref: Any, pref_hash: str)
     if rule_type == "unknown_soft":
         STATS.unknown_soft_count += 1
     uncertainty_out = list(dict.fromkeys([*uncertainty, *[str(x) for x in raw.get("uncertainty", []) if isinstance(raw.get("uncertainty"), list)]]))
+    slots = raw.get("slots") if isinstance(raw.get("slots"), dict) else {}
+    slots = {
+        **slots,
+        "schema_validated": True,
+        "bytecode_program": list(program),
+        "bytecode_ops": [item["op"] for item in program],
+    }
     return PTTRule(
         rule_id=short_hash({"pref_hash": pref_hash, "idx": idx, "type": rule_type}, 12),
         type=rule_type,
@@ -146,7 +236,7 @@ def _rule_from_payload(idx: int, raw: dict[str, Any], pref: Any, pref_hash: str)
         uncertainty=tuple(uncertainty_out),
         source_rule_id=f"qwen_{idx}",
         ptt_compile_source="qwen_ptt",
-        slots={"schema_validated": True},
+        slots=slots,
     )
 
 
@@ -189,6 +279,8 @@ def compile_ptt_rules(api: SimulationApiPort | None, world: World) -> tuple[PTTR
         ],
         "temperature": 0,
         "max_tokens": 512,
+        "enable_thinking": False,
+        "thinking_budget": 0,
     }
     if config.DISABLE_RUNTIME_QWEN:
         qwen_preference_compiler.STATS.budget_blocked_count += 1
@@ -198,7 +290,15 @@ def compile_ptt_rules(api: SimulationApiPort | None, world: World) -> tuple[PTTR
         try:
             STATS.compile_calls += 1
             qwen_preference_compiler.STATS.compile_calls += 1
-            compiled = _compile_from_response(api.model_chat_completion(payload), world)
+            compiled = _compile_from_response(
+                qwen_preference_compiler._completion_with_retries(
+                    api=api,
+                    payload=payload,
+                    api_key="",
+                    use_injected_api=True,
+                ),
+                world,
+            )
         except Exception as exc:  # pragma: no cover - remote API failures vary.
             qwen_preference_compiler.STATS.api_error_count += 1
             qwen_preference_compiler.STATS.last_error_type = exc.__class__.__name__
@@ -208,7 +308,15 @@ def compile_ptt_rules(api: SimulationApiPort | None, world: World) -> tuple[PTTR
             try:
                 STATS.compile_calls += 1
                 qwen_preference_compiler.STATS.compile_calls += 1
-                compiled = _compile_from_response(qwen_preference_compiler._dashscope_compatible_completion(payload, key), world)
+                compiled = _compile_from_response(
+                    qwen_preference_compiler._completion_with_retries(
+                        api=None,
+                        payload=payload,
+                        api_key=key,
+                        use_injected_api=False,
+                    ),
+                    world,
+                )
             except Exception as exc:  # pragma: no cover - remote API failures vary.
                 qwen_preference_compiler.STATS.api_error_count += 1
                 qwen_preference_compiler.STATS.last_error_type = exc.__class__.__name__

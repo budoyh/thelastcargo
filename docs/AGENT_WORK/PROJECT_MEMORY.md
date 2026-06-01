@@ -1,10 +1,10 @@
-# CROWN-PTT-GreedyMPC Project Memory
+# CROWN-EXACT RBT-MPC Project Memory
 
 ## Current Objective
 
-- Build `crown-ptt-firewall-profit` from the existing legal rescue core.
-- Default runtime/package variant must be `preference_firewall_profit`; do not default to `best_rescue`.
-- The goal is hidden-preference penalty control through PTT controllers and action-level Preference Firewall while preserving freight gross.
+- Build `crown-exact-rbt-mpc` from the existing legal rescue core.
+- Default runtime/package variant must be `crown_exact_rbt_mpc`; do not default to `best_rescue` or `preference_firewall_profit`.
+- The goal is official-net uplift through Rule Bytecode Transducer, scorer-semantic controllers, action-level Preference Firewall, and Visible Opportunity Graph MPC while preserving freight gross.
 
 ## Baseline Facts To Preserve
 
@@ -12,6 +12,15 @@
 - Prior Delta-MPC best runtime did not improve over rescue; macro completion did not produce positive official-delta gain.
 - First online B-list style submission using best_rescue default reportedly had hidden preference penalty explosion.
 - Legal actions, Qwen calls, reports, predicate recall, and macro counts are not success without score-hard and semantics-hard gates.
+
+## Current Known Failures
+
+- `best_rescue` 20260529 reference is only official_net 5067.69 with preference_penalty 38140.
+- Previous PTT 20260529 failed harder: official_net -8635.06, gross_minus_cost 33364.94, preference_penalty 42000.
+- Previous PTT full 31-day traces had qwen_compile_calls=0 and ptt_compile_calls=0; synthetic T01-T18 passing did not prove real preference conversion.
+- Previous PTT showed many massive-penalty traces but ptt_blocks=0, so the firewall did not become reliable action-level protection.
+- Delta-MPC exact labels were too sparse and mostly replay/heuristic, so they are not a reliable value function target.
+- Hidden/online preference penalty risk remains the primary submission risk; no low-score default can be packaged as success.
 
 ## Non-Negotiable Boundaries
 
@@ -21,14 +30,15 @@
 - Qwen may compile PTT rules, link current observed vocabulary, or audit gated candidates; it must not choose final actions.
 - Protected literals remain redacted in committed files as `PROTECTED_LITERAL_REDACTED`.
 
-## PTT Implementation Direction
+## CROWN-EXACT Implementation Direction
 
 - Keep the best rescue legality core: query-refresh, current-actionable filtering, safety certificates, and positive freight scoring.
-- Add PTT compile/cache and T01-T18 deterministic controllers.
+- Add RBT compile/cache and T01-T18 deterministic controllers.
 - Run Observed Vocabulary Linker after every query when preferences exist and visible cargo exists.
 - Run Preference Firewall before profit ranking.
 - Use Qwen gated auditor only for high-risk uncertain candidates; auditor output is match/effect/confidence only.
-- Terminal/ranker learned components remain OFF.
+- Keep Visible Graph MPC default OFF unless ablation proves positive official-net or penalty improvement without gross collapse.
+- Terminal/ranker learned components remain OFF unless score evidence supports them.
 
 ## Failure Honesty
 
@@ -39,7 +49,6 @@
 
 ## Current Stop State
 
-- The current branch is diagnostic only: `PTT_DIAGNOSTIC_SUCCESS_DO_NOT_SUBMIT`.
-- 20260529 failed score gates: official_net did not exceed rescue, preference_penalty did not fall below rescue, and gross_minus_cost collapsed below the target floor.
-- Full-run runtime Qwen was disabled for evaluation due to throughput stall, although Qwen smoke compile succeeds and default package keeps PTT Qwen enabled.
-- Next shortest path is targeted repair of high-penalty target/dwell and stay-window controllers, plus bounded runtime Qwen caching/linking that does not stall 31-day runs.
+- Allowed exact stop states: `CROWN_EXACT_RECOMMENDED_SUBMISSION`, `CROWN_EXACT_EXPERIMENTAL_SUBMISSION`, `DO_NOT_SUBMIT_WITH_EXACT_EVIDENCE`, `EXTERNAL_BLOCKER`.
+- If Qwen API, true subagents, or official local evaluation are unavailable, stop as `EXTERNAL_BLOCKER`.
+- If score gates are not reached after exact evidence is produced, stop as `DO_NOT_SUBMIT_WITH_EXACT_EVIDENCE`.

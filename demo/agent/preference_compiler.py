@@ -260,7 +260,7 @@ def compile_if_changed(
                 fallback_amounts=amount_payloads,
             )
             if qwen_preference_compiler.STATS.compile_calls > before:
-                _COMPILE_BUDGET.record_compile(status.driver_id)
+                _COMPILE_BUDGET.record_compile(status.driver_id, pref_hash)
         else:
             qwen_preference_compiler.record_budget_blocked()
             qwen_rules = None
