@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import config
+from . import action_scorer, config
 from .schemas import CandidateOption, NormalizedCargo, World
 from .time_utils import remaining_minutes
 
@@ -77,6 +77,7 @@ def attach_trace(
         "endgame_intensity": round(world.endgame.intensity, 4),
         "debt_value": round(world.debt_market.debt_value, 4),
         "chosen": _cert_payload(chosen),
+        "top5_delta_mpc_decomposition": action_scorer.top_decompositions(options or [chosen], chosen),
         "reposition_gate": dict(chosen.trace) if chosen.action_type == "reposition" else {},
         "reposition_candidates": reposition_candidates,
     }

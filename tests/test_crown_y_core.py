@@ -24,6 +24,8 @@ from agent import (  # noqa: E402
     candidate_preference_verifier,
     preference_repair_planner,
     preference_repair,
+    macro_commitment,
+    preference_automata,
     preference_monitor,
     qwen_preference_compiler,
     query_policy,
@@ -1018,3 +1020,58 @@ def test_pce_repair_planner_builds_no_query_rest_block(monkeypatch):
     assert repairs[0].action_type == "wait"
     assert repairs[0].trace["repair_kind"] == "no_query_rest_block"
     assert repairs[0].trace["action_certificate_required"] is True
+
+
+def test_delta_mpc_top5_decomposition_present(monkeypatch):
+    monkeypatch.setattr(config, "SUBMIT_MODE", False)
+    world1, _, _ = build_world()
+    visible = cargo_filter.normalize_and_filter(
+        raw_cargos=[cargo_item(price=700, cost=60)],
+        world=world1,
+        source_scope=CURRENT_ACTIONABLE,
+        decision_id="d1",
+    )
+    options = candidate_generator.build_options(world1, visible, "d1")
+    options = safety.pre_filter_and_attach_action_certificate(options, world1, {visible[0].cargo_id})
+    chosen = options[0]
+    action = trace_writer.attach_trace(
+        {"action": "take_order", "params": {"cargo_id": visible[0].cargo_id}},
+        world=world1,
+        query_plan=query_policy.QueryPlan("current_small_query", k=50),
+        visible_cargos=visible,
+        chosen=chosen,
+        options=options,
+        query_minutes=5,
+    )
+    top5 = action["agent_trace"]["top5_delta_mpc_decomposition"]
+    assert top5
+    assert {"freight_direct_net", "macro_task_repair_value", "final_score"} <= set(top5[0])
+
+
+def test_macro_commitment_waits_without_query():
+    world1, _, _ = build_world()
+    active = macro_commitment.MacroCommitment(
+        active_macro_id="m1",
+        macro_type="wait_at_target",
+        source_automaton_ids=("r1",),
+        start_time=0,
+        deadline=600,
+        required_duration=120,
+        expected_avoided_penalty=1000,
+        confidence=0.8,
+    )
+    stats = macro_commitment.MacroStats()
+    option, remaining = macro_commitment.next_committed_option(active, stats, world1, "d1")
+    assert option is not None
+    assert option.action_type == "wait"
+    assert option.trace["macro_candidate"] is True
+    assert stats.query_skipped_due_to_macro == 1
+    assert remaining is None
+
+
+def test_preference_automata_snapshot_has_high_impact_type():
+    world1, _, _ = build_world(preferences=[{"content": "limit 55 km", "penalty_amount": 120}])
+    snap = preference_automata.snapshot(world1)
+    assert snap.states
+    assert snap.states[0].automaton_type == "pickup_or_haul_distance_limit"
+    assert "automata_count" in snap.summary()

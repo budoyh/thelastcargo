@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Iterable
 
-from . import config
+from . import config, macro_commitment
 from .geo import haversine_km
 from .schemas import CandidateOption, World
 from .time_utils import day_index, remaining_minutes
@@ -162,6 +162,19 @@ def build_repair_candidate(world: World, decision_id: str) -> CandidateOption | 
                     "urgency": target.urgency,
                 }
             )
+            macro_commitment.mark_macro_candidate(
+                option,
+                macro_type="wait_at_target",
+                source_automaton_ids=(target.rule_id,),
+                avoided_penalty=target.value,
+                repair_value=target.value,
+                lost_gross=max(0.0, world.time_market.productive_time_shadow_price * duration),
+                deadline_minutes=option.finish_minutes,
+                feasibility="runtime_target_wait_feasible",
+                confidence=target.urgency,
+                required_duration=duration,
+                permits_query=False,
+            )
         elif 5.0 < distance <= 120.0:
             duration = max(1, int(distance / config.REPOSITION_SPEED_KM_PER_HOUR * 60.0 + 0.999999))
             if world.status.simulation_progress_minutes + duration > world.horizon.horizon_minutes:
@@ -193,6 +206,19 @@ def build_repair_candidate(world: World, decision_id: str) -> CandidateOption | 
                     "payback_p50_minutes": min(360, duration + 120),
                     "payback_p80_minutes": min(720, duration + 300),
                 }
+            )
+            macro_commitment.mark_macro_candidate(
+                option,
+                macro_type="target_or_dwell_reposition",
+                source_automaton_ids=(target.rule_id,),
+                avoided_penalty=target.value,
+                repair_value=target.value,
+                lost_gross=cost,
+                deadline_minutes=world.status.simulation_progress_minutes + duration + 180,
+                feasibility="runtime_target_reposition_feasible",
+                confidence=target.urgency,
+                required_duration=120,
+                permits_query=False,
             )
         else:
             continue

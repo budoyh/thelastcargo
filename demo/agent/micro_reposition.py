@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from . import config
+from . import config, macro_commitment
 from .geo import haversine_km
 from .schemas import CandidateOption, NormalizedCargo, World
 from .wait_lock import WaitLockState
@@ -63,5 +63,17 @@ def build_candidate(world: World, visible: list[NormalizedCargo], decision_id: s
             "payback_window_6h": 360,
             "payback_window_12h": 720,
         }
+    )
+    macro_commitment.mark_macro_candidate(
+        option,
+        macro_type="escape_reposition",
+        avoided_penalty=0.0,
+        repair_value=max(0.0, best_visible_value) * 0.18,
+        lost_gross=abs(option.direct_money),
+        deadline_minutes=option.finish_minutes + 360,
+        feasibility="current_visible_cluster_escape",
+        confidence=0.45,
+        required_duration=0,
+        permits_query=True,
     )
     return option

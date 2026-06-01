@@ -13,6 +13,14 @@ def _float_env(name: str, default: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, value))
 
 
+def _int_env(name: str, default: int, lo: int, hi: int) -> int:
+    try:
+        value = int(os.environ.get(name, default))
+    except (TypeError, ValueError):
+        return default
+    return max(lo, min(hi, value))
+
+
 SUBMIT_MODE = False
 
 ENABLE_TIME_SHADOW = True
@@ -104,8 +112,8 @@ RESCUE_LOOP_BREAK_AFTER_WAITS = 3
 RESCUE_MICRO_REPOSITION_MIN_KM = 5.0
 RESCUE_MICRO_REPOSITION_MAX_KM = 30.0
 RESCUE_MICRO_REPOSITION_TRIGGER_WAITS = 3
-RESCUE_DAILY_REST_UNTIL_MINUTE = 9 * 60
-RESCUE_FULL_REST_PERIOD_DAYS = 15
+RESCUE_DAILY_REST_UNTIL_MINUTE = _int_env("CROWN_Y_REST_UNTIL_MINUTE", 9 * 60, 0, 12 * 60)
+RESCUE_FULL_REST_PERIOD_DAYS = _int_env("CROWN_Y_FULL_REST_PERIOD_DAYS", 15, 0, 31)
 RESCUE_MIN_REMOVE_SLACK_MINUTES = 60
 ENABLE_RESCUE_SCORER = False
 ENABLE_RESCUE_WAIT_PENALTY = False
@@ -171,6 +179,10 @@ if _VARIANT in {
     "predicate_repair_verifier",
     "pce_repair_first",
     "pce_final",
+    "delta_mpc",
+    "delta_mpc_delta_only",
+    "delta_mpc_macro",
+    "delta_mpc_fallback",
 }:
     ENABLE_RESCUE_SCORER = True
     ENABLE_SCOUT_THEN_DEEPEN = False
@@ -248,6 +260,10 @@ if _VARIANT in {
     "predicate_repair_verifier",
     "pce_repair_first",
     "pce_final",
+    "delta_mpc",
+    "delta_mpc_delta_only",
+    "delta_mpc_macro",
+    "delta_mpc_fallback",
 }:
     ENABLE_QWEN_PREFERENCE_COMPILER = True
     ENABLE_RESCUE_PREFERENCE_SOFT = True
@@ -266,6 +282,39 @@ if _VARIANT in {"predicate_repair_planner", "predicate_repair_verifier", "pce_re
 if _VARIANT in {"pce_repair_first", "pce_final"}:
     ENABLE_RESCUE_MICRO_REPOSITION = True
     ENABLE_NEXT_OBSERVATION_REPOSITION = True
+
+if _VARIANT in {"delta_mpc", "delta_mpc_delta_only", "delta_mpc_macro", "delta_mpc_fallback"}:
+    ENABLE_RESCUE_WAIT_PENALTY = True
+    ENABLE_QWEN_PREFERENCE_COMPILER = True
+    ENABLE_RESCUE_REST_GUARD = True
+    ENABLE_NEXT_NO_QUERY_REST_BLOCK = True
+    ENABLE_RESCUE_PREFERENCE_SOFT = True
+    RESCUE_DIRECT_NET_FLOOR = 1.0
+    RESCUE_PROFIT_PER_HOUR_FLOOR = 0.0
+    RESCUE_DAILY_REST_UNTIL_MINUTE = _int_env("CROWN_Y_REST_UNTIL_MINUTE", 8 * 60, 0, 12 * 60)
+    RESCUE_FULL_REST_PERIOD_DAYS = _int_env("CROWN_Y_FULL_REST_PERIOD_DAYS", 10, 0, 31)
+if _VARIANT in {"delta_mpc", "delta_mpc_macro"}:
+    ENABLE_NEXT_DYNAMIC_QUERY_K = True
+    ENABLE_NEXT_PREFERENCE_STATE_MACHINE = True
+    ENABLE_PCE_REPAIR_FIRST = True
+    ENABLE_RESCUE_MICRO_REPOSITION = True
+    ENABLE_NEXT_OBSERVATION_REPOSITION = True
+if _VARIANT == "delta_mpc_delta_only":
+    ENABLE_NEXT_DYNAMIC_QUERY_K = False
+    ENABLE_NEXT_PREFERENCE_STATE_MACHINE = False
+    ENABLE_PCE_REPAIR_FIRST = False
+    ENABLE_RESCUE_MICRO_REPOSITION = False
+if _VARIANT == "delta_mpc_fallback":
+    ENABLE_NEXT_DYNAMIC_QUERY_K = False
+    ENABLE_NEXT_PREFERENCE_STATE_MACHINE = False
+    ENABLE_PCE_REPAIR_FIRST = False
+    ENABLE_NEXT_MARGINAL_PREF = False
+    ENABLE_RESCUE_MICRO_REPOSITION = True
+    ENABLE_RESCUE_TWOHOP_LITE = True
+    ENABLE_RESCUE_TIME_SHADOW_LITE = True
+    RESCUE_QUERY_K_DEFAULT = 120
+    RESCUE_DAILY_REST_UNTIL_MINUTE = _int_env("CROWN_Y_REST_UNTIL_MINUTE", 9 * 60, 0, 12 * 60)
+    RESCUE_FULL_REST_PERIOD_DAYS = _int_env("CROWN_Y_FULL_REST_PERIOD_DAYS", 15, 0, 31)
 
 if _VARIANT in {"best_rescue", "a7"}:
     RESCUE_QUERY_K_DEFAULT = 120

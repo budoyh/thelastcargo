@@ -179,11 +179,23 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
             option.trace["hard_block_reason"] = reason or ""
         elif option.action_type == "wait":
             penalty = wait_score_penalty(state)
-            repair_value = float(option.trace.get("expected_repair_value", 0.0)) if option.trace.get("preference_repair") else 0.0
+            repair_value = (
+                float(option.trace.get("expected_repair_value", 0.0) or 0.0)
+                if option.trace.get("preference_repair")
+                else float(option.trace.get("repair_value", 0.0) or 0.0)
+                if option.trace.get("macro_candidate")
+                else 0.0
+            )
             option.score = repair_value - penalty
             option.score_components.update({"repeated_wait_penalty": -penalty, "preference_repair_value": repair_value})
         elif option.action_type == "reposition":
-            repair_value = float(option.trace.get("expected_repair_value", 0.0)) if option.trace.get("preference_repair") else 0.0
+            repair_value = (
+                float(option.trace.get("expected_repair_value", 0.0) or 0.0)
+                if option.trace.get("preference_repair")
+                else float(option.trace.get("repair_value", 0.0) or 0.0)
+                if option.trace.get("macro_candidate")
+                else 0.0
+            )
             option.score = repair_value - abs(option.direct_money) - 40.0
             option.score_components.update({"micro_reposition_cost": -abs(option.direct_money) - 40.0, "preference_repair_value": repair_value})
     return options, RescueStats(positive_count, safe_positive_count, best_net, best_per_hour, hard_counts)
@@ -195,7 +207,7 @@ def choose(options: list[CandidateOption], stats: RescueStats, state: WaitLockSt
     repair_options = [
         o for o in options
         if o.action_type in {"reposition", "wait"}
-        and o.trace.get("preference_repair")
+        and (o.trace.get("preference_repair") or o.trace.get("macro_candidate"))
         and not (o.action_cert and not o.action_cert.safe)
         and o.score > 250.0
     ]

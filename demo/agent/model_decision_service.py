@@ -15,6 +15,7 @@ from . import (
     endgame_planner,
     learned_ranker,
     llm_preference_judge,
+    macro_commitment,
     micro_reposition,
     candidate_preference_verifier,
     observed_vocab_linker,
@@ -42,6 +43,8 @@ class DriverRuntime:
     prev_world: World | None = None
     decision_seq: int = 0
     wait_lock: WaitLockState = field(default_factory=WaitLockState)
+    active_macro: macro_commitment.MacroCommitment | None = None
+    macro_stats: macro_commitment.MacroStats = field(default_factory=macro_commitment.MacroStats)
 
 
 class ModelDecisionService:
@@ -127,8 +130,58 @@ class ModelDecisionService:
             )
 
     def _decide_rescue(self, driver_id: str, runtime: DriverRuntime, world0: World, decision_id: str) -> dict[str, Any]:
+        committed, active_macro = macro_commitment.next_committed_option(
+            runtime.active_macro,
+            runtime.macro_stats,
+            world0,
+            decision_id,
+        )
+        runtime.active_macro = active_macro
+        if committed is not None:
+            action = safety.finalize(committed, world0)
+            action = trace_writer.attach_trace(
+                action,
+                world=world0,
+                query_plan=query_policy.QueryPlan(kind="active_macro_commitment", k=0, reason=config.RESCUE_VARIANT),
+                visible_cargos=[],
+                chosen=committed,
+                options=[committed],
+                query_minutes=0,
+                observed_count=0,
+                rescue={
+                    "variant": config.RESCUE_VARIANT,
+                    "wait_lock": runtime.wait_lock.snapshot(),
+                    "query_k": 0,
+                    "returned_count": 0,
+                    "actionable_after_query": 0,
+                    "positive_net_count": 0,
+                    "missed_window_risk": 0,
+                    "query_reward": 0.0,
+                    "positive_count": 0,
+                    "safe_positive_count": 0,
+                    "best_order_net": 0.0,
+                    "best_order_per_hour": 0.0,
+                    "hard_block_reason_counts": {},
+                    "filter_rejection_counts": {},
+                    "macro": runtime.macro_stats.payload(),
+                    "active_macro": runtime.active_macro.payload() if runtime.active_macro else {},
+                    "qwen": qwen_preference_compiler.stats_payload(),
+                },
+            )
+            runtime.prev_world = world0
+            runtime.wait_lock.record(
+                str(action.get("action", "")),
+                0,
+                0,
+                "active_macro_commitment",
+                day=day_index(world0.status.simulation_progress_minutes),
+                wait_minutes=int((action.get("params") or {}).get("duration_minutes", 0) or 0),
+            )
+            return action
+
         pre_rest_option, pre_rest_reason = self._rescue_rest_option(runtime, world0, decision_id)
         if config.ENABLE_NEXT_NO_QUERY_REST_BLOCK and pre_rest_option is not None:
+            runtime.active_macro = macro_commitment.record_selection(runtime.active_macro, runtime.macro_stats, pre_rest_option, world0)
             action = safety.finalize(pre_rest_option, world0)
             stats = rescue_scorer.RescueStats(0, 0, 0.0, 0.0, {})
             wait_forensic = rescue_scorer.wait_forensic(pre_rest_option, [pre_rest_option], stats, runtime.wait_lock)
@@ -170,6 +223,8 @@ class ModelDecisionService:
                     "filter_rejection_counts": {},
                     "wait_forensic": wait_forensic,
                     "qwen": qwen_preference_compiler.stats_payload(),
+                    "macro": runtime.macro_stats.payload(),
+                    "active_macro": runtime.active_macro.payload() if runtime.active_macro else {},
                 },
             )
             runtime.prev_world = world0
@@ -226,6 +281,7 @@ class ModelDecisionService:
             options = candidate_preference_verifier.apply_to_options(options, world_after_query, vocab_links)
         rest_option, rest_reason = self._rescue_rest_option(runtime, world_after_query, decision_id)
         chosen = rest_option if rest_option is not None else rescue_scorer.choose(options, rescue_stats, runtime.wait_lock)
+        runtime.active_macro = macro_commitment.record_selection(runtime.active_macro, runtime.macro_stats, chosen, world_after_query)
         action = safety.finalize(chosen, world_after_query)
         wait_forensic = {}
         if action.get("action") == "wait":
@@ -276,6 +332,8 @@ class ModelDecisionService:
                 "hard_block_reason_counts": hard_block_counts,
                 "filter_rejection_counts": dict(filter_rejections),
                 "wait_forensic": wait_forensic,
+                "macro": runtime.macro_stats.payload(),
+                "active_macro": runtime.active_macro.payload() if runtime.active_macro else {},
                 "qwen": qwen_preference_compiler.stats_payload(),
             },
         )
@@ -333,6 +391,18 @@ class ModelDecisionService:
             score=0.0,
         )
         option.score_components["rest_guard"] = 1.0
+        macro_commitment.mark_macro_candidate(
+            option,
+            macro_type="full_inactive_day" if reason == "periodic_full_rest_guard" else "no_query_rest_block",
+            avoided_penalty=1200.0 if reason == "daily_rest_guard" else 5000.0,
+            repair_value=1200.0 if reason == "daily_rest_guard" else 5000.0,
+            lost_gross=max(0.0, world0.time_market.productive_time_shadow_price * duration),
+            deadline_minutes=world0.status.simulation_progress_minutes + int(duration),
+            feasibility="pre_query_rest_without_query",
+            confidence=0.62,
+            required_duration=int(duration),
+            permits_query=False,
+        )
         option.action_cert = safety._certificate_for(option, set())
         return option, reason
 

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from . import config, preference_repair, safety
+from . import config, macro_commitment, preference_repair, safety
 from .schemas import CandidateOption, World
 from .time_utils import remaining_minutes
 
@@ -34,6 +34,19 @@ def _repair_trace(
     )
     option.score_components["preference_repair_value"] = float(repair_value)
     option.score_components["lost_profit"] = -float(lost_profit)
+    macro_commitment.mark_macro_candidate(
+        option,
+        macro_type=kind,
+        source_automaton_ids=(option.id.split(":", 2)[-1][:24],),
+        avoided_penalty=avoided_penalty,
+        repair_value=repair_value,
+        lost_gross=lost_profit,
+        deadline_minutes=option.finish_minutes,
+        feasibility=feasibility,
+        confidence=confidence,
+        required_duration=option.duration_minutes if option.action_type == "wait" else 120,
+        permits_query=False,
+    )
     return option
 
 
@@ -79,7 +92,8 @@ def _full_offday_wait(world: World, decision_id: str) -> CandidateOption | None:
     remaining = remaining_minutes(now, world.horizon.horizon_minutes)
     if remaining < 8 * 60:
         return None
-    if day not in {6, 14, 22, 29} or minute > 60:
+    period = max(0, int(config.RESCUE_FULL_REST_PERIOD_DAYS))
+    if period <= 0 or (day + 1) % period != 0 or minute > 60:
         return None
     duration = min(1440 - minute, remaining)
     option = CandidateOption(

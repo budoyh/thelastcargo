@@ -1,54 +1,66 @@
 # Agent Operating Rules
 
-This file mirrors the active local project rules for tools that look for a lowercase agent rule file.
+This lowercase rule file mirrors `AGENTS.md` for tools that look for `agent.md`.
 
-## CROWN-PCE Oracle Gap Build
+## Active Build
 
-- Active branch: `crown-pce-oracle-gap`.
-- Stop only as `PCE_STRONG_SUCCESS`, `PCE_PARTIAL_SUCCESS`, `DO_NOT_SUBMIT_WITH_ORACLE_EVIDENCE`, or `EXTERNAL_BLOCKER`.
-- Do not present tests passing, legal action logs, Qwen calls, report completeness, or a low positive score as success.
-- Final PCE artifacts are limited to:
-  - `reports/pce_final_report.md`
-  - `reports/pce_experiments.csv`
-  - `reports/oracle_gap.csv`
-  - `reports/predicate_eval.csv`
-  - `reports/action_forensics.csv`
+- Branch: `crown-delta-mpc`.
+- Task: CROWN-Delta MPC.
+- Honest stop states: `DELTA_MPC_STRONG_SUCCESS`, `DELTA_MPC_PARTIAL_SUCCESS`, `DO_NOT_SUBMIT_WITH_DELTA_EVIDENCE`, `EXTERNAL_BLOCKER`.
+- Success is score-gated. Tests, legality, Qwen calls, reports, and predicate recall are insufficient without official-net improvement.
+- Score accounting is `official_net = gross_income - distance_cost - preference_penalty`; never use a double-penalty proxy.
 
-## P0 Runtime Boundary
+## Long-Lived Compliance Rules
 
-- Runtime code may use only the injected `SimulationApiPort` for state, cargo, history, and model calls.
-- Runtime code under `demo/agent` must not read raw data files, import `server.*`, `bench.*`, income/scoring internals, or use future cargo information.
-- Runtime code must not hardcode driver ids, cargo ids, static place names, route sequences, fixed coordinates, offline heatmaps, or scenario shortcuts.
-- `query_cargo` must be followed by `refresh_world`; filtering, scoring, certificates, and actions must use the post-query `World`.
-- `take_order` can only target the current decision's post-query `current_actionable` observed cargo.
-- `shadow_liquidity_only` and `historical_summary_only` cargo must never enter actionable candidates.
+- Runtime under `demo/agent` must not read raw cargo/driver data, reports, oracle artifacts, exact labels, income calculators, benchmark internals, or future cargo availability.
+- Runtime must not import `server.*`, `bench.*`, scoring internals, or income-calculation internals.
+- Runtime must not hardcode driver ids, cargo ids, static place names, fixed route sequences, fixed coordinates, offline heatmaps, or scenario shortcuts.
+- Protected example terms and scenario shortcut words must not be copied into repository files. Use `PROTECTED_LITERAL_REDACTED`, `runtime_entity_hash`, or `runtime_value_hash`.
+- Qwen3.5-Flash Preference Automata Compiler stays ON for non-empty preferences when an API path is available.
+- Qwen roles are compiler, observed-vocabulary linker, and gated candidate auditor only. Qwen must not output final actions.
+- API priority is injected `SimulationApiPort.model_chat_completion`, then compatible endpoint using `DASHSCOPE_API_KEY`, `BAILIAN_API_KEY`, `ALIYUN_API_KEY`.
+- Never print or commit keys. Dummy or missing keys are fallback evidence, not success.
+
+## Runtime Action Rules
+
+- `query_cargo` must be followed by `refresh_world`.
+- Filtering, scoring, and certificates must use the post-query `World`.
+- `take_order` may only use cargo from the current decision's post-query `current_actionable` observed set.
 - `no_query` cannot take remembered cargo.
-- Destination Shadow Query is OFF unless official evidence changes the rule.
-- Reposition coordinates must keep full precision.
+- Shadow or historical cargo must never enter actionable candidates.
+- Destination Shadow Query is OFF.
+- Reposition action coordinates must keep full precision and must not be rounded.
+- Reposition target sources are runtime preference evidence, current visible clusters, route-start candidates from current visibility, escape moves from legal same-simulation memory, or current observed summaries only.
 
-## Preference System
+## Delta-MPC Rules
 
-- Qwen3.5-Flash Preference Compiler is required for non-empty runtime preferences when an API path is available.
-- Model access order is `SimulationApiPort.model_chat_completion`, then compatible endpoint fallback using `DASHSCOPE_API_KEY`, `BAILIAN_API_KEY`, `ALIYUN_API_KEY`.
-- Never print, commit, or synthesize API keys. Dummy or missing keys are fallback evidence, not success.
-- Qwen roles are limited to Preference Compiler v2, Observed Vocabulary Linker, and gated Candidate Auditor.
-- Qwen must not choose or emit final actions.
-- Preference Compiler v2 must emit executable predicate specs with predicate type, fields, operator, runtime values, time scope, deadline, counter, coordinate target, repair kinds, penalty, confidence, and redacted evidence hash.
-- Rules without executable predicates are unresolved and may only become soft risk.
-- Observed Vocabulary Linker may use only the current visible cargo vocabulary from the latest query. Committed reports must contain hashes or redacted counts, never raw values.
-- Candidate-level verification must report predicate match, marginal effect, predicted marginal penalty, predicted repair value, confidence, and source for high-impact candidates.
-- Repair candidates are first-class actions and must carry avoided penalty, repair value, lost profit, deadline, feasibility, confidence, and an action certificate.
+- Every runtime module must serve the action value model: freight direct net, route continuation, terminal value, preference repair value, preference destruction cost, lost repair-window cost, time/query/reposition cost, execution risk, and OOD/low-confidence risk.
+- Official-scorer counterfactual delta labels drive keep/kill decisions.
+- Label validity fields are mandatory: exact official label, replay validity, continuation policy, visibility validity, legality validity, state compatibility, and confidence.
+- Preference Automata must maintain progress, satisfied, failed, remaining slack, next deadline, repair actions, destroy actions, marginal penalty, repair value, future failure probability, and confidence.
+- UnknownSoft never hard-blocks high-gross actions.
+- Macro repair actions must be runtime candidates with avoided penalty, repair value, lost gross, deadline, feasibility, confidence, and action certificates.
+- Macro commitments must persist across decisions when a repair takes multiple steps. No-query rest, full inactive day, and wait-at-target commitments must not query inside protected intervals unless explicitly aborted.
+- Terminal value and ranker are default OFF. They may be enabled only with positive official-net ablation and clean feature audit.
 
-## Redaction And Offline Boundary
+## Records, Reports, Reviews
 
-- Protected example terms and scenario shortcut words are read-only context. Repository files must write only `literal banned terms redacted`, `scenario shortcuts redacted`, or `raw value redacted`.
-- Offline tools may read public debug data and official scoring code for diagnosis, oracle bounds, labels, and reports only.
-- Runtime must not import or read oracle reports, exact-label artifacts, money-repair trajectories, full-info trajectories, raw cargo ids, raw driver ids, static places, fixed coordinates, fixed routes, or future availability.
-- Exported runtime parameters may only be generic weights, thresholds, abstract predicate templates, and redacted calibration constants.
+- Durable records live under `docs/AGENT_WORK/`.
+- Final `reports/` contains at most the five Delta-MPC artifacts:
+  `delta_mpc_final_report.md`, `delta_mpc_experiments.csv`, `delta_mpc_labels.csv`, `delta_mpc_automata_eval.csv`, and `delta_mpc_forensics.csv`.
+- Old reports are archived, not deleted.
+- Required review scopes: prompt adherence, compliance/future-info, official delta, automata/Qwen, runtime planner, and code/test.
+- If true subagents are unavailable, run simulated read-only reviews and record the findings in the final report.
 
-## Records, Review, And Resources
+## Stop Honesty
 
-- Keep durable notes in `docs/PROJECT_MEMORY.md` and `docs/EXPERIMENT_LOG.md`.
-- Final PCE evidence belongs only in the five PCE report files listed above.
-- Required reviews cover prompt adherence, compliance/future-info, oracle/score-accounting, marginal penalty dataset, predicate compiler, runtime planner, code/test, and final audit. If subagents are unavailable, perform a read-only simulated review and record it.
-- Heavy local or cloud compute must stay isolated to this project and must not disrupt local stability. Use GPU only when materially useful.
+- Strong success requires all hard gates, 20260529 official net at least 45000, preference penalty at most 15000, gross-minus-cost at least 55000 or proven lower ceiling, positive macro delta, 0509 sanity, clean audits, commit, and push.
+- Partial success requires at least useful public improvement, positive macro commitment evidence, clean legality/audits, and final report marked do-not-submit-yet.
+- If score targets are not reached, write `DO NOT SUBMIT: Delta-MPC target not reached.` as the first line of the final report and classify the bottleneck precisely.
+
+## Resource Rules
+
+- Keep local and cloud compute isolated to this project.
+- Avoid heavy local load that can freeze the PC.
+- Use GPU only if materially useful and after checking availability.
+- Never disrupt other users' jobs.

@@ -61,8 +61,10 @@ def _certificate_for(option: CandidateOption, observed_ids: set[str]) -> ActionC
 def reposition_payback_allowed(option: CandidateOption, world: World) -> bool:
     if option.action_type != "reposition":
         return True
-    if option.trace.get("preference_repair"):
-        expected_repair = float(option.trace.get("expected_repair_value", 0.0) or 0.0)
+    if option.trace.get("preference_repair") or option.trace.get("macro_candidate"):
+        expected_repair = float(
+            option.trace.get("expected_repair_value", option.trace.get("repair_value", 0.0)) or 0.0
+        )
         empty_cost = abs(option.direct_money)
         if option.deadhead_km > 120.0:
             option.action_cert.reasons.append("preference_repair_too_far") if option.action_cert else None
