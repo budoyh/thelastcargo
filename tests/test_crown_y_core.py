@@ -577,6 +577,7 @@ def test_wait_forensic_contains_required_fields(monkeypatch):
 
 def test_unknown_preference_risk_is_soft_not_hard(monkeypatch):
     monkeypatch.setattr(config, "ENABLE_RESCUE_PREFERENCE_SOFT", True)
+    monkeypatch.setattr(config, "ENABLE_RESCUE_REST_GUARD", False)
     monkeypatch.setattr(config, "RESCUE_DIRECT_NET_FLOOR", 1.0)
     monkeypatch.setattr(config, "RESCUE_PROFIT_PER_HOUR_FLOOR", 0.0)
     world1, _, _ = build_world(preferences=[{"content": "abstract runtime constraint", "penalty_amount": 100}])

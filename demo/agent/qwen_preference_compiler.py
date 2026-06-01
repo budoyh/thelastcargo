@@ -78,7 +78,7 @@ _CACHE: dict[str, tuple[CompiledPreferenceRule, ...]] = {}
 
 
 def _active_api_key() -> tuple[str, str, str]:
-    for name in ("DASHSCOPE_API_KEY", "BAILIAN_API_KEY", "ALIYUN_API_KEY"):
+    for name in ("DASHSCOPE_API_KEY", "BAILIAN_API_KEY", "ALIYUN_API_KEY", "TIANCHI_MODEL_API_KEY"):
         value = os.environ.get(name, "").strip()
         if value:
             lowered = value.lower()
@@ -285,16 +285,18 @@ def compile_with_qwen(
         STATS.cache_hits += 1
         return _CACHE[pref_hash]
     STATS.cache_misses += 1
+    use_injected_api = api is not None and hasattr(api, "model_chat_completion")
     _, api_key, state = _active_api_key()
-    if state == "missing":
-        STATS.fallback_unknown_count += 1
-        STATS.last_error_type = "api_key_missing"
-        return None
     if state == "dummy":
         STATS.dummy_key_blocked_count += 1
         STATS.fallback_unknown_count += 1
         STATS.last_error_type = "dummy_key_blocked"
         return None
+    if not use_injected_api:
+        if state == "missing":
+            STATS.fallback_unknown_count += 1
+            STATS.last_error_type = "api_key_missing"
+            return None
     payload = {
         "model": STATS.last_model_name,
         "messages": [
@@ -305,7 +307,7 @@ def compile_with_qwen(
     }
     try:
         STATS.compile_calls += 1
-        if api is not None and hasattr(api, "model_chat_completion"):
+        if use_injected_api:
             resp = api.model_chat_completion(payload)
         else:
             resp = _dashscope_compatible_completion(payload, api_key)

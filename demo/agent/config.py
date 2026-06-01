@@ -130,7 +130,7 @@ ENABLE_NEXT_OBSERVATION_REPOSITION = False
 ENABLE_NEXT_PREFERENCE_STATE_MACHINE = False
 ENABLE_PCE_REPAIR_FIRST = False
 
-_VARIANT = os.environ.get("CROWN_Y_VARIANT", "").strip().lower()
+_VARIANT = os.environ.get("CROWN_Y_VARIANT", "best_rescue").strip().lower()
 RESCUE_VARIANT = _VARIANT
 if _VARIANT in {"a", "baseline", "safe_greedy"}:
     ENABLE_TIME_SHADOW = False
