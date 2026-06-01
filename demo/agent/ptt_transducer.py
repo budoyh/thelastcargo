@@ -69,10 +69,20 @@ class PTTStats:
     penalty_unknown_count: int = 0
     unknown_soft_count: int = 0
     controller_scored_candidate_count: int = 0
+    candidate_rule_eval_count: int = 0
+    score_changed_by_controller_count: int = 0
+    changed_decision_count: int = 0
+    hard_block_count: int = 0
+    soft_penalty_count: int = 0
+    repair_value_count: int = 0
+    unknown_soft_risk_count: int = 0
     linker_call_required_count: int = 0
     linker_call_count: int = 0
     auditor_trigger_count: int = 0
+    audited_candidate_count: int = 0
     auditor_changed_match_count: int = 0
+    auditor_changed_score_count: int = 0
+    auditor_changed_decision_count: int = 0
     auditor_changed_action_count: int = 0
     auditor_unknown_count: int = 0
 
@@ -81,6 +91,17 @@ class PTTStats:
 
 
 STATS = PTTStats()
+
+
+def _record_compiled_rule_stats(rules: tuple[PTTRule, ...]) -> None:
+    for rule in rules:
+        STATS.schema_valid_count += 1
+        if rule.penalty_amount is None:
+            STATS.penalty_unknown_count += 1
+        else:
+            STATS.penalty_known_count += 1
+        if rule.type == "unknown_soft":
+            STATS.unknown_soft_count += 1
 
 
 def _prompt(preferences: tuple[Any, ...]) -> str:
@@ -270,6 +291,12 @@ def compile_ptt_rules(api: SimulationApiPort | None, world: World) -> tuple[PTTR
         STATS.cache_hits += 1
         return _CACHE[world.pref_hash]
     STATS.cache_misses += 1
+    if config.ENABLE_GOLD_CONTRACT_MPC:
+        STATS.compile_calls += 1
+        compiled = from_compiled_rules(world, compile_source="gold_contract")
+        _record_compiled_rule_stats(compiled)
+        _CACHE[world.pref_hash] = compiled
+        return compiled
     compiled: tuple[PTTRule, ...] = tuple()
     payload = {
         "model": qwen_preference_compiler.STATS.last_model_name,
@@ -324,13 +351,7 @@ def compile_ptt_rules(api: SimulationApiPort | None, world: World) -> tuple[PTTR
             qwen_preference_compiler.STATS.dummy_key_blocked_count += 1
     if not compiled:
         compiled = from_compiled_rules(world, compile_source="deterministic_fallback")
-        for rule in compiled:
-            if rule.penalty_amount is None:
-                STATS.penalty_unknown_count += 1
-            else:
-                STATS.penalty_known_count += 1
-            if rule.type == "unknown_soft":
-                STATS.unknown_soft_count += 1
+        _record_compiled_rule_stats(compiled)
     _CACHE[world.pref_hash] = compiled
     return compiled
 

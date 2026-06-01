@@ -95,9 +95,9 @@ LEARNED_OOD_SHRINK = 0.2
 LLM_MAX_COMPILE_CALLS_PER_DRIVER = 128
 LLM_MAX_JUDGE_CALLS_PER_DRIVER = 0
 LLM_MAX_JUDGE_CALLS_PER_DAY = 0
-LLM_MAX_LINKER_CALLS_TOTAL = 512
-LLM_TIMEOUT_SECONDS = 60.0
-LLM_MAX_OUTPUT_TOKENS = 512
+LLM_MAX_LINKER_CALLS_TOTAL = _int_env("CROWN_GOLD_MAX_LINKER_CALLS_TOTAL", 4096, 1, 20000)
+LLM_TIMEOUT_SECONDS = 120.0
+LLM_MAX_OUTPUT_TOKENS = _int_env("CROWN_GOLD_LLM_MAX_OUTPUT_TOKENS", 4096, 512, 4096)
 
 RESCUE_QUERY_K_DEFAULT = 120
 RESCUE_QUERY_K_HIGH = 200
@@ -133,8 +133,10 @@ ENABLE_PCE_REPAIR_FIRST = False
 ENABLE_PTT_FIREWALL = False
 ENABLE_PTT_LINKER = False
 ENABLE_PTT_AUDITOR = False
+ENABLE_GOLD_CONTRACT_MPC = False
+ENABLE_LEGACY_RESCUE_QWEN = False
 DISABLE_RUNTIME_QWEN = os.environ.get("CROWN_Y_DISABLE_RUNTIME_QWEN", "").strip() == "1"
-PTT_MAX_AUDITOR_CALLS_TOTAL = 256
+PTT_MAX_AUDITOR_CALLS_TOTAL = _int_env("CROWN_GOLD_MAX_AUDITOR_CALLS_TOTAL", 4096, 1, 20000)
 PTT_SOFT_RISK_MULTIPLIER = 0.45
 PTT_MASSIVE_PENALTY_MULTIPLIER = 2.5
 PTT_UNKNOWN_HIGH_PENALTY_SCALE = 1200.0
@@ -143,8 +145,9 @@ ENABLE_VISIBLE_GRAPH_MPC = False
 EXACT_MPC_DEFAULT_ON = os.environ.get("CROWN_EXACT_ENABLE_VISIBLE_GRAPH_MPC", "").strip() == "1"
 EXACT_QWEN_MIN_REAL_COMPILE = True
 
-_VARIANT = os.environ.get("CROWN_Y_VARIANT", "crown_exact_rbt_mpc").strip().lower()
+_VARIANT = os.environ.get("CROWN_Y_VARIANT", "crown_gold_contract_mpc").strip().lower()
 RESCUE_VARIANT = _VARIANT
+ENABLE_LEGACY_RESCUE_QWEN = _VARIANT in {"a6", "a7", "best_rescue"}
 if _VARIANT in {"a", "baseline", "safe_greedy"}:
     ENABLE_TIME_SHADOW = False
     ENABLE_VISIBLE_TWO_HOP = False
@@ -198,6 +201,7 @@ if _VARIANT in {
     "delta_mpc_fallback",
     "preference_firewall_profit",
     "crown_exact_rbt_mpc",
+    "crown_gold_contract_mpc",
 }:
     ENABLE_RESCUE_SCORER = True
     ENABLE_SCOUT_THEN_DEEPEN = False
@@ -207,19 +211,19 @@ if _VARIANT in {
     ENABLE_REPOSITION = False
     TIME_SHADOW_MODE = "rescue_lite"
 
-if _VARIANT in {"a1", "a2", "a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit"}:
+if _VARIANT in {"a1", "a2", "a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc"}:
     ENABLE_RESCUE_WAIT_PENALTY = True
-if _VARIANT in {"a2", "a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit"}:
+if _VARIANT in {"a2", "a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc"}:
     ENABLE_RESCUE_MICRO_REPOSITION = True
-if _VARIANT in {"a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit"}:
+if _VARIANT in {"a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc"}:
     ENABLE_RESCUE_PREFERENCE_SOFT = True
-if _VARIANT in {"a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit"}:
+if _VARIANT in {"a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc"}:
     ENABLE_RESCUE_TWOHOP_LITE = True
-if _VARIANT in {"a5", "a6", "a7", "best_rescue", "preference_firewall_profit"}:
+if _VARIANT in {"a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc"}:
     ENABLE_RESCUE_TIME_SHADOW_LITE = True
-if _VARIANT in {"a6", "a7", "best_rescue", "preference_firewall_profit"}:
+if _VARIANT in {"a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc"}:
     ENABLE_QWEN_PREFERENCE_COMPILER = True
-if _VARIANT in {"a6", "a7", "best_rescue", "preference_firewall_profit"}:
+if _VARIANT in {"a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc"}:
     ENABLE_RESCUE_REST_GUARD = True
 
 if _VARIANT in {
@@ -366,6 +370,27 @@ if _VARIANT == "crown_exact_rbt_mpc":
     RESCUE_DAILY_REST_UNTIL_MINUTE = _int_env("CROWN_Y_REST_UNTIL_MINUTE", 9 * 60, 0, 12 * 60)
     RESCUE_FULL_REST_PERIOD_DAYS = _int_env("CROWN_Y_FULL_REST_PERIOD_DAYS", 15, 0, 31)
     RESCUE_VARIANT = "crown_exact_rbt_mpc"
+
+if _VARIANT == "crown_gold_contract_mpc":
+    ENABLE_GOLD_CONTRACT_MPC = True
+    ENABLE_EXACT_RBT = True
+    ENABLE_PTT_FIREWALL = os.environ.get("CROWN_GOLD_ENABLE_FIREWALL", "1").strip() != "0"
+    ENABLE_PTT_LINKER = os.environ.get("CROWN_GOLD_ENABLE_LINKER", "1").strip() != "0"
+    ENABLE_PTT_AUDITOR = os.environ.get("CROWN_GOLD_ENABLE_AUDITOR", "1").strip() != "0"
+    ENABLE_QWEN_PREFERENCE_COMPILER = True
+    ENABLE_RESCUE_PREFERENCE_SOFT = True
+    ENABLE_RESCUE_REST_GUARD = True
+    ENABLE_NEXT_PREFERENCE_STATE_MACHINE = os.environ.get("CROWN_GOLD_ENABLE_REPAIR", "0").strip() == "1"
+    ENABLE_RESCUE_MICRO_REPOSITION = True
+    ENABLE_RESCUE_TWOHOP_LITE = True
+    ENABLE_RESCUE_TIME_SHADOW_LITE = True
+    ENABLE_VISIBLE_GRAPH_MPC = os.environ.get("CROWN_GOLD_ENABLE_VISIBLE_GRAPH_MPC", "0").strip() == "1"
+    RESCUE_QUERY_K_DEFAULT = _int_env("CROWN_GOLD_QUERY_K", 120, 50, 600)
+    RESCUE_DIRECT_NET_FLOOR = _float_env("CROWN_GOLD_DIRECT_NET_FLOOR", 1.0, -200.0, 500.0)
+    RESCUE_PROFIT_PER_HOUR_FLOOR = _float_env("CROWN_GOLD_PROFIT_PER_HOUR_FLOOR", 0.0, -50.0, 200.0)
+    RESCUE_DAILY_REST_UNTIL_MINUTE = _int_env("CROWN_Y_REST_UNTIL_MINUTE", 9 * 60, 0, 12 * 60)
+    RESCUE_FULL_REST_PERIOD_DAYS = _int_env("CROWN_Y_FULL_REST_PERIOD_DAYS", 15, 0, 31)
+    RESCUE_VARIANT = "crown_gold_contract_mpc"
 
 if _VARIANT in {"best_rescue", "a7"}:
     RESCUE_QUERY_K_DEFAULT = 120

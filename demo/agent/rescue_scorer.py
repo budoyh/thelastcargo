@@ -139,6 +139,7 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
             ptt_lost_window = max(0.0, -float(option.score_components.get("ptt_lost_repair_window_cost", 0.0) or 0.0))
             ptt_failure_risk = max(0.0, -float(option.score_components.get("ptt_failure_probability_delta", 0.0) or 0.0))
             ptt_low_conf = max(0.0, -float(option.score_components.get("ptt_low_confidence_risk", 0.0) or 0.0))
+            qwen_audit_adjustment = float(option.score_components.get("qwen_audit_adjustment", 0.0) or 0.0)
             rest_penalty = 0.0
             if (config.ENABLE_RESCUE_REST_GUARD or config.ENABLE_NEXT_MARGINAL_PREF) and world.status.preferences:
                 overlap = _rest_window_overlap_minutes(world.status.simulation_progress_minutes, option.finish_minutes)
@@ -162,6 +163,7 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
                 - ptt_lost_window
                 - ptt_failure_risk
                 - ptt_low_conf
+                + qwen_audit_adjustment
                 - time_penalty
                 - rest_penalty
                 - duration_penalty
@@ -183,6 +185,7 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
                     "ptt_lost_repair_window_applied": -ptt_lost_window,
                     "ptt_failure_risk_applied": -ptt_failure_risk,
                     "ptt_low_confidence_applied": -ptt_low_conf,
+                    "qwen_audit_adjustment_applied": qwen_audit_adjustment,
                     "twohop_lite": twohop,
                     "preference_soft_penalty": -soft_pref,
                     "time_shadow_lite": -time_penalty,
@@ -203,9 +206,11 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
             )
             repair_value += max(0.0, float(option.score_components.get("ptt_repair_value", 0.0) or 0.0))
             ptt_penalty = max(0.0, -float(option.score_components.get("ptt_marginal_penalty", 0.0) or 0.0))
+            qwen_audit_adjustment = float(option.score_components.get("qwen_audit_adjustment", 0.0) or 0.0)
             option.score = repair_value - penalty
             option.score -= ptt_penalty
-            option.score_components.update({"repeated_wait_penalty": -penalty, "preference_repair_value": repair_value, "ptt_wait_penalty_applied": -ptt_penalty})
+            option.score += qwen_audit_adjustment
+            option.score_components.update({"repeated_wait_penalty": -penalty, "preference_repair_value": repair_value, "ptt_wait_penalty_applied": -ptt_penalty, "qwen_audit_adjustment_applied": qwen_audit_adjustment})
         elif option.action_type == "reposition":
             repair_value = (
                 float(option.trace.get("expected_repair_value", 0.0) or 0.0)
@@ -216,9 +221,11 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
             )
             repair_value += max(0.0, float(option.score_components.get("ptt_repair_value", 0.0) or 0.0))
             ptt_penalty = max(0.0, -float(option.score_components.get("ptt_marginal_penalty", 0.0) or 0.0))
+            qwen_audit_adjustment = float(option.score_components.get("qwen_audit_adjustment", 0.0) or 0.0)
             option.score = repair_value - abs(option.direct_money) - 40.0
             option.score -= ptt_penalty
-            option.score_components.update({"micro_reposition_cost": -abs(option.direct_money) - 40.0, "preference_repair_value": repair_value, "ptt_reposition_penalty_applied": -ptt_penalty})
+            option.score += qwen_audit_adjustment
+            option.score_components.update({"micro_reposition_cost": -abs(option.direct_money) - 40.0, "preference_repair_value": repair_value, "ptt_reposition_penalty_applied": -ptt_penalty, "qwen_audit_adjustment_applied": qwen_audit_adjustment})
     return options, RescueStats(positive_count, safe_positive_count, best_net, best_per_hour, hard_counts)
 
 

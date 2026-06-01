@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from . import config
 from .schemas import CandidateOption, PreferenceCertificate, PreferenceCertificateItem, World
 
 
@@ -14,6 +15,16 @@ def _rule_exposure(option: CandidateOption, kind: str) -> float:
     duration = max(0.0, float(option.occupied_minutes))
     if option.action_type == "wait":
         return _bounded(duration / 720.0) * 0.35
+    if config.ENABLE_LEGACY_RESCUE_QWEN:
+        if kind == "time_window":
+            return _bounded(duration / 720.0)
+        if kind in {"quantitative_limit", "distance_budget"}:
+            distance_risk = _bounded(total_distance / 650.0)
+            duration_risk = _bounded(duration / 840.0)
+            return max(distance_risk, duration_risk)
+        if option.action_type == "reposition":
+            return _bounded(total_distance / 180.0) * 0.65
+        return 0.18
     if kind in {"time_window", "time_window_constraint", "rest_requirement"}:
         return _bounded(duration / 720.0)
     if kind in {"quantitative_limit", "distance_budget", "quota_constraint", "count_target"}:

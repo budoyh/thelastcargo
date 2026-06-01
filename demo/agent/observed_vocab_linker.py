@@ -159,15 +159,14 @@ def link_current_observed_vocab(
     qwen_preference_compiler.STATS.cache_misses += 1
     if (
         not config.DISABLE_RUNTIME_QWEN
-        and
-        api is not None
-        and hasattr(api, "model_chat_completion")
         and qwen_preference_compiler.STATS.linker_calls < config.LLM_MAX_LINKER_CALLS_TOTAL
+        and qwen_preference_compiler.runtime_completion_available(api)
     ):
         try:
             qwen_preference_compiler.record_linker_call()
-            resp = api.model_chat_completion(
-                {
+            resp = qwen_preference_compiler.completion_with_runtime_order(
+                api=api,
+                payload={
                     "model": qwen_preference_compiler.STATS.last_model_name,
                     "messages": [
                         {"role": "system", "content": "Return valid JSON only."},
@@ -177,7 +176,7 @@ def link_current_observed_vocab(
                     "max_tokens": 128,
                     "enable_thinking": False,
                     "thinking_budget": 0,
-                }
+                },
             )
             qwen_preference_compiler._usage_from_response(resp)
             data = qwen_preference_compiler._extract_json(qwen_preference_compiler._content_from_response(resp)) or {}
@@ -188,10 +187,8 @@ def link_current_observed_vocab(
         except Exception as exc:  # pragma: no cover - remote API failures vary.
             qwen_preference_compiler.STATS.api_error_count += 1
             qwen_preference_compiler.STATS.last_error_type = exc.__class__.__name__
-    elif api is not None and hasattr(api, "model_chat_completion") and not config.DISABLE_RUNTIME_QWEN:
+    elif qwen_preference_compiler.runtime_completion_available(api) and not config.DISABLE_RUNTIME_QWEN:
         qwen_preference_compiler.STATS.budget_exhausted_count += 1
     links = _deterministic_links(preferences, rules, vocab)
-    if not links:
-        qwen_preference_compiler.STATS.fallback_unknown_count += 1
     _CACHE[key] = links
     return links

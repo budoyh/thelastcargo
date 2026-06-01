@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+import hashlib
 from typing import Any
 
 from . import config, safety
@@ -28,9 +29,11 @@ class MacroCommitment:
 
     def payload(self) -> dict[str, Any]:
         return {
-            "active_macro_id": self.active_macro_id,
+            "active_macro_id": None,
+            "active_macro_id_hash": _hash_text(self.active_macro_id),
             "macro_type": self.macro_type,
-            "source_automaton_ids": list(self.source_automaton_ids),
+            "source_automaton_ids": [],
+            "source_automaton_id_hashes": [_hash_text(item) for item in self.source_automaton_ids],
             "start_time": self.start_time,
             "deadline": self.deadline,
             "target_or_position_hash": _target_hash(self.target_lat, self.target_lng),
@@ -66,9 +69,11 @@ class MacroStats:
 def _target_hash(lat: float | None, lng: float | None) -> str:
     if lat is None or lng is None:
         return ""
-    import hashlib
-
     return hashlib.sha256(f"{lat:.6f},{lng:.6f}".encode("utf-8")).hexdigest()[:12]
+
+
+def _hash_text(value: str) -> str:
+    return hashlib.sha256(str(value).encode("utf-8")).hexdigest()[:12] if value else ""
 
 
 def mark_macro_candidate(
@@ -90,7 +95,8 @@ def mark_macro_candidate(
         {
             "macro_candidate": True,
             "macro_type": macro_type,
-            "source_automaton_ids": list(source_automaton_ids),
+            "source_automaton_ids": [],
+            "source_automaton_id_hashes": [_hash_text(item) for item in source_automaton_ids],
             "avoided_penalty": round(float(avoided_penalty), 2),
             "repair_value": round(float(repair_value), 2),
             "lost_gross": round(float(lost_gross), 2),
@@ -118,11 +124,11 @@ def _float_trace(option: CandidateOption, name: str, default: float = 0.0) -> fl
 
 
 def _source_ids(option: CandidateOption) -> tuple[str, ...]:
-    raw = option.trace.get("source_automaton_ids") or option.trace.get("rule_id") or ()
+    raw = option.trace.get("source_automaton_id_hashes") or option.trace.get("source_automaton_ids") or option.trace.get("rule_id") or ()
     if isinstance(raw, str):
-        return (raw,)
+        return (_hash_text(raw),) if len(raw) != 12 else (raw,)
     if isinstance(raw, list):
-        return tuple(str(item) for item in raw)
+        return tuple(str(item) if len(str(item)) == 12 else _hash_text(str(item)) for item in raw)
     return tuple()
 
 
@@ -155,7 +161,7 @@ def record_selection(
     except (TypeError, ValueError):
         deadline = option.finish_minutes + required
     return MacroCommitment(
-        active_macro_id=option.id,
+        active_macro_id=_hash_text(option.id),
         macro_type=macro_type,
         source_automaton_ids=_source_ids(option),
         start_time=world.status.simulation_progress_minutes,

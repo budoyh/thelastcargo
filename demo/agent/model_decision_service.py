@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import hashlib
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -39,6 +40,10 @@ from .memory import DriverMemory
 from .schemas import CURRENT_ACTIONABLE, CandidateOption, NormalizedCargo, World
 from .time_utils import day_index, remaining_minutes
 from .wait_lock import WaitLockState, query_k
+
+
+def _log_hash(value: Any) -> str:
+    return hashlib.sha256(str(value).encode("utf-8")).hexdigest()[:12]
 
 
 @dataclass
@@ -114,18 +119,18 @@ class ModelDecisionService:
             )
             runtime.prev_world = world_after_query
             self._logger.info(
-                "decision driver=%s seq=%s plan=%s observed=%s visible=%s chosen=%s action=%s",
-                driver_id,
+                "decision driver_hash=%s seq=%s plan=%s observed=%s visible=%s chosen_hash=%s action=%s",
+                _log_hash(driver_id),
                 runtime.decision_seq,
                 plan.kind,
                 len(observed),
                 len(visible),
-                chosen.id,
+                _log_hash(chosen.id),
                 action.get("action"),
             )
             return action
         except Exception as exc:  # pragma: no cover - exact exception types depend on the host API.
-            self._logger.exception("decision fallback driver=%s seq=%s", driver_id, runtime.decision_seq)
+            self._logger.exception("decision fallback driver_hash=%s seq=%s", _log_hash(driver_id), runtime.decision_seq)
             return trace_writer.attach_exception_trace(
                 {"action": "wait", "params": {"duration_minutes": 1}},
                 decision_id=decision_id,
@@ -338,6 +343,7 @@ class ModelDecisionService:
             options = candidate_preference_verifier.apply_to_options(options, world_after_query, vocab_links)
         rest_option, rest_reason = self._rescue_rest_option(runtime, world_after_query, decision_id)
         chosen = rest_option if rest_option is not None else rescue_scorer.choose(options, rescue_stats, runtime.wait_lock)
+        _record_controller_decision_change(options, chosen)
         runtime.active_macro = macro_commitment.record_selection(runtime.active_macro, runtime.macro_stats, chosen, world_after_query)
         action = safety.finalize(chosen, world_after_query)
         wait_forensic = {}
@@ -412,13 +418,13 @@ class ModelDecisionService:
             wait_minutes=int((action.get("params") or {}).get("duration_minutes", 0) or 0),
         )
         self._logger.info(
-            "rescue decision driver=%s seq=%s variant=%s observed=%s visible=%s chosen=%s action=%s positive=%s safe_positive=%s",
-            driver_id,
+            "rescue decision driver_hash=%s seq=%s variant=%s observed=%s visible=%s chosen_hash=%s action=%s positive=%s safe_positive=%s",
+            _log_hash(driver_id),
             runtime.decision_seq,
             config.RESCUE_VARIANT,
             len(observed),
             len(visible),
-            chosen.id,
+            _log_hash(chosen.id),
             action.get("action"),
             rescue_stats.positive_count,
             rescue_stats.safe_positive_count,
@@ -489,11 +495,11 @@ class ModelDecisionService:
             world_current = world_module.refresh_world(self._api, driver_id, memory=runtime.memory, prev_world=world_current)
             return observed, world_current, world_current.status.simulation_progress_minutes - start_minutes
         if plan.kind == "scout_then_deepen":
-            observed.extend(self._query_here(driver_id, world_current, plan.scout_k))
+            observed = self._query_here(driver_id, world_current, plan.scout_k)
             world_current = world_module.refresh_world(self._api, driver_id, memory=runtime.memory, prev_world=world_current)
             scout_visible = cargo_filter.fast_normalize_and_filter(observed, world_current, decision_id)
             if query_policy.should_deepen(world_current, scout_visible):
-                observed.extend(self._query_here(driver_id, world_current, plan.deepen_k))
+                observed = self._query_here(driver_id, world_current, plan.deepen_k)
                 world_current = world_module.refresh_world(self._api, driver_id, memory=runtime.memory, prev_world=world_current)
             return observed, world_current, world_current.status.simulation_progress_minutes - start_minutes
         if plan.kind == "current_large_query":
@@ -535,3 +541,28 @@ def visible_rollout_value(option: CandidateOption, world_current: World, visible
     from . import visible_rollout
 
     return visible_rollout.evaluate(option, world_current, visible)
+
+
+def _record_controller_decision_change(options: list[CandidateOption], chosen: CandidateOption) -> None:
+    if not any(
+        abs(float(option.score_components.get(name, 0.0) or 0.0)) > 1e-9
+        for option in options
+        for name in (
+            "ptt_marginal_penalty",
+            "ptt_repair_value",
+            "ptt_lost_repair_window_cost",
+            "ptt_low_confidence_risk",
+            "qwen_audit_adjustment",
+        )
+    ):
+        return
+    direct_candidates = [
+        option
+        for option in options
+        if option.action_type == "take_order" and not (option.action_cert and not option.action_cert.safe)
+    ]
+    if not direct_candidates:
+        return
+    direct_best = max(direct_candidates, key=lambda option: option.direct_money)
+    if direct_best.id != chosen.id:
+        ptt_transducer.STATS.changed_decision_count += 1

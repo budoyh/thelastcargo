@@ -1,4 +1,4 @@
-"""Build a restricted official-style submission ZIP for the CROWN-EXACT runtime."""
+"""Build a restricted official-style submission ZIP for the CROWN-GOLD runtime."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 AGENT_DIR = ROOT / "demo" / "agent"
 SUBMISSION = ROOT / "demo" / "SUBMISSION.md"
-AUDIT_PATH = ROOT / "runs" / "packages" / "exact_package_audit.json"
+AUDIT_PATH = ROOT / "runs" / "packages" / "gold_package_audit.json"
 
 
 def _default_variant() -> str:
@@ -48,12 +48,17 @@ def _sha256(path: Path) -> str:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--recommended", action="store_true")
+    parser.add_argument("--not-recommended", action="store_true")
     parser.add_argument("--out", type=Path, default=None)
     args = parser.parse_args()
+    if args.recommended and args.not_recommended:
+        raise SystemExit("--recommended and --not-recommended are mutually exclusive")
+    if not args.recommended and not args.not_recommended:
+        raise SystemExit("Refusing to build a Gold package without an explicit --recommended or --not-recommended gate")
     default_name = (
-        "crown_exact_rbt_mpc_submission.zip"
+        "crown_gold_contract_mpc_submission.zip"
         if args.recommended
-        else "crown_exact_NOT_RECOMMENDED_DO_NOT_SUBMIT.zip"
+        else "crown_gold_NOT_RECOMMENDED_DO_NOT_SUBMIT.zip"
     )
     out = args.out or (ROOT / "runs" / "packages" / default_name)
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -89,7 +94,7 @@ def main() -> int:
     ok = (
         audit["contains_demo_agent"]
         and audit["contains_submission_md"]
-        and audit["default_variant"] == "crown_exact_rbt_mpc"
+        and audit["default_variant"] == "crown_gold_contract_mpc"
         and not disallowed
     )
     return 0 if ok else 1

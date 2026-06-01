@@ -490,7 +490,8 @@ def test_trace_records_certificate_fields_in_minimal_mode(monkeypatch):
     assert chosen["cargo_id"] is None
     assert chosen["cargo_id_hash"]
     assert chosen["source_scope"] == CURRENT_ACTIONABLE
-    assert chosen["cert_decision_id"] == "d1"
+    assert chosen["cert_decision_id"] is None
+    assert chosen["cert_decision_id_hash"]
 
 
 def test_learned_ranker_sign_constraints():
@@ -712,16 +713,20 @@ def test_qwen_compiler_calls_model_for_new_pref_hash(monkeypatch):
                         "message": {
                             "content": json.dumps(
                                 {
+                                    "contract_version": "gold_v1",
                                     "rules": [
                                         {
-                                            "kind": "unknown",
+                                            "polarity": "prefer",
+                                            "observable": "unknown",
                                             "scope": "whole_period",
-                                            "condition": {},
-                                            "repairability": "always_soft",
-                                            "reward_or_penalty": {"amount": 10, "direction": "penalty"},
-                                            "evidence": "abstract",
+                                            "metric": "unknown",
+                                            "counting": "unknown",
+                                            "slots": {},
+                                            "severity": {"source": "unknown", "penalty_amount": None, "penalty_cap": None},
+                                            "repair_actions": ["wait"],
                                             "confidence": 0.3,
-                                            "repair_action_kinds": ["wait"],
+                                            "uncertainty": [],
+                                            "evidence_hash": "0123456789abcdef",
                                         }
                                     ]
                                 }
@@ -747,6 +752,72 @@ def test_qwen_compiler_calls_model_for_new_pref_hash(monkeypatch):
     assert qwen_preference_compiler.STATS.compile_calls == before + 1
 
 
+def test_qwen_gold_contract_rejects_malformed_schema():
+    malformed = {
+        "contract_version": "gold_v1",
+        "rules": [
+            {
+                "polarity": "prefer",
+                "observable": "unknown",
+                "scope": "whole_period",
+                "metric": "unknown",
+                "counting": "unknown",
+                "slots": {},
+                "severity": "not-a-dict",
+                "repair_actions": ["wait"],
+                "confidence": "bad",
+                "uncertainty": [],
+                "evidence_hash": 123,
+            }
+        ],
+    }
+    assert not qwen_preference_compiler._valid_gold_contract(malformed)
+
+
+def test_qwen_gold_contract_requires_unknown_penalty_null():
+    invented_penalty = {
+        "contract_version": "gold_v1",
+        "rules": [
+            {
+                "polarity": "avoid",
+                "observable": "distance",
+                "scope": "whole_period",
+                "metric": "<=",
+                "counting": "per_action",
+                "slots": {"distance_km": 100},
+                "severity": {"source": "unknown", "penalty_amount": 1200, "penalty_cap": None},
+                "repair_actions": ["avoid_take"],
+                "confidence": 0.9,
+                "uncertainty": [],
+                "evidence_hash": "1111222233334444",
+            }
+        ],
+    }
+    assert not qwen_preference_compiler._valid_gold_contract(invented_penalty)
+
+
+def test_qwen_gold_contract_rejects_model_reported_explicit_penalty():
+    explicit_penalty = {
+        "contract_version": "gold_v1",
+        "rules": [
+            {
+                "polarity": "avoid",
+                "observable": "distance",
+                "scope": "whole_period",
+                "metric": "<=",
+                "counting": "per_action",
+                "slots": {"distance_km": 100},
+                "severity": {"source": "explicit", "penalty_amount": 1200, "penalty_cap": None},
+                "repair_actions": ["avoid_take"],
+                "confidence": 0.9,
+                "uncertainty": [],
+                "evidence_hash": "1111222233334444",
+            }
+        ],
+    }
+    assert not qwen_preference_compiler._valid_gold_contract(explicit_penalty)
+
+
 def test_qwen_compiler_env_priority_fallback_keys(monkeypatch):
     class CompilerApi:
         def model_chat_completion(self, payload):
@@ -756,14 +827,20 @@ def test_qwen_compiler_env_priority_fallback_keys(monkeypatch):
                         "message": {
                             "content": json.dumps(
                                 {
+                                    "contract_version": "gold_v1",
                                     "rules": [
                                         {
-                                            "kind": "unknown",
+                                            "polarity": "prefer",
+                                            "observable": "unknown",
                                             "scope": "whole_period",
-                                            "condition": {},
-                                            "repairability": "always_soft",
-                                            "evidence": "abstract",
+                                            "metric": "unknown",
+                                            "counting": "unknown",
+                                            "slots": {},
+                                            "severity": {"source": "unknown", "penalty_amount": None, "penalty_cap": None},
+                                            "repair_actions": ["wait"],
                                             "confidence": 0.3,
+                                            "uncertainty": [],
+                                            "evidence_hash": "abcdef0123456789",
                                         }
                                     ]
                                 }
@@ -786,20 +863,65 @@ def test_qwen_compiler_env_priority_fallback_keys(monkeypatch):
 
 
 def test_qwen_compiler_does_not_treat_dummy_key_as_success(monkeypatch):
-    class ForbiddenApi:
-        def model_chat_completion(self, payload):
-            raise AssertionError("dummy key path must not call the model")
-
     monkeypatch.setenv("DASHSCOPE_API_KEY", "local-dummy-key-not-used")
     before = qwen_preference_compiler.STATS.dummy_key_blocked_count
     rules = qwen_preference_compiler.compile_with_qwen(
-        api=ForbiddenApi(),
+        api=None,
         pref_hash="unit-qwen-dummy-pref",
         preferences=({"content": "abstract runtime preference", "penalty_amount": 10},),
         fallback_amounts=[{"amount": 10.0, "cap": None, "direction": "penalty"}],
     )
     assert rules is None
     assert qwen_preference_compiler.STATS.dummy_key_blocked_count == before + 1
+
+
+def test_qwen_compiler_prefers_injected_api_over_dummy_key(monkeypatch):
+    class InjectedApi:
+        def __init__(self):
+            self.calls = 0
+
+        def model_chat_completion(self, payload):
+            self.calls += 1
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "contract_version": "gold_v1",
+                                    "rules": [
+                                        {
+                                            "polarity": "prefer",
+                                            "observable": "unknown",
+                                            "scope": "whole_period",
+                                            "metric": "unknown",
+                                            "counting": "unknown",
+                                            "slots": {},
+                                            "severity": {"source": "unknown", "penalty_amount": None, "penalty_cap": None},
+                                            "repair_actions": ["wait"],
+                                            "confidence": 0.3,
+                                            "uncertainty": [],
+                                            "evidence_hash": "0123456789abcdef",
+                                        }
+                                    ],
+                                }
+                            )
+                        }
+                    }
+                ],
+                "usage": {},
+            }
+
+    monkeypatch.setenv("DASHSCOPE_API_KEY", "local-dummy-key-not-used")
+    api = InjectedApi()
+    rules = qwen_preference_compiler.compile_with_qwen(
+        api=api,
+        pref_hash="unit-qwen-dummy-with-injected-pref",
+        preferences=({"content": "abstract runtime preference", "penalty_amount": 10},),
+        fallback_amounts=[{"amount": 10.0, "cap": None, "direction": "penalty"}],
+    )
+    assert rules is not None
+    assert api.calls == 1
 
 
 def test_qwen_irreversible_repairability_reaches_certificate(monkeypatch):
@@ -811,15 +933,20 @@ def test_qwen_irreversible_repairability_reaches_certificate(monkeypatch):
                         "message": {
                             "content": json.dumps(
                                 {
+                                    "contract_version": "gold_v1",
                                     "rules": [
                                         {
-                                            "kind": "distance_budget",
+                                            "polarity": "avoid",
+                                            "observable": "distance",
                                             "scope": "whole_period",
-                                            "condition": {},
-                                            "repairability": "irreversible",
-                                            "reward_or_penalty": {"amount": 10000, "direction": "penalty"},
-                                            "evidence": "abstract",
+                                            "metric": "<=",
+                                            "counting": "per_action",
+                                            "slots": {"distance_km": 100},
+                                            "severity": {"source": "unknown", "penalty_amount": None, "penalty_cap": None},
+                                            "repair_actions": ["avoid_take"],
                                             "confidence": 0.9,
+                                            "uncertainty": [],
+                                            "evidence_hash": "1111222233334444",
                                         }
                                     ]
                                 }

@@ -10,12 +10,12 @@
 ## Runtime Entry
 
 - Official evaluation should load `demo/agent/model_decision_service.py`.
-- The default runtime policy is `crown_exact_rbt_mpc`; no environment variable is required.
-- `CROWN_Y_VARIANT` can still override the policy for local experiments, but the submitted default is the CROWN-EXACT Rule Bytecode Transducer plus scorer-semantic controller line.
+- The default runtime policy is `crown_gold_contract_mpc`; no environment variable is required.
+- `CROWN_Y_VARIANT` can still override the policy for local experiments, but the submitted default is the CROWN-GOLD Preference Contract plus controller/firewall line.
 
 ## Model Calls
 
-- Qwen is used only for preference bytecode compilation/linking/auditing, never for final action selection.
+- Qwen is used only for preference contract compilation, observed-vocabulary linking, and candidate auditing, never for final action selection.
 - The agent first uses the injected `SimulationApiPort.model_chat_completion` when available.
 - If no injected model API exists, it falls back to compatible environment variables such as `DASHSCOPE_API_KEY`; missing or dummy keys trigger deterministic fallback.
 

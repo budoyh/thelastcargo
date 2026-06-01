@@ -74,7 +74,7 @@ class CompiledPreferenceRule:
     deadline: Any = "unknown"
     counter: Any = "unknown"
     coordinate_target: Any = "unknown"
-    penalty_amount: float = 0.0
+    penalty_amount: float | None = None
     penalty_cap: float | None = None
     evidence_hash: str = ""
     unresolved_reason: str = ""

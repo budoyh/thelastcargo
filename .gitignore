@@ -21,3 +21,8 @@ runs/
 !runs/.gitkeep
 reports/*.tmp
 submissions/
+
+# Generated local archives that should not enter a submission or source commit.
+archive/packages_old_*/
+archive/submissions_old_*/
+archive/compliance_audit_*/

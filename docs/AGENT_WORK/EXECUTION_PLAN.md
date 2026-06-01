@@ -1,44 +1,65 @@
-# CROWN-EXACT RBT-MPC Execution Plan
+# CROWN-GOLD Contract-MPC Execution Plan
 
 ## Stop States
 
-- `CROWN_EXACT_RECOMMENDED_SUBMISSION`: all score, Qwen, semantics, compliance, reviewer, package, commit, and push gates pass.
-- `CROWN_EXACT_EXPERIMENTAL_SUBMISSION`: explicit experimental gates pass without pretending recommendation.
-- `DO_NOT_SUBMIT_WITH_EXACT_EVIDENCE`: one or more hard gates fail and the final report explains the evidence.
-- `EXTERNAL_BLOCKER`: required external service or true reviewer capability is unavailable.
+- `CROWN_GOLD_RECOMMENDED_SUBMISSION`: all score, Qwen, controller, compliance, reviewer, package, commit, and push gates pass.
+- `CROWN_GOLD_EXPERIMENTAL_SUBMISSION`: explicit experimental gates pass without pretending recommendation.
+- `DO_NOT_SUBMIT_WITH_GOLD_EVIDENCE`: one or more hard gates fail and the final report explains the evidence.
+- `EXTERNAL_BLOCKER`: required external service, true reviewer capability, or runnable official local evaluation is unavailable.
 
 ## Recommended Submission Gates
 
-- 20260529 official_net >= 30000.
+- 20260529 official_net >= 40000.
 - 20260529 preference_penalty <= 22000.
-- 20260529 gross_minus_cost >= 45000.
-- Full eval has real Qwen compile/cache evidence for non-empty preferences.
-- Controller scored candidates > 0 and scorer-semantics aligned controller evidence > 0.
-- P0 compliance clean: no raw data reads, no server/bench/scorer imports in runtime, no future cargo, current-actionable take only.
+- 20260529 gross_minus_cost >= 52000.
+- Real Qwen compile/link/audit > 0; runtime Qwen must not be disabled.
+- controller_scored_candidate_count > 1000.
+- candidate_rule_eval_count > 1000.
+- score_changed_by_controller_count > 100.
+- changed_decision_count > 20.
+- 0 simulation failure, abort, illegal, rejected.
 - 20260509 has no catastrophic regression.
-- Package audit confirms root `demo/`, default variant `crown_exact_rbt_mpc`, and no disallowed entries.
+- Package audit confirms root `demo/`, default variant `crown_gold_contract_mpc`, and no disallowed entries.
 - Reviewer subagents return PASS or their failures are recorded as DO_NOT evidence.
+
+## Experimental Gates
+
+- 20260529 official_net >= 30000.
+- 20260529 preference_penalty <= 28000.
+- 20260529 gross_minus_cost >= 45000.
+- All Qwen, controller, compliance, reviewer, default-variant, and package gates pass.
 
 ## Work Order
 
-1. Keep `best_rescue` legality core as the base; add `crown_exact_rbt_mpc` as the default runtime/package variant.
-2. Archive non-exact final reports and keep `reports/` limited to five exact files.
-3. Add/maintain CROWN-EXACT long-lived records in `AGENTS.md`, `agent.md`, and `docs/AGENT_WORK/*`.
-4. Run Stage 0 baseline table for rescue, previous PTT, money-greedy, strict-pref, and safe-profit.
-5. Run scorer semantics probe and downgrade any unaligned semantics to soft risk.
-6. Run real Qwen RBT compile/cache and observed-vocabulary linking in full eval; do not use smoke as a substitute.
-7. Keep Candidate Auditor, controller scoring, and Visible Graph MPC default OFF unless ablation improves official score or materially reduces penalty without gross collapse.
-8. Run 20260529 and 20260509 31-day exact evaluations with runtime Qwen enabled.
-9. Build package audit; if score gates fail, only produce `NOT_RECOMMENDED_DO_NOT_SUBMIT` inspection zip.
-10. Build final five exact reports, run reviewers, commit, and push.
+1. Create and push branch `crown-gold-contract-mpc`.
+2. Restore immutable `best_rescue` core and verify 20260529 historical rescue reference.
+3. Add `crown_gold_contract_mpc` as default variant without changing `best_rescue` behavior.
+4. Implement/verify real Qwen Preference Contract Compiler, Observed Vocabulary Linker, Candidate Auditor, and Preference Firewall score components.
+5. Keep repair and visible-graph MPC default OFF until ablation proves they help without gross collapse.
+6. Run 20260529 Gold full eval with runtime Qwen enabled.
+7. Run 20260509 non-catastrophic check when practical.
+8. Archive old Exact reports and keep `reports/` limited to the five Gold artifacts.
+9. Run compile/test/audit guard/Qwen evidence checks.
+10. Run real reviewers, fix actionable blockers when feasible, then commit and push.
 
-## Current Result
+## Current Progress
 
-- Final selected exact strategy did not reach recommendation or experimental gates.
-- 20260529 exact: official_net -163.93, gross_minus_cost 41296.06, preference_penalty 41460.0.
-- 20260509 exact: official_net 86900.14, simulation_failures 0.
-- Real Qwen compile/link evidence exists, but auditor/controller scoring and schema-valid Qwen RBT evidence are insufficient.
-- Current stop state is `DO_NOT_SUBMIT_WITH_EXACT_EVIDENCE`; the package is an inspection package only.
+- Branch `crown-gold-contract-mpc` was created and pushed.
+- Historical rescue worktree `f96786a` reproduced 20260529 official_net 5067.69, preference_penalty 38140.0.
+- Current branch restored `best_rescue` to the same 20260529 result: official_net 5067.69, preference_penalty 38140.0, 89 take / 163 wait / 0 reposition.
+- `crown_gold_contract_mpc` is the default variant and keeps runtime Qwen enabled.
+- Cloud host was checked and skipped because high shared load made local continuation safer.
+- B9 Gold 20260529 full eval completed with real Qwen calls and controller scoring, but failed score gates:
+  - official_net 6373.17
+  - gross_minus_cost 45993.17
+  - preference_penalty 39620.0
+  - Qwen compile/link/audit 5 / 245 / 245
+  - controller_scored_candidate_count 11461
+  - changed_decision_count 240
+- 20260509 simulation loop completed with official_net 167347.15 and preference_penalty 0.0, but official monthly income calculation aborted for 2 drivers. This does not satisfy a clean no-regression gate.
+- Final reports were written under `reports/`; no Gold submission zip was generated.
+- Final reviewer issues fixed where practical: 0509 abort reporting, strict Gold schema validation, injected API priority before dummy key state, linker/auditor retry/fallback path, explicit penalty-source rejection, recursive trace id sanitization, old `submissions/` zip archival, and explicit package build gating.
+- Current stop state: `DO_NOT_SUBMIT_WITH_GOLD_EVIDENCE`.
 
 ## Keep/Kill Policy
 

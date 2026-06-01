@@ -6,6 +6,7 @@ import json
 import hashlib
 import os
 import re
+import time
 import urllib.error
 import urllib.request
 from dataclasses import dataclass
@@ -50,6 +51,44 @@ ALLOWED_OPERATORS = {
     "sequence_before_deadline",
     "unknown",
 }
+GOLD_CONTRACT_REQUIRED_FIELDS = {
+    "polarity",
+    "observable",
+    "scope",
+    "metric",
+    "counting",
+    "slots",
+    "severity",
+    "repair_actions",
+    "confidence",
+    "uncertainty",
+    "evidence_hash",
+}
+GOLD_ALLOWED_POLARITIES = {"prefer", "avoid", "require", "forbid", "neutral", "unknown"}
+GOLD_ALLOWED_OBSERVABLES = {
+    "cargo_attribute",
+    "time_window",
+    "duration",
+    "distance",
+    "count",
+    "location",
+    "sequence",
+    "work_pattern",
+    "unknown",
+}
+GOLD_ALLOWED_COUNTING = {
+    "per_action",
+    "per_take",
+    "per_order",
+    "per_day",
+    "distinct_days",
+    "continuous_minutes",
+    "capped_count",
+    "month_end",
+    "whole_period",
+    "unknown",
+}
+GOLD_ALLOWED_SEVERITY_SOURCES = {"runtime_preference", "runtime_metadata", "unknown"}
 
 
 @dataclass
@@ -92,18 +131,27 @@ def _active_api_key() -> tuple[str, str, str]:
 
 def _prompt(preferences: tuple[Any, ...] | list[Any]) -> str:
     return (
-        "Compile runtime driver preferences into executable predicate JSON only. "
-        "Return compact JSON only; no explanation. "
-        "Do not choose actions. Use only abstract schema fields. Each rule needs "
-        "predicate_type, fields, operator, values, time_scope, deadline, counter, "
-        "coordinate_target, repair_action_kinds, penalty_amount, penalty_cap, "
-        "confidence, evidence_hash, and unresolved_reason. predicate_type must be "
-        "one of cargo_field_match, action_time_overlap, continuous_wait, "
-        "off_day_quota, pickup_deadhead_limit, location_visit, route_sequence, "
-        "count_distinct_days, unknown. values may include runtime values from "
-        "preference evidence only; unresolved rules must use predicate_type unknown. "
-        "repair_action_kinds must use abstract labels only from wait, "
-        "reposition_to_target, take_towards_target, avoid_take, none, unknown. "
+        "Compile runtime driver preferences into Preference Contract JSON only. "
+        "Return compact valid JSON only; no explanation and no final action. "
+        "The top object must contain contract_version='gold_v1' and rules. "
+        "Each rule must include polarity, observable, scope, metric, counting, "
+        "slots, severity, repair_actions, confidence, uncertainty, evidence_hash, "
+        "plus executable predicate fields predicate_type, fields, operator, values, "
+        "time_scope, deadline, counter, coordinate_target. Allowed observables are "
+        "cargo_attribute,time_window,duration,distance,count,location,sequence,"
+        "work_pattern,unknown. Do not invent penalty_amount or penalty_cap; use "
+        "null and severity.source='unknown' when missing from runtime input. "
+        "Runtime values may appear only in slots/values for this in-memory call; "
+        "evidence_hash must hash evidence. Preferences: "
+        + json.dumps(list(preferences), ensure_ascii=False, sort_keys=True)
+    )
+
+
+def _legacy_rescue_prompt(preferences: tuple[Any, ...] | list[Any]) -> str:
+    return (
+        "Compile runtime driver preferences into abstract JSON DSL only. "
+        "Do not choose actions. Use only abstract fields: time windows, counts, "
+        "location relations, sequence, rest, reward/penalty, evidence span and confidence. "
         "Return a JSON object with key rules. Preferences: "
         + json.dumps(list(preferences), ensure_ascii=False, sort_keys=True)
     )
@@ -197,8 +245,12 @@ def _tuple_strings(value: Any, allowed: set[str] | None = None) -> tuple[str, ..
 
 def _evidence_hash(raw: dict[str, Any]) -> str:
     value = raw.get("evidence_hash")
-    if isinstance(value, str) and len(value.strip()) >= 8:
-        return value.strip()[:24]
+    if isinstance(value, str):
+        cleaned = value.strip()
+        if re.fullmatch(r"[0-9a-fA-F]{8,64}", cleaned):
+            return cleaned[:24].lower()
+        if cleaned:
+            return hashlib.sha256(cleaned.encode("utf-8")).hexdigest()[:16]
     evidence = str(raw.get("evidence", ""))
     return hashlib.sha256(evidence.encode("utf-8")).hexdigest()[:16] if evidence else ""
 
@@ -210,14 +262,22 @@ def _float_or_default(value: Any, default: float) -> float:
         return default
 
 
-def _runtime_penalty_from_fallback(fallback_amount: dict[str, Any]) -> tuple[float, float | None, str]:
+def _is_number_or_null(value: Any) -> bool:
+    return value is None or (isinstance(value, (int, float)) and not isinstance(value, bool))
+
+
+def _is_string_or_null(value: Any) -> bool:
+    return value is None or isinstance(value, str)
+
+
+def _runtime_penalty_from_fallback(fallback_amount: dict[str, Any]) -> tuple[float | None, float | None, str]:
     amount_raw = fallback_amount.get("amount")
     try:
         amount = float(amount_raw)
     except (TypeError, ValueError):
         amount = 0.0
     if amount <= 0.0 or fallback_amount.get("direction") != "penalty":
-        return float(config.PTT_UNKNOWN_HIGH_PENALTY_SCALE), None, "generic_unknown"
+        return None, None, "unknown"
     cap_raw = fallback_amount.get("cap")
     try:
         cap = None if cap_raw is None else float(cap_raw)
@@ -226,13 +286,22 @@ def _runtime_penalty_from_fallback(fallback_amount: dict[str, Any]) -> tuple[flo
     return amount, cap, "runtime_preference"
 
 
+def _runtime_reward_payload(fallback_amount: dict[str, Any]) -> dict[str, Any]:
+    amount, cap, source = _runtime_penalty_from_fallback(fallback_amount)
+    if source == "runtime_preference" and amount is not None:
+        return {"amount": amount, "cap": cap, "direction": "penalty"}
+    return {"amount": None, "cap": None, "direction": "unknown"}
+
+
 def _rule_from_payload(idx: int, raw: dict[str, Any], fallback_amount: dict[str, Any]) -> CompiledPreferenceRule:
+    if "polarity" in raw or "observable" in raw:
+        raw = _payload_from_gold_contract(raw)
     kind = str(raw.get("kind", "unknown")).strip()
     scope = str(raw.get("scope", "unknown")).strip()
     repair = str(raw.get("repairability", "unknown")).strip()
     if repair == "irreversible":
         repair = "irreversible_after_action"
-    reward = raw.get("reward_or_penalty")
+    reward = _runtime_reward_payload(fallback_amount)
     penalty_amount, penalty_cap, penalty_source = _runtime_penalty_from_fallback(fallback_amount)
     unresolved = str(raw.get("unresolved_reason", ""))
     if raw.get("penalty_amount") is not None and penalty_source != "runtime_preference":
@@ -252,7 +321,7 @@ def _rule_from_payload(idx: int, raw: dict[str, Any], fallback_amount: dict[str,
         scope=scope if scope in ALLOWED_SCOPES else "unknown",
         condition=raw.get("condition") if isinstance(raw.get("condition"), dict) else {},
         repairability=repair if repair in ALLOWED_REPAIR else "unknown",
-        reward_or_penalty=reward if isinstance(reward, dict) else fallback_amount,
+        reward_or_penalty=reward,
         evidence=str(raw.get("evidence", "")),
         confidence=conf,
         repair_action_kinds=_repair_actions(raw),
@@ -269,6 +338,145 @@ def _rule_from_payload(idx: int, raw: dict[str, Any], fallback_amount: dict[str,
         evidence_hash=_evidence_hash(raw),
         unresolved_reason=unresolved,
     )
+
+
+def _payload_from_gold_contract(raw: dict[str, Any]) -> dict[str, Any]:
+    observable = str(raw.get("observable", "unknown")).strip()
+    polarity = str(raw.get("polarity", "unknown")).strip()
+    metric = str(raw.get("metric", "unknown")).strip()
+    slots = raw.get("slots") if isinstance(raw.get("slots"), dict) else {}
+    severity = raw.get("severity") if isinstance(raw.get("severity"), dict) else {}
+    repairs = raw.get("repair_actions") if isinstance(raw.get("repair_actions"), list) else ["unknown"]
+    uncertainty_raw = raw.get("uncertainty")
+    if isinstance(uncertainty_raw, list):
+        uncertainty = [str(item) for item in uncertainty_raw if item not in (None, "")]
+    elif uncertainty_raw in (None, ""):
+        uncertainty = []
+    else:
+        uncertainty = [str(uncertainty_raw)]
+    predicate_map = {
+        "cargo_attribute": "cargo_field_match",
+        "time_window": "continuous_wait",
+        "duration": "continuous_wait",
+        "distance": "pickup_deadhead_limit",
+        "count": "off_day_quota",
+        "location": "location_visit",
+        "sequence": "route_sequence",
+        "work_pattern": "continuous_wait",
+    }
+    kind_map = {
+        "cargo_attribute": "unknown",
+        "time_window": "time_window_constraint",
+        "duration": "time_window_constraint",
+        "distance": "distance_budget",
+        "count": "quota_constraint",
+        "location": "location_relation",
+        "sequence": "sequence_constraint",
+        "work_pattern": "rest_requirement",
+    }
+    fields = []
+    field_ref = slots.get("field_ref")
+    if isinstance(field_ref, str) and field_ref:
+        fields.append(field_ref)
+    elif observable == "cargo_attribute":
+        fields.extend(["cargo_name", "start_city", "end_city"])
+    return {
+        "kind": kind_map.get(observable, "unknown"),
+        "scope": raw.get("scope", "unknown"),
+        "condition": {
+            "gold_contract": {
+                "polarity": polarity,
+                "observable": observable,
+                "metric": metric,
+                "counting": raw.get("counting", "unknown"),
+                "slots_hash": hashlib.sha256(json.dumps(slots, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")).hexdigest()[:16],
+                "severity_source": severity.get("source", "unknown"),
+            },
+            "duration_minutes": slots.get("duration_minutes"),
+            "time_window": slots.get("time_window"),
+            "deadline": slots.get("deadline"),
+            "count": slots.get("count"),
+            "distance_km": slots.get("distance_km"),
+            "coordinate_target": slots.get("location_ref"),
+            "sequence_refs": slots.get("sequence_refs") if isinstance(slots.get("sequence_refs"), list) else [],
+        },
+        "repairability": "irreversible_after_action" if raw.get("counting") == "per_action" else "repairable_until_deadline",
+        "reward_or_penalty": {"amount": severity.get("penalty_amount"), "cap": severity.get("penalty_cap"), "direction": "penalty" if severity.get("penalty_amount") is not None else "unknown"},
+        "evidence": "runtime_contract",
+        "confidence": raw.get("confidence", 0.0),
+        "repair_action_kinds": repairs,
+        "predicate_type": predicate_map.get(observable, "unknown"),
+        "fields": fields,
+        "operator": metric if metric in ALLOWED_OPERATORS else "unknown",
+        "values": [slots.get("field_ref"), slots.get("location_ref")],
+        "time_scope": raw.get("scope", "unknown"),
+        "deadline": slots.get("deadline", "unknown"),
+        "counter": slots.get("count", "unknown"),
+        "coordinate_target": slots.get("location_ref", "unknown"),
+        "evidence_hash": raw.get("evidence_hash", ""),
+        "unresolved_reason": ";".join(uncertainty),
+    }
+
+
+def _valid_gold_rule(rule: Any) -> bool:
+    if not isinstance(rule, dict) or not GOLD_CONTRACT_REQUIRED_FIELDS <= set(rule):
+        return False
+    if not isinstance(rule.get("polarity"), str) or rule["polarity"] not in GOLD_ALLOWED_POLARITIES:
+        return False
+    if not isinstance(rule.get("observable"), str) or rule["observable"] not in GOLD_ALLOWED_OBSERVABLES:
+        return False
+    if not isinstance(rule.get("scope"), str) or rule["scope"] not in ALLOWED_SCOPES:
+        return False
+    if not isinstance(rule.get("metric"), str):
+        return False
+    if not isinstance(rule.get("counting"), str) or rule["counting"] not in GOLD_ALLOWED_COUNTING:
+        return False
+    if not isinstance(rule.get("slots"), dict):
+        return False
+    severity = rule.get("severity")
+    if not isinstance(severity, dict):
+        return False
+    source = severity.get("source")
+    if not isinstance(source, str) or source not in GOLD_ALLOWED_SEVERITY_SOURCES:
+        return False
+    if not _is_number_or_null(severity.get("penalty_amount")) or not _is_number_or_null(severity.get("penalty_cap")):
+        return False
+    if source == "unknown" and (severity.get("penalty_amount") is not None or severity.get("penalty_cap") is not None):
+        return False
+    repairs = rule.get("repair_actions")
+    if not isinstance(repairs, list) or not repairs:
+        return False
+    if any(not isinstance(item, str) or item not in ALLOWED_REPAIR_ACTIONS for item in repairs):
+        return False
+    confidence = rule.get("confidence")
+    if not isinstance(confidence, (int, float)) or isinstance(confidence, bool) or not (0.0 <= float(confidence) <= 1.0):
+        return False
+    uncertainty = rule.get("uncertainty")
+    if not isinstance(uncertainty, list) or any(not isinstance(item, str) for item in uncertainty):
+        return False
+    evidence_hash = rule.get("evidence_hash")
+    if not isinstance(evidence_hash, str) or not re.fullmatch(r"[0-9a-fA-F]{8,64}", evidence_hash.strip()):
+        return False
+    optional_strings = ("predicate_type", "operator", "time_scope")
+    if any(key in rule and not isinstance(rule.get(key), str) for key in optional_strings):
+        return False
+    if "fields" in rule and not (
+        isinstance(rule.get("fields"), list) and all(isinstance(item, str) for item in rule.get("fields", []))
+    ):
+        return False
+    for key in ("deadline", "counter", "coordinate_target"):
+        if key in rule and not _is_string_or_null(rule.get(key)) and not _is_number_or_null(rule.get(key)):
+            return False
+    return True
+
+
+def _valid_gold_contract(data: dict[str, Any]) -> bool:
+    if data.get("contract_version") != "gold_v1":
+        return False
+    rules = data.get("rules")
+    if not isinstance(rules, list) or not rules:
+        return False
+    return all(_valid_gold_rule(rule) for rule in rules)
 
 
 def _completion_with_retries(
@@ -288,8 +496,38 @@ def _completion_with_retries(
             last_exc = exc
             if attempt < 2:
                 STATS.retry_count += 1
+                time.sleep(float(2**attempt))
     assert last_exc is not None
     raise last_exc
+
+
+def completion_with_runtime_order(
+    *,
+    api: SimulationApiPort | None,
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    """Try injected runtime API first, then compatible endpoint with the same retry policy."""
+
+    use_injected_api = api is not None and hasattr(api, "model_chat_completion")
+    last_exc: Exception | None = None
+    if use_injected_api:
+        try:
+            return _completion_with_retries(api=api, payload=payload, api_key="", use_injected_api=True)
+        except Exception as exc:  # pragma: no cover - transport failures vary.
+            last_exc = exc
+    _, api_key, state = _active_api_key()
+    if state == "dummy":
+        STATS.dummy_key_blocked_count += 1
+        STATS.last_error_type = "dummy_key_blocked"
+        if last_exc is not None:
+            raise last_exc
+        raise RuntimeError("dummy_key_blocked")
+    if state == "missing":
+        STATS.last_error_type = "api_key_missing"
+        if last_exc is not None:
+            raise last_exc
+        raise RuntimeError("api_key_missing")
+    return _completion_with_retries(api=None, payload=payload, api_key=api_key, use_injected_api=False)
 
 
 def has_cached(pref_hash: str) -> bool:
@@ -309,6 +547,13 @@ def record_linker_call() -> None:
 
 def record_auditor_call() -> None:
     STATS.auditor_calls += 1
+
+
+def runtime_completion_available(api: SimulationApiPort | None) -> bool:
+    if api is not None and hasattr(api, "model_chat_completion"):
+        return True
+    _, _, state = _active_api_key()
+    return state == "present"
 
 
 def compile_with_qwen(
@@ -332,7 +577,7 @@ def compile_with_qwen(
     STATS.cache_misses += 1
     use_injected_api = api is not None and hasattr(api, "model_chat_completion")
     _, api_key, state = _active_api_key()
-    if state == "dummy":
+    if state == "dummy" and not use_injected_api:
         STATS.dummy_key_blocked_count += 1
         STATS.fallback_unknown_count += 1
         STATS.last_error_type = "dummy_key_blocked"
@@ -342,22 +587,34 @@ def compile_with_qwen(
             STATS.fallback_unknown_count += 1
             STATS.last_error_type = "api_key_missing"
             return None
-    payload = {
-        "model": STATS.last_model_name,
-        "messages": [
-            {"role": "system", "content": "Return valid JSON only."},
-            {"role": "user", "content": _prompt(preferences)},
-        ],
-        "temperature": 0,
-        "max_tokens": 512,
-        "enable_thinking": False,
-        "thinking_budget": 0,
-    }
+    if config.ENABLE_LEGACY_RESCUE_QWEN:
+        payload = {
+            "model": STATS.last_model_name,
+            "messages": [
+                {"role": "system", "content": "Return valid JSON only."},
+                {"role": "user", "content": _legacy_rescue_prompt(preferences)},
+            ],
+            "temperature": 0,
+        }
+    else:
+        payload = {
+            "model": STATS.last_model_name,
+            "messages": [
+                {"role": "system", "content": "Return valid JSON only."},
+                {"role": "user", "content": _prompt(preferences)},
+            ],
+            "temperature": 0,
+            "max_tokens": config.LLM_MAX_OUTPUT_TOKENS,
+            "enable_thinking": False,
+            "thinking_budget": 0,
+        }
     try:
         STATS.compile_calls += 1
-        resp = _completion_with_retries(api=api, payload=payload, api_key=api_key, use_injected_api=use_injected_api)
+        resp = completion_with_runtime_order(api=api, payload=payload)
         _usage_from_response(resp)
         data = _extract_json(_content_from_response(resp))
+        if not config.ENABLE_LEGACY_RESCUE_QWEN and (not isinstance(data, dict) or not _valid_gold_contract(data)):
+            raise ValueError("invalid_gold_contract_schema")
         rules_raw = data.get("rules", []) if isinstance(data, dict) else []
         if not isinstance(rules_raw, list):
             raise ValueError("rules_not_list")

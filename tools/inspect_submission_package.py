@@ -1,4 +1,4 @@
-"""Inspect a CROWN-EXACT submission ZIP for official package shape."""
+"""Inspect a CROWN-GOLD submission ZIP for official package shape."""
 
 from __future__ import annotations
 
@@ -9,7 +9,7 @@ import zipfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-AUDIT_PATH = ROOT / "runs" / "packages" / "exact_package_audit.json"
+AUDIT_PATH = ROOT / "runs" / "packages" / "gold_package_audit.json"
 
 
 def _sha256(path: Path) -> str:
@@ -46,7 +46,7 @@ def main() -> int:
         "root_demo_only": all(name.startswith("demo/") for name in names),
         "contains_demo_agent": any(name.startswith("demo/agent/") for name in names),
         "contains_submission_md": "demo/SUBMISSION.md" in names,
-        "default_variant_config_text": "crown_exact_rbt_mpc" in config_text,
+        "default_variant_config_text": "crown_gold_contract_mpc" in config_text,
         "best_rescue_default_absent": 'os.environ.get("CROWN_Y_VARIANT", "best_rescue")' not in config_text,
         "disallowed_entries": disallowed,
     }

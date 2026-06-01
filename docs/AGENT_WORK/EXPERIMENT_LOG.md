@@ -1,53 +1,71 @@
-# CROWN-EXACT RBT-MPC Experiment Log
+# CROWN-GOLD Contract-MPC Experiment Log
 
-## 2026-06-01 CROWN-EXACT Kickoff
+## 2026-06-02 Gold Kickoff
 
-- Branch created and pushed: `crown-exact-rbt-mpc`.
-- Previous PTT evidence imported as failure baseline: 20260529 official_net -8635.06, gross_minus_cost 33364.94, preference_penalty 42000, qwen_compile_calls 0, ptt_compile_calls 0.
-- Exact gates adopted: real Qwen compile/cache, scorer semantics probe, action-level controller scoring, official score uplift, P0 clean, reviewer PASS.
-- Working assumption: use `best_rescue` legality core as base; exact modules are additive and must be disabled by default if ablation shows gross collapse or no penalty improvement.
+- Branch created and pushed: `crown-gold-contract-mpc`.
+- Long prompt adopted as controlling workflow with stop states `CROWN_GOLD_RECOMMENDED_SUBMISSION`, `CROWN_GOLD_EXPERIMENTAL_SUBMISSION`, `DO_NOT_SUBMIT_WITH_GOLD_EVIDENCE`, and `EXTERNAL_BLOCKER`.
+- Previous failure evidence carried forward:
+  - PTT full eval had qwen_compile_calls=0 and ptt_compile_calls=0.
+  - Exact full eval had Qwen compile/link counts but controller_scored_candidate_count=0 and qwen_auditor_calls=0.
+- Working rule: no synthetic pass, Qwen smoke, legal-action count, report completeness, or package shape can substitute for official score and real runtime metrics.
 
-## 2026-06-01 Historical PTT Record
+## 2026-06-02 Rescue Reproduction
 
-- This section is archived context from the failed PTT build, not the current CROWN-EXACT plan.
-- PTT branch `crown-ptt-firewall-profit` used default variant `preference_firewall_profit`.
-- The PTT run was not submission-ready: 20260529 official_net=-8635.06, gross_minus_cost=33364.94, preference_penalty=42000.0.
-- The PTT run used `CROWN_Y_DISABLE_RUNTIME_QWEN=1` for full eval and therefore cannot satisfy the CROWN-EXACT real-Qwen gate.
-- Current CROWN-EXACT default is `crown_exact_rbt_mpc`; runtime Qwen was enabled in the full exact evals.
+- Current un-restored `best_rescue` initially matched Exact failure shape on 20260529: official_net -163.93, gross_minus_cost 41296.06, preference_penalty 41460.0.
+- Separate historical worktree at `f96786a` reproduced the rescue reference on 20260529: official_net 5067.69, gross_minus_cost 43207.69, preference_penalty 38140.0.
+- Current branch restored immutable `best_rescue` behavior:
+  - Run: `runs/gold/B0_best_rescue_restored_20260529`
+  - official_net 5067.69
+  - gross_minus_cost 43207.69
+  - preference_penalty 38140.0
+  - actions 89 take / 163 wait / 0 reposition
+  - rejected/abort/failure observed as 0 in the available run artifacts.
 
-## Historical PTT Planned Evidence
+## 2026-06-02 Implementation Evidence
 
-| gate | evidence |
-|---|---|
-| historical default variant | `preference_firewall_profit` in config and package smoke logs |
-| PTT coverage | T01-T18 compiler/controller/firewall rows |
-| synthetic behavior | T01-T18 compile, positive, negative, repair, paraphrase, runtime replacement, firewall impact |
-| public eval | 20260529 and 20260509 31-day simulations |
-| compliance | audit guard P0=0 and package inspection |
+- Default variant changed to `crown_gold_contract_mpc`.
+- `best_rescue` and legacy rescue variants keep historical Qwen compiler behavior to preserve B0.
+- Gold Preference Contract Compiler emits contract fields and maps them into existing runtime controllers.
+- Qwen timeout set to 120 seconds with retry backoff.
+- Preference Firewall traces canonical components: marginal penalty, repair value, lost repair-window cost, unknown-soft risk, and Qwen audit adjustment.
+- Candidate Auditor reviews high-conflict/top candidates and emits relation/effect/risk/repair/confidence/evidence, not actions.
+- Trace output redacts or hashes agent diagnostic driver/candidate/decision ids.
+- Tests completed before full Gold run: `python -m compileall demo\agent tests\test_crown_y_core.py` passed; `python -m pytest tests\test_crown_y_core.py -q` reported 57 passed.
 
-## Historical PTT Reviewer Notes
+## 2026-06-02 Resource Check
 
-- Prompt-adherence/compliance reviewer: default PTT variant, PTT docs, PTT controllers, mandatory linker, and PTT report replacement are immediate blockers.
-- Trace reports must hash diagnostic ids; action params may retain runtime `cargo_id` for official `take_order`.
+- SSH to `yinhhzzu` succeeded.
+- Host load was about 421 and multiple GPUs were heavily used, including two GPUs near full memory/high utilization.
+- Decision: continue local execution and do not disrupt shared cloud jobs.
 
-## 2026-06-01 PTT Final Evidence
+## 2026-06-02 Running Gold Evaluation
 
-- `python -m pytest tests -q`: 57 passed.
-- `python -m compileall demo tools tests`: passed.
-- `python tools/audit_guard.py --fail-on-p0`: P0=0.
-- `python tools/qwen_preference_smoke_test.py`: Qwen3.5-Flash compile call succeeded for a non-empty preference.
-- `python tools/run_ptt_synthetic_tests.py`: 18/18 PTT abstract types passed.
-- 20260529 31-day local eval with `preference_firewall_profit`: official_net=-8635.06, gross_minus_cost=33364.94, preference_penalty=42000.0, failed_driver_count=0.
-- 20260509 31-day local eval with `preference_firewall_profit`: official_net=87591.66, preference_penalty=99530.0, failed_driver_count=0.
-- Historical PTT full eval used `CROWN_Y_DISABLE_RUNTIME_QWEN=1` because live Qwen calls stalled full-run throughput; this is explicitly invalid for CROWN-EXACT success.
-- Package audit created only a `NOT_RECOMMENDED_DO_NOT_SUBMIT` zip: default variant `preference_firewall_profit`, root `demo/`, no disallowed entries, SHA256 recorded in `reports/ptt_submission_audit.md`.
-- Stop state is `PTT_DIAGNOSTIC_SUCCESS_DO_NOT_SUBMIT`; score gates and runtime Qwen-call gate were not reached.
+- Run: `runs/gold/B9_gold_default_20260529`.
+- Variant: `crown_gold_contract_mpc`.
+- Runtime Qwen: enabled.
+- Gold repair and visible-graph MPC: default OFF pending ablation evidence.
+- Status at log inspection: full eval was progressing with real Qwen token usage and no observed rejected/abort in the tail.
 
-## 2026-06-01 CROWN-EXACT Evidence
+## 2026-06-02 Gold Final Evidence
 
-- Real Qwen path was kept enabled: `CROWN_Y_DISABLE_RUNTIME_QWEN` was not set for exact full evals, and real compile/link calls appeared in traces.
-- Scorer semantics microprobe produced 10 rows with 9 aligned cases and hard-enable evidence for aligned semantics.
-- 20260529 exact after disabling negative PTT firewall default: official_net -163.93, gross_minus_cost 41296.06, preference_penalty 41460.0, qwen_compile_calls 12, qwen_linker_calls 243, simulation_failures 0.
-- Current-code `best_rescue` reproduction matched exact at official_net -163.93, showing the exact default no longer adds a score regression beyond the current rescue/Qwen path, but it also does not reach rescue historical score.
-- Numeric parameter probe `90min_wait_8am_rest` failed: official_net -20415.93 and preference_penalty 62680.0, so it was reverted from default.
-- Gate consequence: CROWN-EXACT is not recommended unless a later run reaches official_net >=30000, preference_penalty <=22000, gross_minus_cost >=45000, real Qwen compile/cache >0, controller scoring >0, scorer semantics aligned >0, P0 clean, and 0509 non-catastrophic.
+- B9 initial schema run failed badly: official_net -8771.94, gross_minus_cost 32788.06, preference_penalty 41560.0.
+- After 4096 output tokens and strict Gold schema validation, 20260529 final selected run reached:
+  - official_net 6373.17
+  - gross_minus_cost 45993.17
+  - preference_penalty 39620.0
+  - Qwen compile/link/audit 5 / 245 / 245
+  - controller_scored_candidate_count 11461
+  - candidate_rule_eval_count 52909
+  - score_changed_by_controller_count 11461
+  - changed_decision_count 240
+  - rejected/abort/failure observed as 0
+- The real Qwen/controller chain is active, but score gates fail: official_net is below 30000 and preference_penalty is above 28000.
+- 20260509 simulation loop completed with 10 drivers, official_net 167347.15, gross_minus_cost 167347.14, and preference_penalty 0.0, but official monthly income calculation aborted for 2 drivers. This is not clean no-regression evidence.
+- 20260509 exposed old Qwen total caps: qwen_budget_exhausted_count 1592. Gold default total linker/auditor budgets were raised to 4096 afterward.
+- Strict Gold contract validation was tightened after final reviewer found malformed contracts could pass field-presence-only checks.
+- Linker and auditor were routed through shared Qwen retry/fallback order after final reviewer found they did not share the compiler's compatibility path.
+- Injected Qwen API priority was fixed so dummy/local compatible endpoint state cannot block an available injected `SimulationApiPort.model_chat_completion`.
+- Gold contract schema now rejects model-reported `severity.source='explicit'` penalty provenance.
+- Old package zips were moved out of `submissions/`; no Gold submission package was generated.
+- Package builder now requires explicit `--recommended` or `--not-recommended` to avoid accidental zip creation after failed gates.
+- No Gold submission package was generated. Stop state is `DO_NOT_SUBMIT_WITH_GOLD_EVIDENCE`.
