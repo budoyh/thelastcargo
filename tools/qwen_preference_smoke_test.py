@@ -24,20 +24,25 @@ class SmokeApi:
                 {
                     "message": {
                         "content": json.dumps(
-                            {
-                                "rules": [
-                                    {
-                                        "rule_id": "r0",
-                                        "kind": "unknown",
-                                        "scope": "whole_period",
-                                        "condition": {},
-                                        "repairability": "always_soft",
-                                        "reward_or_penalty": {"amount": 100, "cap": None, "direction": "penalty"},
-                                        "evidence": "abstract preference",
-                                        "confidence": 0.4,
-                                    }
-                                ]
-                            }
+                                {
+                                    "contract_version": "trident_v2",
+                                    "rules": [
+                                        {
+                                            "rule_id": "0123456789abcdef",
+                                            "polarity": "prefer",
+                                            "observable": "unknown",
+                                            "scope": "whole_period",
+                                            "metric": "unknown",
+                                            "counting": "unknown",
+                                            "slots": {},
+                                            "severity": {"source": "unknown", "penalty_amount": None, "penalty_cap": None},
+                                            "repair": ["wait"],
+                                            "confidence": 0.4,
+                                            "uncertainty": [],
+                                            "evidence_hash": "0123456789abcdef",
+                                        }
+                                    ]
+                                }
                         )
                     }
                 }

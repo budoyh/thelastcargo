@@ -48,7 +48,7 @@ def decompose(option: CandidateOption, *, chosen: bool = False, rank: int | None
     """Return a stable audit decomposition using runtime-visible candidate fields."""
 
     freight = option.direct_money
-    route_value = _component(option, "twohop_lite", "rollout_value", "visible_rollout")
+    route_value = _component(option, "twohop_lite", "rollout_value", "visible_rollout", "visible_graph_route_value")
     terminal = _component(option, "terminal_value", "learned_ranker")
     macro_repair = _component(option, "preference_repair_value", "pce_predicted_repair_value")
     macro_repair += _component(option, "ptt_repair_value")
@@ -74,6 +74,9 @@ def decompose(option: CandidateOption, *, chosen: bool = False, rank: int | None
     low_conf = -_component(option, "low_confidence_risk", "ptt_low_confidence_risk", "ptt_low_confidence_applied")
     if option.pref_cert is not None:
         low_conf += max(0.0, option.pref_cert.unknown_risk)
+    audit_adjustment = _component(option, "qwen_audit_adjustment", "qwen_audit_adjustment_applied", "ptt_auditor_adjustment")
+    audit_items = option.trace.get("ptt_auditor") if isinstance(option.trace.get("ptt_auditor"), list) else []
+    audit_first = audit_items[0] if audit_items and isinstance(audit_items[0], dict) else {}
 
     final_score = float(option.score)
     payload = {
@@ -92,6 +95,12 @@ def decompose(option: CandidateOption, *, chosen: bool = False, rank: int | None
         "reposition_cost": round(reposition_cost, 4),
         "execution_risk": round(execution_risk, 4),
         "low_confidence_risk": round(low_conf, 4),
+        "qwen_audit_adjustment": round(audit_adjustment, 4),
+        "qwen_audit_relation": str(audit_first.get("relation", "")),
+        "qwen_audit_effect": str(audit_first.get("effect", "")),
+        "qwen_audit_risk": str(audit_first.get("risk_level", "")),
+        "qwen_audit_repair": str(audit_first.get("repair_level", "")),
+        "qwen_audit_confidence": audit_first.get("confidence", ""),
         "final_score": round(final_score, 4),
         "chosen_flag": bool(chosen),
         "why_not_chosen": "" if chosen else _why_not_chosen(option),

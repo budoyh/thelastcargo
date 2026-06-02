@@ -182,6 +182,24 @@ def _bytecode_for_rule_type(rule_type: str) -> list[dict[str, Any]]:
 
 
 def _classify_from_rule(rule: CompiledPreferenceRule, pref_text: str) -> tuple[str, str, str, str, tuple[str, ...]]:
+    if rule.observable == "cargo_attribute":
+        if rule.polarity in {"require", "prefer"}:
+            return "required_cargo_attribute_distinct_days", "cargo_name", "distinct_days_count", "month_end", ("take",)
+        return "forbidden_cargo_attribute", "cargo_name", "contains", "per_take", ("avoid_take",)
+    if rule.observable in {"time_window", "duration", "work_pattern"}:
+        if rule.scope in {"window", "date_window"} or rule.metric == "overlap":
+            return "scheduled_quiet_window", "action_interval", "not_overlaps", "continuous_window", ("wait",)
+        return "daily_continuous_rest", "wait_interval", "continuous_minutes", "per_day", ("wait",)
+    if rule.observable == "distance":
+        if "haul" in tuple(str(item).lower() for item in rule.fields):
+            return "haul_distance_limit", "haul_km", "<=", "per_take", ("avoid_take",)
+        return "pickup_deadhead_limit", "pickup_deadhead_km", "<=", "per_take", ("avoid_take",)
+    if rule.observable == "count":
+        return "full_inactive_day_quota", "day_action_count", "count_ge", "month_end", ("wait",)
+    if rule.observable == "location":
+        return "location_visit_or_dwell", "position", "near", "once_if_failed", ("reposition", "wait", "take")
+    if rule.observable == "sequence":
+        return "ordered_multi_stop_task", "position", "ordered_visit", "once_if_failed", ("reposition", "take", "wait")
     lower = pref_text.lower()
     if rule.predicate_type == "continuous_wait":
         if _time_window(pref_text):
@@ -270,6 +288,12 @@ def from_compiled_rules(world: World, compile_source: str = "deterministic") -> 
                 source_rule_id=rule.rule_id,
                 ptt_compile_source=compile_source,
                 slots={
+                    "contract_version": rule.contract_version,
+                    "polarity": rule.polarity,
+                    "observable": rule.observable,
+                    "metric": rule.metric,
+                    "counting": rule.counting,
+                    "contract_slots": dict(rule.slots),
                     "predicate_type": rule.predicate_type,
                     "fields": list(rule.fields),
                     "operator": rule.operator,

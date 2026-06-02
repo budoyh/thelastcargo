@@ -338,12 +338,18 @@ class ModelDecisionService:
                 stats=ptt_firewall_stats,
             )
         options, rescue_stats = rescue_scorer.score_options(options, world_after_query, runtime.wait_lock)
-        mpc_stats = visible_graph_mpc.apply_visible_graph_mpc(options, world_after_query, visible)
+        mpc_stats = visible_graph_mpc.apply_visible_graph_mpc(
+            options,
+            world_after_query,
+            visible,
+            online_summary=runtime.memory.online_graph_snapshot(),
+        )
         if config.ENABLE_PCE_REPAIR_FIRST:
             options = candidate_preference_verifier.apply_to_options(options, world_after_query, vocab_links)
         rest_option, rest_reason = self._rescue_rest_option(runtime, world_after_query, decision_id)
         chosen = rest_option if rest_option is not None else rescue_scorer.choose(options, rescue_stats, runtime.wait_lock)
         _record_controller_decision_change(options, chosen)
+        preference_firewall.finalize_auditor_effect_trace(options=options, chosen=chosen, stats=ptt_firewall_stats)
         runtime.active_macro = macro_commitment.record_selection(runtime.active_macro, runtime.macro_stats, chosen, world_after_query)
         action = safety.finalize(chosen, world_after_query)
         wait_forensic = {}

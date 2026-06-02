@@ -307,7 +307,6 @@ def compile_ptt_rules(api: SimulationApiPort | None, world: World) -> tuple[PTTR
         "temperature": 0,
         "max_tokens": 512,
         "enable_thinking": False,
-        "thinking_budget": 0,
     }
     if config.DISABLE_RUNTIME_QWEN:
         qwen_preference_compiler.STATS.budget_blocked_count += 1

@@ -60,6 +60,12 @@ def _prompt(preferences: tuple[Any, ...], rules: tuple[CompiledPreferenceRule, .
     compact_rules = [
         {
             "rule_id": rule.rule_id,
+            "contract_version": rule.contract_version,
+            "polarity": rule.polarity,
+            "observable": rule.observable,
+            "metric": rule.metric,
+            "counting": rule.counting,
+            "slots_hash": _hash(rule.slots),
             "predicate_type": rule.predicate_type,
             "fields": list(rule.fields),
             "operator": rule.operator,
@@ -175,7 +181,6 @@ def link_current_observed_vocab(
                     "temperature": 0,
                     "max_tokens": 128,
                     "enable_thinking": False,
-                    "thinking_budget": 0,
                 },
             )
             qwen_preference_compiler._usage_from_response(resp)

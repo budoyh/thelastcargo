@@ -24,9 +24,11 @@ from agent import (  # noqa: E402
     candidate_preference_verifier,
     preference_repair_planner,
     preference_repair,
+    preference_firewall,
     macro_commitment,
     preference_automata,
     preference_monitor,
+    ptt_transducer,
     qwen_preference_compiler,
     query_policy,
     rescue_scorer,
@@ -34,6 +36,7 @@ from agent import (  # noqa: E402
     time_bid_scorer,
     time_shadow_market,
     trace_writer,
+    visible_graph_mpc,
     wait_lock,
     world as world_module,
 )
@@ -298,6 +301,80 @@ def test_visible_rollout_uses_only_current_actionable():
     option = candidate_generator.build_options(world1, [current], "d1")[0]
     rollout = visible_rollout.evaluate(option, world1, visible)
     assert "S" not in rollout.used_second_hop_ids
+
+
+def test_visible_graph_alpha_entrypoints_configured():
+    assert config.VISIBLE_GRAPH_ALPHA_TEST_VALUES == (0.05, 0.10, 0.20, 0.35)
+
+
+def test_visible_graph_mpc_uses_current_actionable_and_alpha(monkeypatch):
+    monkeypatch.setattr(config, "ENABLE_VISIBLE_GRAPH_MPC", True)
+    world1, memory, _ = build_world()
+    visible = cargo_filter.normalize_and_filter(
+        raw_cargos=[
+            cargo_item("A", price=900, end_lat=23.5, end_lng=113.5, cost=60),
+            cargo_item("B", price=900, start_lat=23.5, start_lng=113.5, end_lat=23.7, end_lng=113.7, cost=60),
+        ],
+        world=world1,
+        source_scope=CURRENT_ACTIONABLE,
+        decision_id="d1",
+    )
+    memory.update_current_observation(world1, visible, query_minutes=5)
+
+    def bonus_for_alpha(alpha):
+        monkeypatch.setattr(config, "VISIBLE_GRAPH_ALPHA", alpha)
+        options = candidate_generator.build_options(world1, visible, "d1")
+        take_a = next(option for option in options if option.cargo and option.cargo.cargo_id == "A")
+        stats = visible_graph_mpc.apply_visible_graph_mpc(
+            options,
+            world1,
+            visible,
+            online_summary=memory.online_graph_snapshot(),
+        )
+        return take_a.score_components["visible_graph_mpc"], take_a.trace["visible_graph_mpc"], stats
+
+    bonus_low, trace_low, stats_low = bonus_for_alpha(0.05)
+    bonus_high, trace_high, stats_high = bonus_for_alpha(0.35)
+    assert bonus_low > 0
+    assert bonus_high > bonus_low
+    assert trace_low["plan_type"] == "visible_A_to_B_pair"
+    assert trace_low["alpha"] == 0.05
+    assert trace_low["uses_current_actionable_only"] is True
+    assert trace_low["uses_same_driver_online_summary"] is True
+    assert stats_low.visible_pair_count > 0
+    assert stats_high.payload()["alpha"] == 0.35
+
+
+def test_visible_graph_terminal_filters_scope_and_decision(monkeypatch):
+    monkeypatch.setattr(config, "ENABLE_VISIBLE_GRAPH_MPC", True)
+    monkeypatch.setattr(config, "VISIBLE_GRAPH_ALPHA", 0.10)
+    world1, _, _ = build_world()
+    current = normalize_cargo_item(cargo_item("A", price=200), world_minutes=0, source_scope=CURRENT_ACTIONABLE, decision_id="d1")
+    stale = normalize_cargo_item(cargo_item("OLD", price=20000), world_minutes=0, source_scope=CURRENT_ACTIONABLE, decision_id="d2")
+    shadow = normalize_cargo_item(cargo_item("SHADOW", price=20000), world_minutes=0, source_scope=SHADOW_LIQUIDITY_ONLY, decision_id="d1")
+    option = CandidateOption(id="wait:graph", action_type="wait", decision_id="d1", duration_minutes=30, occupied_minutes=30, finish_minutes=30)
+    stats = visible_graph_mpc.apply_visible_graph_mpc([option], world1, [current, stale, shadow], online_summary={})
+    trace = option.trace["visible_graph_mpc"]
+    assert trace["plan_type"] == "wait_then_A"
+    assert trace["current_actionable_count"] == 1
+    assert trace["uses_current_actionable_only"] is True
+    assert stats.terminal_value_used_count == 1
+
+
+def test_online_graph_memory_snapshot_is_aggregate_only():
+    world1, memory, _ = build_world()
+    visible = cargo_filter.normalize_and_filter(
+        raw_cargos=[cargo_item("A", price=700), cargo_item("B", price=500)],
+        world=world1,
+        source_scope=CURRENT_ACTIONABLE,
+        decision_id="d1",
+    )
+    memory.update_current_observation(world1, visible, query_minutes=5)
+    snapshot = memory.online_graph_snapshot()
+    assert snapshot["cell_count"] > 0
+    assert snapshot["observations"] == 1
+    assert "A" not in repr(snapshot)
+    assert "B" not in repr(snapshot)
 
 
 def test_resource_pressure_endgame():
@@ -752,6 +829,88 @@ def test_qwen_compiler_calls_model_for_new_pref_hash(monkeypatch):
     assert qwen_preference_compiler.STATS.compile_calls == before + 1
 
 
+def test_qwen_trident_v2_contract_fields_and_redacted_slots(monkeypatch):
+    class CompilerApi:
+        def model_chat_completion(self, payload):
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "contract_version": "trident_v2",
+                                    "rules": [
+                                        {
+                                            "rule_id": "abcdef0123456789",
+                                            "polarity": "avoid",
+                                            "observable": "cargo_attribute",
+                                            "scope": "action",
+                                            "metric": "match",
+                                            "counting": "per_action",
+                                            "slots": {
+                                                "field": "cargo_name",
+                                                "operator": "contains_any",
+                                                "runtime_values": ["private-runtime-value"],
+                                            },
+                                            "repair": ["avoid_take"],
+                                            "confidence": 0.8,
+                                            "uncertainty": [],
+                                            "evidence_hash": "abcdef0123456789",
+                                        }
+                                    ],
+                                }
+                            )
+                        }
+                    }
+                ],
+                "usage": {},
+            }
+
+    monkeypatch.setenv("DASHSCOPE_API_KEY", "unit-test-key")
+    rules = qwen_preference_compiler.compile_with_qwen(
+        api=CompilerApi(),
+        pref_hash="unit-qwen-trident-v2-pref",
+        preferences=({"content": "abstract runtime preference", "penalty_amount": 10},),
+        fallback_amounts=[{"amount": 10.0, "cap": None, "direction": "penalty"}],
+    )
+    assert rules is not None
+    rule = rules[0]
+    assert rule.contract_version == "trident_v2"
+    assert rule.polarity == "avoid"
+    assert rule.observable == "cargo_attribute"
+    assert rule.counting == "per_action"
+    assert rule.repair == ("avoid_take",)
+    assert rule.penalty_amount == 10.0
+    assert rule.penalty_amount_source == "runtime_preference"
+    slots_text = json.dumps(rule.slots, ensure_ascii=False, sort_keys=True)
+    assert "private-runtime-value" not in slots_text
+    assert rule.slots["runtime_values"] == []
+    assert rule.slots["runtime_value_hashes"]
+
+
+def test_qwen_trident_v2_rejects_invented_unknown_penalty():
+    invented_penalty = {
+        "contract_version": "trident_v2",
+        "rules": [
+            {
+                "rule_id": "1111222233334444",
+                "polarity": "avoid",
+                "observable": "distance",
+                "scope": "action",
+                "metric": "<=",
+                "counting": "per_action",
+                "slots": {"distance_km": 100},
+                "repair": ["avoid_take"],
+                "severity": {"source": "unknown", "penalty_amount": 1200, "penalty_cap": None},
+                "confidence": 0.9,
+                "uncertainty": [],
+                "evidence_hash": "1111222233334444",
+            }
+        ],
+    }
+    assert not qwen_preference_compiler._valid_gold_contract(invented_penalty)
+
+
 def test_qwen_gold_contract_rejects_malformed_schema():
     malformed = {
         "contract_version": "gold_v1",
@@ -983,6 +1142,94 @@ def test_qwen_irreversible_repairability_reaches_certificate(monkeypatch):
     )
     cert = preference_monitor.certify(option, world2)
     assert cert.high_confidence_irreversible_violation
+
+
+def test_qwen_auditor_records_nonzero_trident_effect_trace(monkeypatch):
+    class AuditorApi:
+        def model_chat_completion(self, payload):
+            content = payload["messages"][1]["content"]
+            assert "Do not choose an action" in content
+            assert "final action" in content
+            data = json.loads(content.split("Input is current runtime-only visible data: ", 1)[1])
+            candidate_hash = data[0]["candidate_hash"]
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "assessments": [
+                                        {
+                                            "candidate_id": candidate_hash,
+                                            "rule_id": "runtime-rule-id",
+                                            "relation": "violation",
+                                            "effect": "violates",
+                                            "risk_level": "high",
+                                            "repair_level": "none",
+                                            "confidence": 0.9,
+                                            "evidence": "private auditor evidence",
+                                        }
+                                    ],
+                                    "final_action": "take_order",
+                                }
+                            )
+                        }
+                    }
+                ],
+                "usage": {},
+            }
+
+    monkeypatch.setattr(config, "ENABLE_PTT_AUDITOR", True)
+    monkeypatch.setattr(config, "DISABLE_RUNTIME_QWEN", False)
+    world1, _, _ = build_world(preferences=[{"content": "abstract runtime preference", "penalty_amount": 1000}])
+    risky = CandidateOption(
+        id="take:audited",
+        action_type="take_order",
+        decision_id="D_TEST:7",
+        direct_money=100,
+        occupied_minutes=60,
+        finish_minutes=60,
+        score=100,
+    )
+    risky.trace["ptt_firewall"] = {
+        "decision": "qwen_audit_required",
+        "marginal_penalty": 900.0,
+        "future_repairability_delta": 200.0,
+        "top_impacts": [{"rule_hash": "abc123", "effect": "violates"}],
+    }
+    other = CandidateOption(
+        id="take:other",
+        action_type="take_order",
+        decision_id="D_TEST:7",
+        direct_money=50,
+        occupied_minutes=60,
+        finish_minutes=60,
+        score=50,
+    )
+    stats = preference_firewall.FirewallStats()
+    before = qwen_preference_compiler.STATS.audit_adjustment_nonzero_count
+    preference_firewall.maybe_audit_high_risk(
+        api=AuditorApi(),
+        world=world1,
+        options=[risky, other],
+        stats=stats,
+        limit=2,
+    )
+    adjustment = risky.score_components["qwen_audit_adjustment"]
+    assert adjustment < 0
+    risky.score += adjustment
+    chosen = other
+    preference_firewall.finalize_auditor_effect_trace(options=[risky, other], chosen=chosen, stats=stats)
+    rows = stats.payload()["qwen_effect_rows"]
+    assert rows
+    row = next(item for item in rows if item["candidate_hash"] == preference_firewall._hash("take:audited"))
+    assert row["applied_score_adjustment"] != 0
+    assert row["ranking_changed"] is True
+    assert row["action_changed"] is True
+    assert row["final_action_used"] is False
+    assert row["affected_rule_ids"]
+    assert "private auditor evidence" not in json.dumps(rows, ensure_ascii=False)
+    assert qwen_preference_compiler.STATS.audit_adjustment_nonzero_count == before + 1
 
 
 def test_score_accountant_no_double_count_and_redacts_preferences(tmp_path):

@@ -27,9 +27,33 @@ ALLOWED_KINDS = {
     "distance_budget",
     "unknown",
 }
-ALLOWED_SCOPES = {"single_action", "day", "rolling_window", "month", "date_specific", "whole_period", "unknown"}
+ALLOWED_SCOPES = {
+    "single_action",
+    "action",
+    "day",
+    "rolling_window",
+    "window",
+    "month",
+    "date_specific",
+    "date_window",
+    "whole_period",
+    "unknown",
+}
 ALLOWED_REPAIR = {"irreversible", "irreversible_after_action", "repairable_until_deadline", "repairable_by_quota", "always_soft", "unknown"}
-ALLOWED_REPAIR_ACTIONS = {"wait", "reposition_to_target", "take_towards_target", "avoid_take", "none", "unknown"}
+ALLOWED_REPAIR_ACTIONS = {
+    "wait",
+    "wait_block",
+    "full_day_inactive",
+    "wait_at_target",
+    "reposition",
+    "reposition_to_target",
+    "take_towards_target",
+    "take_matching",
+    "ordered_progress",
+    "avoid_take",
+    "none",
+    "unknown",
+}
 ALLOWED_PREDICATE_TYPES = {
     "cargo_field_match",
     "action_time_overlap",
@@ -51,6 +75,8 @@ ALLOWED_OPERATORS = {
     "sequence_before_deadline",
     "unknown",
 }
+CONTRACT_VERSION_V1 = "gold_v1"
+CONTRACT_VERSION_V2 = "trident_v2"
 GOLD_CONTRACT_REQUIRED_FIELDS = {
     "polarity",
     "observable",
@@ -64,7 +90,20 @@ GOLD_CONTRACT_REQUIRED_FIELDS = {
     "uncertainty",
     "evidence_hash",
 }
-GOLD_ALLOWED_POLARITIES = {"prefer", "avoid", "require", "forbid", "neutral", "unknown"}
+TRIDENT_CONTRACT_REQUIRED_FIELDS = {
+    "rule_id",
+    "polarity",
+    "observable",
+    "scope",
+    "metric",
+    "counting",
+    "slots",
+    "repair",
+    "confidence",
+    "uncertainty",
+    "evidence_hash",
+}
+GOLD_ALLOWED_POLARITIES = {"prefer", "avoid", "require", "required", "limit", "forbid", "neutral", "unknown"}
 GOLD_ALLOWED_OBSERVABLES = {
     "cargo_attribute",
     "time_window",
@@ -78,12 +117,17 @@ GOLD_ALLOWED_OBSERVABLES = {
 }
 GOLD_ALLOWED_COUNTING = {
     "per_action",
+    "per_action",
     "per_take",
     "per_order",
     "per_day",
     "distinct_days",
+    "distinct_day",
     "continuous_minutes",
+    "continuous_window",
     "capped_count",
+    "capped",
+    "once_if_failed",
     "month_end",
     "whole_period",
     "unknown",
@@ -104,6 +148,8 @@ class CompileStats:
     budget_blocked_count: int = 0
     linker_calls: int = 0
     auditor_calls: int = 0
+    audit_adjustment_nonzero_count: int = 0
+    auditor_adjustment_total: float = 0.0
     timeout_count: int = 0
     retry_count: int = 0
     budget_exhausted_count: int = 0
@@ -131,16 +177,16 @@ def _active_api_key() -> tuple[str, str, str]:
 
 def _prompt(preferences: tuple[Any, ...] | list[Any]) -> str:
     return (
-        "Compile runtime driver preferences into Preference Contract JSON only. "
+        "Compile runtime driver preferences into Preference Contract V2 JSON only. "
         "Return compact valid JSON only; no explanation and no final action. "
-        "The top object must contain contract_version='gold_v1' and rules. "
-        "Each rule must include polarity, observable, scope, metric, counting, "
-        "slots, severity, repair_actions, confidence, uncertainty, evidence_hash, "
+        "The top object must contain contract_version='trident_v2' and rules. "
+        "Each rule must include rule_id, polarity, observable, scope, metric, counting, "
+        "slots, repair, confidence, uncertainty, evidence_hash, "
         "plus executable predicate fields predicate_type, fields, operator, values, "
         "time_scope, deadline, counter, coordinate_target. Allowed observables are "
         "cargo_attribute,time_window,duration,distance,count,location,sequence,"
         "work_pattern,unknown. Do not invent penalty_amount or penalty_cap; use "
-        "null and severity.source='unknown' when missing from runtime input. "
+        "null and source='unknown' when missing from runtime input. "
         "Runtime values may appear only in slots/values for this in-memory call; "
         "evidence_hash must hash evidence. Preferences: "
         + json.dumps(list(preferences), ensure_ascii=False, sort_keys=True)
@@ -211,7 +257,7 @@ def _dashscope_compatible_completion(payload: dict[str, Any], api_key: str) -> d
 
 
 def _repair_actions(raw: dict[str, Any]) -> tuple[str, ...]:
-    value = raw.get("repair_action_kinds", ())
+    value = raw.get("repair_action_kinds", raw.get("repair_actions", raw.get("repair", ())))
     if isinstance(value, str):
         items = [value]
     elif isinstance(value, list):
@@ -255,6 +301,71 @@ def _evidence_hash(raw: dict[str, Any]) -> str:
     return hashlib.sha256(evidence.encode("utf-8")).hexdigest()[:16] if evidence else ""
 
 
+def _contract_rule_id(idx: int, raw: dict[str, Any]) -> str:
+    value = str(raw.get("rule_id", "")).strip()
+    if re.fullmatch(r"[0-9a-fA-F]{8,64}", value):
+        return f"qwen_{value[:16].lower()}"
+    if value:
+        return "qwen_" + hashlib.sha256(value.encode("utf-8")).hexdigest()[:16]
+    return f"qwen_{idx}"
+
+
+def _hash_runtime_value(value: Any) -> str:
+    payload = json.dumps(value, ensure_ascii=False, sort_keys=True, default=str)
+    return hashlib.sha256(payload.encode("utf-8")).hexdigest()[:16]
+
+
+def _slot_number(value: Any) -> float | int | None:
+    if value in (None, "") or isinstance(value, bool):
+        return None
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return None
+    return int(number) if number.is_integer() else number
+
+
+def _slot_text(value: Any) -> str | None:
+    if value in (None, ""):
+        return None
+    return str(value)[:48]
+
+
+def _redacted_slots(slots: dict[str, Any]) -> dict[str, Any]:
+    runtime_values = slots.get("runtime_values", [])
+    if not isinstance(runtime_values, list):
+        runtime_values = [runtime_values] if runtime_values not in (None, "") else []
+    sequence_refs = slots.get("sequence_refs", [])
+    if not isinstance(sequence_refs, list):
+        sequence_refs = [sequence_refs] if sequence_refs not in (None, "") else []
+    target_ref = slots.get("target_ref", slots.get("location_ref"))
+    payload = {
+        "field": _slot_text(slots.get("field", slots.get("field_ref"))),
+        "operator": _slot_text(slots.get("operator")),
+        "runtime_values": [],
+        "runtime_value_hashes": [_hash_runtime_value(item) for item in runtime_values if item not in (None, "")][:12],
+        "time_window": slots.get("time_window"),
+        "date_window": slots.get("date_window"),
+        "duration_minutes": _slot_number(slots.get("duration_minutes")),
+        "distance_km": _slot_number(slots.get("distance_km")),
+        "count": _slot_number(slots.get("count")),
+        "target_ref": None,
+        "target_ref_hash": _hash_runtime_value(target_ref) if target_ref not in (None, "") else "",
+        "sequence_refs": [],
+        "sequence_ref_hashes": [_hash_runtime_value(item) for item in sequence_refs if item not in (None, "")][:8],
+    }
+    return payload
+
+
+def _contract_uncertainty(raw: dict[str, Any]) -> tuple[str, ...]:
+    value = raw.get("uncertainty", ())
+    if isinstance(value, list):
+        return tuple(str(item) for item in value if item not in (None, ""))
+    if value in (None, ""):
+        return tuple()
+    return (str(value),)
+
+
 def _float_or_default(value: Any, default: float) -> float:
     try:
         return float(value)
@@ -295,7 +406,7 @@ def _runtime_reward_payload(fallback_amount: dict[str, Any]) -> dict[str, Any]:
 
 def _rule_from_payload(idx: int, raw: dict[str, Any], fallback_amount: dict[str, Any]) -> CompiledPreferenceRule:
     if "polarity" in raw or "observable" in raw:
-        raw = _payload_from_gold_contract(raw)
+        raw = _payload_from_gold_contract(idx, raw)
     kind = str(raw.get("kind", "unknown")).strip()
     scope = str(raw.get("scope", "unknown")).strip()
     repair = str(raw.get("repairability", "unknown")).strip()
@@ -316,7 +427,7 @@ def _rule_from_payload(idx: int, raw: dict[str, Any], fallback_amount: dict[str,
     except (TypeError, ValueError):
         conf = 0.0
     return CompiledPreferenceRule(
-        rule_id=f"qwen_{idx}",
+        rule_id=str(raw.get("rule_id") or f"qwen_{idx}"),
         kind=kind if kind in ALLOWED_KINDS else "unknown",
         scope=scope if scope in ALLOWED_SCOPES else "unknown",
         condition=raw.get("condition") if isinstance(raw.get("condition"), dict) else {},
@@ -337,23 +448,30 @@ def _rule_from_payload(idx: int, raw: dict[str, Any], fallback_amount: dict[str,
         penalty_cap=penalty_cap,
         evidence_hash=_evidence_hash(raw),
         unresolved_reason=unresolved,
+        contract_version=str(raw.get("contract_version", "legacy_v1")),
+        polarity=str(raw.get("polarity", "unknown")),
+        observable=str(raw.get("observable", "unknown")),
+        metric=str(raw.get("metric", raw.get("operator", "unknown"))),
+        counting=str(raw.get("counting", "unknown")),
+        slots=raw.get("slots") if isinstance(raw.get("slots"), dict) else {},
+        repair=_repair_actions(raw),
+        uncertainty=_contract_uncertainty(raw),
+        penalty_amount_source=penalty_source,
     )
 
 
-def _payload_from_gold_contract(raw: dict[str, Any]) -> dict[str, Any]:
+def _payload_from_gold_contract(idx: int, raw: dict[str, Any]) -> dict[str, Any]:
     observable = str(raw.get("observable", "unknown")).strip()
     polarity = str(raw.get("polarity", "unknown")).strip()
     metric = str(raw.get("metric", "unknown")).strip()
     slots = raw.get("slots") if isinstance(raw.get("slots"), dict) else {}
     severity = raw.get("severity") if isinstance(raw.get("severity"), dict) else {}
-    repairs = raw.get("repair_actions") if isinstance(raw.get("repair_actions"), list) else ["unknown"]
-    uncertainty_raw = raw.get("uncertainty")
-    if isinstance(uncertainty_raw, list):
-        uncertainty = [str(item) for item in uncertainty_raw if item not in (None, "")]
-    elif uncertainty_raw in (None, ""):
-        uncertainty = []
-    else:
-        uncertainty = [str(uncertainty_raw)]
+    if not severity and isinstance(raw.get("penalty"), dict):
+        severity = raw.get("penalty", {})
+    repairs_raw = raw.get("repair", raw.get("repair_actions", ["unknown"]))
+    repairs = repairs_raw if isinstance(repairs_raw, list) else [repairs_raw]
+    uncertainty = list(_contract_uncertainty(raw))
+    redacted_slots = _redacted_slots(slots)
     predicate_map = {
         "cargo_attribute": "cargo_field_match",
         "time_window": "continuous_wait",
@@ -375,12 +493,21 @@ def _payload_from_gold_contract(raw: dict[str, Any]) -> dict[str, Any]:
         "work_pattern": "rest_requirement",
     }
     fields = []
-    field_ref = slots.get("field_ref")
+    field_ref = slots.get("field_ref", slots.get("field"))
     if isinstance(field_ref, str) and field_ref:
         fields.append(field_ref)
     elif observable == "cargo_attribute":
         fields.extend(["cargo_name", "start_city", "end_city"])
     return {
+        "rule_id": _contract_rule_id(idx, raw),
+        "contract_version": str(raw.get("contract_version", CONTRACT_VERSION_V1)),
+        "polarity": polarity,
+        "observable": observable,
+        "metric": metric,
+        "counting": raw.get("counting", "unknown"),
+        "slots": redacted_slots,
+        "repair": repairs,
+        "uncertainty": uncertainty,
         "kind": kind_map.get(observable, "unknown"),
         "scope": raw.get("scope", "unknown"),
         "condition": {
@@ -397,8 +524,8 @@ def _payload_from_gold_contract(raw: dict[str, Any]) -> dict[str, Any]:
             "deadline": slots.get("deadline"),
             "count": slots.get("count"),
             "distance_km": slots.get("distance_km"),
-            "coordinate_target": slots.get("location_ref"),
-            "sequence_refs": slots.get("sequence_refs") if isinstance(slots.get("sequence_refs"), list) else [],
+            "coordinate_target_hash": redacted_slots.get("target_ref_hash", ""),
+            "sequence_ref_hashes": redacted_slots.get("sequence_ref_hashes", []),
         },
         "repairability": "irreversible_after_action" if raw.get("counting") == "per_action" else "repairable_until_deadline",
         "reward_or_penalty": {"amount": severity.get("penalty_amount"), "cap": severity.get("penalty_cap"), "direction": "penalty" if severity.get("penalty_amount") is not None else "unknown"},
@@ -408,11 +535,11 @@ def _payload_from_gold_contract(raw: dict[str, Any]) -> dict[str, Any]:
         "predicate_type": predicate_map.get(observable, "unknown"),
         "fields": fields,
         "operator": metric if metric in ALLOWED_OPERATORS else "unknown",
-        "values": [slots.get("field_ref"), slots.get("location_ref")],
+        "values": [*redacted_slots.get("runtime_value_hashes", []), redacted_slots.get("target_ref_hash", "")],
         "time_scope": raw.get("scope", "unknown"),
         "deadline": slots.get("deadline", "unknown"),
         "counter": slots.get("count", "unknown"),
-        "coordinate_target": slots.get("location_ref", "unknown"),
+        "coordinate_target": redacted_slots.get("target_ref_hash", "unknown") or "unknown",
         "evidence_hash": raw.get("evidence_hash", ""),
         "unresolved_reason": ";".join(uncertainty),
     }
@@ -420,6 +547,8 @@ def _payload_from_gold_contract(raw: dict[str, Any]) -> dict[str, Any]:
 
 def _valid_gold_rule(rule: Any) -> bool:
     if not isinstance(rule, dict) or not GOLD_CONTRACT_REQUIRED_FIELDS <= set(rule):
+        return False
+    if "action" in rule or "final_action" in rule or "chosen_action" in rule:
         return False
     if not isinstance(rule.get("polarity"), str) or rule["polarity"] not in GOLD_ALLOWED_POLARITIES:
         return False
@@ -470,13 +599,71 @@ def _valid_gold_rule(rule: Any) -> bool:
     return True
 
 
-def _valid_gold_contract(data: dict[str, Any]) -> bool:
-    if data.get("contract_version") != "gold_v1":
+def _valid_penalty_payload(rule: dict[str, Any]) -> bool:
+    severity = rule.get("severity") if isinstance(rule.get("severity"), dict) else None
+    penalty = rule.get("penalty") if isinstance(rule.get("penalty"), dict) else None
+    payload = severity or penalty
+    if payload is None:
+        if not _is_number_or_null(rule.get("penalty_amount", None)) or not _is_number_or_null(rule.get("penalty_cap", None)):
+            return False
+        return rule.get("penalty_amount") is None and rule.get("penalty_cap") is None
+    source = payload.get("source", "unknown")
+    if not isinstance(source, str) or source not in GOLD_ALLOWED_SEVERITY_SOURCES:
         return False
+    if not _is_number_or_null(payload.get("penalty_amount")) or not _is_number_or_null(payload.get("penalty_cap")):
+        return False
+    return not (source == "unknown" and (payload.get("penalty_amount") is not None or payload.get("penalty_cap") is not None))
+
+
+def _valid_trident_rule(rule: Any) -> bool:
+    if not isinstance(rule, dict) or not TRIDENT_CONTRACT_REQUIRED_FIELDS <= set(rule):
+        return False
+    if "action" in rule or "final_action" in rule or "chosen_action" in rule:
+        return False
+    rule_id = rule.get("rule_id")
+    if not isinstance(rule_id, str) or not re.fullmatch(r"[0-9a-fA-F]{8,64}", rule_id.strip()):
+        return False
+    if not isinstance(rule.get("polarity"), str) or rule["polarity"] not in GOLD_ALLOWED_POLARITIES:
+        return False
+    if not isinstance(rule.get("observable"), str) or rule["observable"] not in GOLD_ALLOWED_OBSERVABLES:
+        return False
+    if not isinstance(rule.get("scope"), str) or rule["scope"] not in ALLOWED_SCOPES:
+        return False
+    if not isinstance(rule.get("metric"), str):
+        return False
+    if not isinstance(rule.get("counting"), str) or rule["counting"] not in GOLD_ALLOWED_COUNTING:
+        return False
+    if not isinstance(rule.get("slots"), dict):
+        return False
+    repairs = rule.get("repair")
+    if not isinstance(repairs, list) or not repairs:
+        return False
+    if any(not isinstance(item, str) or item not in ALLOWED_REPAIR_ACTIONS for item in repairs):
+        return False
+    confidence = rule.get("confidence")
+    if not isinstance(confidence, (int, float)) or isinstance(confidence, bool) or not (0.0 <= float(confidence) <= 1.0):
+        return False
+    uncertainty = rule.get("uncertainty")
+    if not isinstance(uncertainty, list) or any(not isinstance(item, str) for item in uncertainty):
+        return False
+    evidence_hash = rule.get("evidence_hash")
+    if not isinstance(evidence_hash, str) or not re.fullmatch(r"[0-9a-fA-F]{8,64}", evidence_hash.strip()):
+        return False
+    return _valid_penalty_payload(rule)
+
+
+def _valid_gold_contract(data: dict[str, Any]) -> bool:
+    if "action" in data or "final_action" in data or "chosen_action" in data:
+        return False
+    version = data.get("contract_version")
     rules = data.get("rules")
     if not isinstance(rules, list) or not rules:
         return False
-    return all(_valid_gold_rule(rule) for rule in rules)
+    if version == CONTRACT_VERSION_V1:
+        return all(_valid_gold_rule(rule) for rule in rules)
+    if version == CONTRACT_VERSION_V2:
+        return all(_valid_trident_rule(rule) for rule in rules)
+    return False
 
 
 def _completion_with_retries(
@@ -549,6 +736,13 @@ def record_auditor_call() -> None:
     STATS.auditor_calls += 1
 
 
+def record_audit_adjustment(adjustment: float) -> None:
+    if abs(float(adjustment)) <= 1e-9:
+        return
+    STATS.audit_adjustment_nonzero_count += 1
+    STATS.auditor_adjustment_total += float(adjustment)
+
+
 def runtime_completion_available(api: SimulationApiPort | None) -> bool:
     if api is not None and hasattr(api, "model_chat_completion"):
         return True
@@ -606,7 +800,6 @@ def compile_with_qwen(
             "temperature": 0,
             "max_tokens": config.LLM_MAX_OUTPUT_TOKENS,
             "enable_thinking": False,
-            "thinking_budget": 0,
         }
     try:
         STATS.compile_calls += 1
@@ -619,8 +812,10 @@ def compile_with_qwen(
         if not isinstance(rules_raw, list):
             raise ValueError("rules_not_list")
         rules: list[CompiledPreferenceRule] = []
+        contract_version = str(data.get("contract_version", "legacy_v1")) if isinstance(data, dict) else "legacy_v1"
         for idx, raw in enumerate(rules_raw):
             if isinstance(raw, dict):
+                raw = {**raw, "contract_version": contract_version}
                 fallback = fallback_amounts[idx] if idx < len(fallback_amounts) else {"amount": 0.0, "cap": None, "direction": "unknown"}
                 rules.append(_rule_from_payload(idx, raw, fallback))
         if not rules:
@@ -651,6 +846,9 @@ def stats_payload() -> dict[str, Any]:
         "budget_blocked_count": STATS.budget_blocked_count,
         "linker_calls": STATS.linker_calls,
         "auditor_calls": STATS.auditor_calls,
+        "qwen_audit_adjustment_nonzero_count": STATS.audit_adjustment_nonzero_count,
+        "audit_adjustment_nonzero_count": STATS.audit_adjustment_nonzero_count,
+        "auditor_adjustment_total": round(STATS.auditor_adjustment_total, 2),
         "timeout_count": STATS.timeout_count,
         "retry_count": STATS.retry_count,
         "budget_exhausted_count": STATS.budget_exhausted_count,

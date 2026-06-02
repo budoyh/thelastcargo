@@ -1,30 +1,34 @@
-# CROWN-GOLD Contract-MPC Project Memory
+# CROWN-TRIDENT / GOLD-2 Project Memory
 
 ## Current Objective
 
-- Build `crown-gold-contract-mpc` from the existing repository, not from scratch.
-- Default runtime/package variant must be `crown_gold_contract_mpc`; do not default to `best_rescue`, `preference_firewall_profit`, PCE, Delta-MPC, or Exact.
-- The target is official-net uplift through restored rescue legality/profit core plus real Qwen Preference Contract, Observed Vocabulary Linker, top-candidate Auditor, Preference Firewall, and Online Opportunity Graph MPC.
+- Build `crown-trident-gold2` from the existing repository, not from scratch.
+- The target is official-net uplift through causal evidence: rule-level penalty deltas, changed-decision counterfactual deltas, Qwen auditor numeric effects, controller alignment, online graph uplift, and parameter ablations.
+- Final selected runtime must be the smallest score-positive combination: immutable rescue core plus only overlays that improve official_net or reduce a named regret without unacceptable gross collapse.
 
 ## Baseline Facts To Preserve
 
-- Historical 20260529 rescue reference: official_net 5067.69, preference_penalty 38140.0, actions 89 take / 163 wait / 0 reposition.
-- Current branch restored `best_rescue` to the historical reference on 20260529: official_net 5067.69, preference_penalty 38140.0, actions 89 take / 163 wait / 0 reposition.
-- Previous PTT evidence failed the real-Qwen gate: qwen_compile_calls=0 and ptt_compile_calls=0 in full eval.
-- Previous Exact evidence had real Qwen compile/link counts but controller_scored_candidate_count=0 and qwen_auditor_calls=0.
-- Tests passing, legal actions, Qwen smoke, reports, synthetic pass, and macro counts are not success without official score, gross, penalty, Qwen, controller, compliance, reviewer, and package gates.
+- Historical 20260529 rescue reference: official_net 5067.69, gross_minus_cost 43207.69, preference_penalty 38140.00, actions 89 take / 163 wait / 0 reposition.
+- B0 Trident gate requires official_net >= 5000, gross_minus_cost >= 43000, preference_penalty <= 38200, and 0 failure/abort/illegal/rejected.
+- CROWN-GOLD final selected: official_net 6373.17, gross_minus_cost 45993.17, preference_penalty 39620.00, Qwen compile/link/audit 5/245/245, controller_scored_candidate_count 11461, changed_decision_count 240.
+- Gold lifted net only through gross and worsened preference_penalty. First broken link is decision changed -> official preference penalty reduced.
+- Previous PTT failed real-Qwen gate with qwen_compile_calls=0 and ptt_compile_calls=0 in full eval.
+- Previous Exact had Qwen compile/link but controller scoring did not enter final decision path.
+- Tests passing, legal actions, Qwen smoke, reports, synthetic pass, macro counts, Qwen call counts, and controller counts are not success without official score and causal deltas.
 
 ## Current Known Risks
 
-- Gold modules can activate real controller scoring without reducing official preference penalty enough. Final 20260529 Gold net was only 6373.17 with penalty 39620.0.
-- Repair/reposition loops are a known risk. Gold repair and visible-graph MPC are default OFF unless ablation proves positive official-net or named regret reduction without gross collapse.
-- Qwen contract/link/audit calls are expensive in local full evals, but must remain real for final evidence. Gold total linker/auditor default caps were raised to 4096 after 0509 exposed old cap exhaustion.
-- Raw local run outputs under ignored `runs/` are evidence artifacts and may contain benchmark-emitted raw ids/literals; do not treat them as package/report content.
-- Cloud host `yinhhzzu` was reachable on 2026-06-02, but load was about 421 with multiple busy GPUs, so local execution continued to avoid disrupting other users.
+- Preference controllers may be directionally wrong: changed decisions can raise gross while increasing official penalty.
+- Auditor calls may be present but ineffective if all score adjustments are zero.
+- Hard shields and large repair bonuses are unsafe until scorer microprobes prove alignment.
+- Already failed or capped rules can destroy gross repeatedly if rule-state delta is missing.
+- Online graph can import future/offline signal by accident; it must start empty per driver and use only current-run observed market summaries.
+- Parameter search can overfit driver/rule ids; only generic numeric parameters may be exported.
+- Qwen calls are expensive but cannot be disabled for final evidence.
 
-## Non-Negotiable Boundaries
+## Non-Negotiable Runtime Boundaries
 
-- Runtime may use only `SimulationApiPort`; no raw datasets, no server/bench/scoring imports, no future cargo, no offline reports.
+- Runtime may use only `SimulationApiPort`; no raw datasets, no server/bench/scoring imports, no future cargo, no offline reports, no income calculator internals.
 - `take_order` must come from current post-query `current_actionable` cargo.
 - Every query must be followed by world refresh and post-query filtering.
 - `no_query` cannot take remembered cargo.
@@ -35,26 +39,43 @@
 
 ## Implementation Direction
 
-- Keep the restored best-rescue legality core: query-refresh, current-actionable filtering, safety certificates, and positive freight scoring.
-- Compile non-empty preferences into Gold Preference Contract JSON with polarity, observable, scope, metric, counting, slots, severity, repair_actions, confidence, uncertainty, and evidence_hash.
-- Run Observed Vocabulary Linker after every query when preferences and visible cargo exist.
-- Run Preference Firewall before profit ranking and trace marginal penalty, repair value, lost repair-window cost, unknown-soft risk, and Qwen audit adjustment.
-- Run Qwen Candidate Auditor only for high-conflict top candidates; auditor output is relation/effect/risk/repair/confidence/evidence only.
-- Use immutable rescue/safe-profit scoring as the profit backbone.
-- Keep Online Opportunity Graph MPC default OFF unless ablation proves score uplift or regret reduction without gross collapse.
+- Restore and lock immutable best-rescue behavior as B0 before evaluating overlays.
+- Build Trident ledgers first: `trident_rule_ledger.csv`, `trident_decision_deltas.csv`, and `trident_qwen_effect.csv`.
+- Preference Contract V2 must model rule state with past debt, candidate delta, future repairability delta, marginal penalty, repair value, and lost repair-window cost.
+- Controller strength must be gated by scorer microprobe alignment.
+- Qwen auditor must produce numeric score adjustments and record ranking/action change effects; if it does not improve official_net, kill it.
+- Online Opportunity Graph must be runtime-only and default OFF until alpha/weight ablations prove official-net uplift.
+- Parameter search freezes real Qwen artifacts after a true pass, searches only generic parameters, and re-runs top configs through live Qwen before final selection.
+
+## Required Subagents / Reviewers
+
+- Rescue Baseline Keeper.
+- Penalty Attribution / Regret Lab.
+- Preference Contract / Qwen Auditor Engineer.
+- Profit Backbone / Online Graph Engineer.
+- Parameter Search / Ablation Engineer.
+- Compliance / Package Gatekeeper.
+- Each must return changed files, commands run, before/after metrics, pass/fail, blockers, and keep/kill.
+- If real subagents or recorded named reviewer passes cannot cover all required missions, stop `DO_NOT_SUBMIT_WITH_INCOMPLETE_SUBAGENT_EVIDENCE`.
 
 ## Stop State Rules
 
-- Allowed Gold stop states: `CROWN_GOLD_RECOMMENDED_SUBMISSION`, `CROWN_GOLD_EXPERIMENTAL_SUBMISSION`, `DO_NOT_SUBMIT_WITH_GOLD_EVIDENCE`, `EXTERNAL_BLOCKER`.
-- If Qwen API, true subagents, or official local evaluation are unavailable, stop as `EXTERNAL_BLOCKER`.
-- If score gates are not reached after Gold evidence is produced, stop as `DO_NOT_SUBMIT_WITH_GOLD_EVIDENCE`.
-- If gates fail, do not create a submission-shaped zip and make `reports/gold_final_report.md` start with `DO NOT SUBMIT: gold gates not reached.`
+- Allowed Trident stop states: `CROWN_TRIDENT_RECOMMENDED_SUBMISSION`, `CROWN_TRIDENT_EXPERIMENTAL_SUBMISSION`, `DO_NOT_SUBMIT_WITH_TRIDENT_EVIDENCE`, `EXTERNAL_BLOCKER_QWEN`, `EXTERNAL_BLOCKER_RESCUE_CORE`, `EXTERNAL_BLOCKER_EVAL_INFRA`, and `DO_NOT_SUBMIT_WITH_INCOMPLETE_SUBAGENT_EVIDENCE`.
+- If Qwen is unavailable for all relevant full runs, stop as `EXTERNAL_BLOCKER_QWEN`.
+- If official runner/data/eval infrastructure cannot run B0, stop as `EXTERNAL_BLOCKER_RESCUE_CORE` or `EXTERNAL_BLOCKER_EVAL_INFRA` as appropriate.
+- If gates are not reached after evidence is produced, stop as `DO_NOT_SUBMIT_WITH_TRIDENT_EVIDENCE`.
+- If official_net < 30000, do not create a submission-shaped zip and make `reports/trident_final_report.md` start with `DO NOT SUBMIT: <precise reason>`.
 
-## Final Gold Evidence Snapshot
+## Report And Package Limits
 
-- Stop state: `DO_NOT_SUBMIT_WITH_GOLD_EVIDENCE`.
-- 20260529 B9 final selected: official_net 6373.17, gross_minus_cost 45993.17, preference_penalty 39620.0.
-- 20260529 real Qwen compile/link/audit: 5 / 245 / 245.
-- 20260529 controller metrics: controller_scored 11461, candidate_rule_eval 52909, score_changed 11461, changed_decision 240.
-- 20260509 regression check: official_net 167347.15 and preference_penalty 0.0, but monthly income calculation aborted for 2 drivers; not clean no-regression evidence.
-- No Gold package exists because score gates failed.
+- Final `reports/` contains only `trident_final_report.md`, `trident_experiments.csv`, `trident_rule_ledger.csv`, `trident_decision_deltas.csv`, and `trident_qwen_effect.csv`.
+- Old reports move to `archive/`; raw run outputs remain under `runs/`.
+- Build a package only after experimental or recommended gates pass.
+- Package root must be `demo/`; it must exclude server, data, reports, runs, docs, archive, keys, pyc, and prompt documents.
+
+## Resource Notes
+
+- Keep local and cloud compute isolated to this project.
+- Check cloud load and `nvidia-smi` before using shared GPU resources.
+- Avoid heavy local load that can freeze the PC.
+- Never kill unrelated jobs.

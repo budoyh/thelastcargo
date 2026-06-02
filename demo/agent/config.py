@@ -140,12 +140,20 @@ PTT_MAX_AUDITOR_CALLS_TOTAL = _int_env("CROWN_GOLD_MAX_AUDITOR_CALLS_TOTAL", 409
 PTT_SOFT_RISK_MULTIPLIER = 0.45
 PTT_MASSIVE_PENALTY_MULTIPLIER = 2.5
 PTT_UNKNOWN_HIGH_PENALTY_SCALE = 1200.0
+TRIDENT_STAGE = os.environ.get("CROWN_TRIDENT_STAGE", "").strip().lower()
+TRIDENT_QWEN_AUDIT_SCALE = _float_env("CROWN_TRIDENT_QWEN_AUDIT_SCALE", 1.0, 0.0, 4.0)
+TRIDENT_UNKNOWN_AUDIT_SOFT_RISK = _float_env("CROWN_TRIDENT_UNKNOWN_AUDIT_SOFT_RISK", 35.0, 0.0, 300.0)
 ENABLE_EXACT_RBT = False
 ENABLE_VISIBLE_GRAPH_MPC = False
 EXACT_MPC_DEFAULT_ON = os.environ.get("CROWN_EXACT_ENABLE_VISIBLE_GRAPH_MPC", "").strip() == "1"
 EXACT_QWEN_MIN_REAL_COMPILE = True
+VISIBLE_GRAPH_ALPHA = _float_env("CROWN_TRIDENT_VISIBLE_GRAPH_ALPHA", 0.20, 0.0, 0.35)
+VISIBLE_GRAPH_ALPHA_TEST_VALUES = (0.05, 0.10, 0.20, 0.35)
+VISIBLE_GRAPH_BONUS_CAP = _float_env("CROWN_TRIDENT_VISIBLE_GRAPH_BONUS_CAP", 160.0, 0.0, 300.0)
+VISIBLE_GRAPH_NEGATIVE_BONUS_CAP = _float_env("CROWN_TRIDENT_VISIBLE_GRAPH_NEGATIVE_BONUS_CAP", 120.0, 0.0, 300.0)
+VISIBLE_GRAPH_CELL_DEGREES = _float_env("CROWN_TRIDENT_VISIBLE_GRAPH_CELL_DEGREES", 0.25, 0.05, 1.0)
 
-_VARIANT = os.environ.get("CROWN_Y_VARIANT", "crown_gold_contract_mpc").strip().lower()
+_VARIANT = os.environ.get("CROWN_Y_VARIANT", "crown_trident_gold2").strip().lower()
 RESCUE_VARIANT = _VARIANT
 ENABLE_LEGACY_RESCUE_QWEN = _VARIANT in {"a6", "a7", "best_rescue"}
 if _VARIANT in {"a", "baseline", "safe_greedy"}:
@@ -202,6 +210,7 @@ if _VARIANT in {
     "preference_firewall_profit",
     "crown_exact_rbt_mpc",
     "crown_gold_contract_mpc",
+    "crown_trident_gold2",
 }:
     ENABLE_RESCUE_SCORER = True
     ENABLE_SCOUT_THEN_DEEPEN = False
@@ -211,19 +220,19 @@ if _VARIANT in {
     ENABLE_REPOSITION = False
     TIME_SHADOW_MODE = "rescue_lite"
 
-if _VARIANT in {"a1", "a2", "a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc"}:
+if _VARIANT in {"a1", "a2", "a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"}:
     ENABLE_RESCUE_WAIT_PENALTY = True
-if _VARIANT in {"a2", "a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc"}:
+if _VARIANT in {"a2", "a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"}:
     ENABLE_RESCUE_MICRO_REPOSITION = True
-if _VARIANT in {"a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc"}:
+if _VARIANT in {"a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"}:
     ENABLE_RESCUE_PREFERENCE_SOFT = True
-if _VARIANT in {"a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc"}:
+if _VARIANT in {"a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"}:
     ENABLE_RESCUE_TWOHOP_LITE = True
-if _VARIANT in {"a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc"}:
+if _VARIANT in {"a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"}:
     ENABLE_RESCUE_TIME_SHADOW_LITE = True
-if _VARIANT in {"a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc"}:
+if _VARIANT in {"a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"}:
     ENABLE_QWEN_PREFERENCE_COMPILER = True
-if _VARIANT in {"a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc"}:
+if _VARIANT in {"a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"}:
     ENABLE_RESCUE_REST_GUARD = True
 
 if _VARIANT in {
@@ -371,7 +380,7 @@ if _VARIANT == "crown_exact_rbt_mpc":
     RESCUE_FULL_REST_PERIOD_DAYS = _int_env("CROWN_Y_FULL_REST_PERIOD_DAYS", 15, 0, 31)
     RESCUE_VARIANT = "crown_exact_rbt_mpc"
 
-if _VARIANT == "crown_gold_contract_mpc":
+if _VARIANT in {"crown_gold_contract_mpc", "crown_trident_gold2"}:
     ENABLE_GOLD_CONTRACT_MPC = True
     ENABLE_EXACT_RBT = True
     ENABLE_PTT_FIREWALL = os.environ.get("CROWN_GOLD_ENABLE_FIREWALL", "1").strip() != "0"
@@ -384,13 +393,49 @@ if _VARIANT == "crown_gold_contract_mpc":
     ENABLE_RESCUE_MICRO_REPOSITION = True
     ENABLE_RESCUE_TWOHOP_LITE = True
     ENABLE_RESCUE_TIME_SHADOW_LITE = True
-    ENABLE_VISIBLE_GRAPH_MPC = os.environ.get("CROWN_GOLD_ENABLE_VISIBLE_GRAPH_MPC", "0").strip() == "1"
-    RESCUE_QUERY_K_DEFAULT = _int_env("CROWN_GOLD_QUERY_K", 120, 50, 600)
-    RESCUE_DIRECT_NET_FLOOR = _float_env("CROWN_GOLD_DIRECT_NET_FLOOR", 1.0, -200.0, 500.0)
-    RESCUE_PROFIT_PER_HOUR_FLOOR = _float_env("CROWN_GOLD_PROFIT_PER_HOUR_FLOOR", 0.0, -50.0, 200.0)
+    graph_env = "CROWN_TRIDENT_ENABLE_VISIBLE_GRAPH_MPC" if _VARIANT == "crown_trident_gold2" else "CROWN_GOLD_ENABLE_VISIBLE_GRAPH_MPC"
+    query_env = "CROWN_TRIDENT_QUERY_K" if _VARIANT == "crown_trident_gold2" else "CROWN_GOLD_QUERY_K"
+    direct_env = "CROWN_TRIDENT_DIRECT_NET_FLOOR" if _VARIANT == "crown_trident_gold2" else "CROWN_GOLD_DIRECT_NET_FLOOR"
+    pph_env = "CROWN_TRIDENT_PROFIT_PER_HOUR_FLOOR" if _VARIANT == "crown_trident_gold2" else "CROWN_GOLD_PROFIT_PER_HOUR_FLOOR"
+    ENABLE_VISIBLE_GRAPH_MPC = os.environ.get(graph_env, "0").strip() == "1"
+    RESCUE_QUERY_K_DEFAULT = _int_env(query_env, 120, 50, 600)
+    RESCUE_DIRECT_NET_FLOOR = _float_env(direct_env, 1.0, -200.0, 500.0)
+    RESCUE_PROFIT_PER_HOUR_FLOOR = _float_env(pph_env, 0.0, -50.0, 200.0)
     RESCUE_DAILY_REST_UNTIL_MINUTE = _int_env("CROWN_Y_REST_UNTIL_MINUTE", 9 * 60, 0, 12 * 60)
     RESCUE_FULL_REST_PERIOD_DAYS = _int_env("CROWN_Y_FULL_REST_PERIOD_DAYS", 15, 0, 31)
-    RESCUE_VARIANT = "crown_gold_contract_mpc"
+    RESCUE_VARIANT = _VARIANT
+
+if _VARIANT == "crown_trident_gold2":
+    if TRIDENT_STAGE in {"b1", "compile_logging_only"}:
+        ENABLE_PTT_FIREWALL = False
+        ENABLE_PTT_LINKER = False
+        ENABLE_PTT_AUDITOR = False
+        ENABLE_VISIBLE_GRAPH_MPC = False
+    elif TRIDENT_STAGE in {"b2", "monitor_no_score", "b6", "observed_vocab_linker_only"}:
+        ENABLE_PTT_FIREWALL = False
+        ENABLE_PTT_LINKER = True
+        ENABLE_PTT_AUDITOR = False
+        ENABLE_VISIBLE_GRAPH_MPC = False
+    elif TRIDENT_STAGE in {"b3", "controller_soft_scoring", "b4", "verified_hard_firewall_only"}:
+        ENABLE_PTT_FIREWALL = True
+        ENABLE_PTT_LINKER = True
+        ENABLE_PTT_AUDITOR = False
+        ENABLE_VISIBLE_GRAPH_MPC = False
+    elif TRIDENT_STAGE in {"b5", "qwen_auditor_nonzero_adjustment"}:
+        ENABLE_PTT_FIREWALL = True
+        ENABLE_PTT_LINKER = True
+        ENABLE_PTT_AUDITOR = True
+        ENABLE_VISIBLE_GRAPH_MPC = False
+    elif TRIDENT_STAGE in {"b7", "opportunity_graph_only"}:
+        ENABLE_PTT_FIREWALL = False
+        ENABLE_PTT_LINKER = False
+        ENABLE_PTT_AUDITOR = False
+        ENABLE_VISIBLE_GRAPH_MPC = True
+    elif TRIDENT_STAGE in {"b8", "opportunity_graph_plus_auditor"}:
+        ENABLE_PTT_FIREWALL = True
+        ENABLE_PTT_LINKER = True
+        ENABLE_PTT_AUDITOR = True
+        ENABLE_VISIBLE_GRAPH_MPC = True
 
 if _VARIANT in {"best_rescue", "a7"}:
     RESCUE_QUERY_K_DEFAULT = 120
@@ -423,3 +468,9 @@ if os.environ.get("CROWN_Y_SUBMIT_MODE", "").strip() == "1":
     SUBMIT_MODE = True
     TRACE_LEVEL = "minimal"
     ENABLE_DESTINATION_SHADOW_QUERY = False
+
+_TRIDENT_GRAPH_FLAG = os.environ.get("CROWN_TRIDENT_ENABLE_VISIBLE_GRAPH_MPC", "").strip()
+if _TRIDENT_GRAPH_FLAG == "1":
+    ENABLE_VISIBLE_GRAPH_MPC = True
+elif _TRIDENT_GRAPH_FLAG == "0":
+    ENABLE_VISIBLE_GRAPH_MPC = False

@@ -15,6 +15,8 @@ from .preference_controllers import ControllerImpact, PreferenceController
 from .ptt_types import PTTRule
 from .schemas import CandidateOption, World
 
+_AUDIT_CACHE: dict[str, dict[str, Any]] = {}
+
 
 @dataclass
 class FirewallStats:
@@ -34,6 +36,8 @@ class FirewallStats:
     repair_candidate_count: int = 0
     lost_repair_window_total: float = 0.0
     affected_actions: list[dict[str, Any]] = field(default_factory=list)
+    qwen_effect_rows: list[dict[str, Any]] = field(default_factory=list)
+    _auditor_trace_finalized: bool = False
 
     def payload(self) -> dict[str, Any]:
         return {
@@ -53,6 +57,7 @@ class FirewallStats:
             "repair_candidate_count": self.repair_candidate_count,
             "lost_repair_window_total": round(self.lost_repair_window_total, 2),
             "affected_actions": self.affected_actions[:20],
+            "qwen_effect_rows": self.qwen_effect_rows[:80],
         }
 
 
@@ -77,12 +82,21 @@ def apply_firewall(
         for controller in controllers:
             impact = controller.marginal_cost(option, world, links)
             impact = scorer_semantics_adapter.gate_impact(controller.rule, impact)
+            impact.past_debt = round(max(0.0, controller.final_penalty_lower_bound(world)), 2)
+            impact.candidate_delta = round(impact.marginal_penalty - impact.repair_value, 2)
+            impact.future_repairability_delta = round(
+                impact.lost_repair_window_cost + impact.future_failure_probability_delta * controller.rule.penalty_scale(),
+                2,
+            )
             impacts.append(impact)
             stats.candidate_rule_eval_count += 1
             ptt_transducer.STATS.candidate_rule_eval_count += 1
         marginal = sum(item.marginal_penalty * item.confidence for item in impacts)
         repair = sum(item.repair_value * item.confidence for item in impacts)
         lost = sum(item.lost_repair_window_cost * item.confidence for item in impacts)
+        past_debt = sum(item.past_debt * item.confidence for item in impacts)
+        candidate_delta = sum(item.candidate_delta * item.confidence for item in impacts)
+        future_repairability_delta = sum(item.future_repairability_delta * item.confidence for item in impacts)
         failure_delta = max((item.future_failure_probability_delta for item in impacts), default=0.0)
         confidence = max((item.confidence for item in impacts), default=0.0)
         unknown_soft = _low_confidence_risk(impacts, rules_by_id)
@@ -119,6 +133,8 @@ def apply_firewall(
             ptt_transducer.STATS.score_changed_by_controller_count += 1
         option.score_components["preference_marginal_penalty"] = -round(marginal, 2)
         option.score_components["preference_repair_value"] = round(repair, 2)
+        option.score_components["preference_candidate_delta"] = -round(max(0.0, candidate_delta), 2)
+        option.score_components["preference_future_repairability_delta"] = -round(max(0.0, future_repairability_delta), 2)
         option.score_components["lost_repair_window_cost"] = -round(lost, 2)
         option.score_components["unknown_soft_risk"] = -round(unknown_soft, 2)
         option.score_components.setdefault("qwen_audit_adjustment", 0.0)
@@ -132,6 +148,9 @@ def apply_firewall(
             "decision": decision,
             "marginal_penalty": round(marginal, 2),
             "repair_value": round(repair, 2),
+            "past_debt": round(past_debt, 2),
+            "candidate_delta": round(candidate_delta, 2),
+            "future_repairability_delta": round(future_repairability_delta, 2),
             "lost_repair_window_cost": round(lost, 2),
             "future_failure_probability_delta": round(failure_delta, 4),
             "confidence": round(confidence, 4),
@@ -141,12 +160,27 @@ def apply_firewall(
                     "type": item.controller_type,
                     "effect": item.effect,
                     "decision": item.decision,
+                    "past_debt": item.past_debt,
+                    "candidate_delta": item.candidate_delta,
+                    "future_repairability_delta": item.future_repairability_delta,
                     "penalty": item.marginal_penalty,
                     "repair": item.repair_value,
+                    "lost_repair_window_cost": item.lost_repair_window_cost,
                     "reason": item.reason,
                 }
                 for item in sorted(impacts, key=lambda x: (x.marginal_penalty + x.repair_value), reverse=True)[:5]
             ],
+        }
+        option.trace["preference_contract_v2_state_delta"] = {
+            "candidate_hash": _hash(option.id),
+            "past_debt": round(past_debt, 2),
+            "candidate_delta": round(candidate_delta, 2),
+            "future_repairability_delta": round(future_repairability_delta, 2),
+            "marginal_penalty": round(marginal, 2),
+            "repair_value": round(repair, 2),
+            "lost_repair_window_cost": round(lost, 2),
+            "unknown_soft_risk": round(unknown_soft, 2),
+            "rule_count": len(impacts),
         }
         if marginal or repair or lost:
             stats.affected_actions.append(
@@ -154,6 +188,9 @@ def apply_firewall(
                     "candidate_hash": _hash(option.id),
                     "action_type": option.action_type,
                     "decision": decision,
+                    "past_debt": round(past_debt, 2),
+                    "candidate_delta": round(candidate_delta, 2),
+                    "future_repairability_delta": round(future_repairability_delta, 2),
                     "marginal_penalty": round(marginal, 2),
                     "repair_value": round(repair, 2),
                     "lost_repair_window_cost": round(lost, 2),
@@ -188,40 +225,56 @@ def maybe_audit_high_risk(
     risky = _audit_candidates(options, limit)
     if not risky:
         return
-    if qwen_preference_compiler.STATS.auditor_calls >= config.PTT_MAX_AUDITOR_CALLS_TOTAL:
-        qwen_preference_compiler.STATS.budget_exhausted_count += 1
-        return
-    qwen_preference_compiler.record_auditor_call()
+    payloads = [_audit_payload(world, option) for option in risky]
+    audit_key = _hash({"pref_hash": world.pref_hash, "payloads": payloads})
+    decision_index = _decision_index(risky[0].decision_id if risky else "")
+    call_id = _hash({"audit_key": audit_key, "decision_index": decision_index})
+    cache_hit = audit_key in _AUDIT_CACHE
     ptt_transducer.STATS.auditor_trigger_count += len(risky)
     ptt_transducer.STATS.audited_candidate_count += len(risky)
     stats.audited_candidate_count += len(risky)
     try:
-        resp = qwen_preference_compiler.completion_with_runtime_order(
-            api=api,
-            payload={
-                "model": qwen_preference_compiler.STATS.last_model_name,
-                "messages": [
-                    {"role": "system", "content": "Return compact valid JSON only; no explanation."},
-                    {
-                        "role": "user",
-                        "content": (
-                            "Audit candidate preference effects. Return JSON {assessments:[{candidate_id,rule_id,relation,effect,risk_level,repair_level,confidence,evidence,missing_info}]}. "
-                            "relation is irrelevant/supports/risk/violation/uncertain. effect is repairs/violates/neutral/reduces_repairability/unknown. "
-                            "risk_level and repair_level are none/low/medium/high/catastrophic. "
-                            "Do not choose an action. Input is current runtime-only visible data: "
-                            + json.dumps([_audit_payload(world, option) for option in risky], ensure_ascii=False, sort_keys=True)
-                        ),
-                    },
-                ],
-                "temperature": 0,
-                "max_tokens": 192,
-                "enable_thinking": False,
-                "thinking_budget": 0,
-            },
-        )
-        qwen_preference_compiler._usage_from_response(resp)
-        data = qwen_preference_compiler._extract_json(qwen_preference_compiler._content_from_response(resp)) or {}
+        retry_before = qwen_preference_compiler.STATS.retry_count
+        if cache_hit:
+            qwen_preference_compiler.STATS.cache_hits += 1
+            data = _AUDIT_CACHE[audit_key]
+        else:
+            if qwen_preference_compiler.STATS.auditor_calls >= config.PTT_MAX_AUDITOR_CALLS_TOTAL:
+                qwen_preference_compiler.STATS.budget_exhausted_count += 1
+                return
+            qwen_preference_compiler.STATS.cache_misses += 1
+            qwen_preference_compiler.record_auditor_call()
+            resp = qwen_preference_compiler.completion_with_runtime_order(
+                api=api,
+                payload={
+                    "model": qwen_preference_compiler.STATS.last_model_name,
+                    "messages": [
+                        {"role": "system", "content": "Return compact valid JSON only; no explanation."},
+                        {
+                            "role": "user",
+                            "content": (
+                                "Audit candidate preference effects. Return JSON {assessments:[{candidate_id,rule_id,relation,effect,risk_level,repair_level,confidence,evidence,missing_info}]}. "
+                                "relation is irrelevant/supports/risk/violation/uncertain. effect is repairs/violates/neutral/reduces_repairability/unknown. "
+                                "risk_level and repair_level are none/low/medium/high/catastrophic. "
+                                "Do not choose an action, do not veto an action, and do not output a final action. "
+                                "Input is current runtime-only visible data: "
+                                + json.dumps(payloads, ensure_ascii=False, sort_keys=True)
+                            ),
+                        },
+                    ],
+                    "temperature": 0,
+                    "max_tokens": 192,
+                    "enable_thinking": False,
+                },
+            )
+            qwen_preference_compiler._usage_from_response(resp)
+            data = qwen_preference_compiler._extract_json(qwen_preference_compiler._content_from_response(resp)) or {}
+            if isinstance(data, dict):
+                data = {k: v for k, v in data.items() if k not in {"action", "final_action", "chosen_action"}}
+                _AUDIT_CACHE[audit_key] = data
+        retry_count = qwen_preference_compiler.STATS.retry_count - retry_before
         audits = data.get("assessments", data.get("audits", [])) if isinstance(data, dict) else []
+        json_valid = isinstance(data, dict) and isinstance(audits, list)
         if not isinstance(audits, list):
             audits = []
         by_hash = {
@@ -229,34 +282,72 @@ def maybe_audit_high_risk(
             for item in audits
             if isinstance(item, dict)
         }
+        rank_before = _rank_order(options, include_pending_audit=False)
+        pending_rows: list[dict[str, Any]] = []
         for option in risky:
-            item = by_hash.get(_hash(option.id), {})
-            relation = str(item.get("relation", item.get("match", "unknown"))) if isinstance(item, dict) else "unknown"
-            effect = str(item.get("effect", "unknown")) if isinstance(item, dict) else "unknown"
-            risk = str(item.get("risk_level", "none")) if isinstance(item, dict) else "none"
-            repair = str(item.get("repair_level", "none")) if isinstance(item, dict) else "none"
+            item = by_hash.get(_hash(option.id))
+            has_assessment = isinstance(item, dict)
+            relation = str(item.get("relation", item.get("match", "unknown"))) if has_assessment else "unknown"
+            effect = str(item.get("effect", "unknown")) if has_assessment else "unknown"
+            risk = str(item.get("risk_level", "none")) if has_assessment else "none"
+            repair = str(item.get("repair_level", "none")) if has_assessment else "none"
             evidence_value = item.get("evidence", "") if isinstance(item, dict) else ""
             missing_value = item.get("missing_info", "") if isinstance(item, dict) else ""
             if relation in {"unknown", "uncertain"} or effect == "unknown":
                 ptt_transducer.STATS.auditor_unknown_count += 1
-            adjustment = _audit_adjustment(relation, effect, risk, repair, item.get("confidence", 0.0) if isinstance(item, dict) else 0.0)
+            confidence = _conf(item.get("confidence", 0.0)) if has_assessment else 0.0
+            risk_score = _audit_level_score(risk, option, kind="risk") if has_assessment else 0.0
+            repair_score = _audit_level_score(repair, option, kind="repair") if has_assessment else 0.0
+            adjustment = _audit_adjustment(
+                relation,
+                effect,
+                risk,
+                repair,
+                confidence,
+                option=option,
+                risk_score=risk_score,
+                repair_score=repair_score,
+                has_assessment=has_assessment,
+            )
+            adjustment *= getattr(config, "TRIDENT_QWEN_AUDIT_SCALE", 1.0)
             if adjustment:
                 option.score_components["qwen_audit_adjustment"] = round(adjustment, 2)
                 option.score_components["ptt_auditor_adjustment"] = round(adjustment, 2)
+                qwen_preference_compiler.record_audit_adjustment(adjustment)
                 stats.auditor_changed_score_count += 1
                 ptt_transducer.STATS.auditor_changed_score_count += 1
-            option.trace.setdefault("ptt_auditor", []).append(
-                {
-                    "candidate_hash": _hash(option.id),
-                    "relation": relation if relation in {"irrelevant", "supports", "risk", "violation", "uncertain", "yes", "no", "unknown"} else "unknown",
-                    "effect": effect if effect in {"violates", "repairs", "neutral", "reduces_repairability", "unknown"} else "unknown",
-                    "risk_level": risk if risk in {"none", "low", "medium", "high", "catastrophic"} else "none",
-                    "repair_level": repair if repair in {"none", "low", "medium", "high", "catastrophic"} else "none",
-                    "confidence": _conf(item.get("confidence", 0.0)) if isinstance(item, dict) else 0.0,
-                    "evidence_hash": _hash(evidence_value) if evidence_value else "",
-                    "missing_info_hash": _hash(missing_value) if missing_value else "",
-                }
-            )
+            row = {
+                "call_id": call_id,
+                "decision_index": decision_index,
+                "candidate_hash": _hash(option.id),
+                "candidate_count": len(risky),
+                "affected_rule_ids": _affected_rule_ids(option, item if has_assessment else {}),
+                "output_relation": relation if relation in {"irrelevant", "supports", "risk", "violation", "uncertain", "yes", "no", "unknown"} else "unknown",
+                "output_effect": effect if effect in {"violates", "repairs", "neutral", "reduces_repairability", "unknown"} else "unknown",
+                "raw_risk_score": round(risk_score, 2),
+                "raw_repair_score": round(repair_score, 2),
+                "applied_score_adjustment": round(adjustment, 2),
+                "ranking_changed": False,
+                "action_changed": False,
+                "final_action_used": False,
+                "confidence": confidence,
+                "json_valid": bool(json_valid and has_assessment),
+                "retry_count": retry_count,
+                "cache_hit": cache_hit,
+                "evidence_hash": _hash(evidence_value) if evidence_value else "",
+                "missing_info_hash": _hash(missing_value) if missing_value else "",
+            }
+            pending_rows.append(row)
+            option.trace.setdefault("ptt_auditor", []).append(dict(row))
+        rank_after = _rank_order(options, include_pending_audit=True)
+        ranking_changed = rank_before != rank_after
+        for row in pending_rows:
+            row["ranking_changed"] = ranking_changed
+            stats.qwen_effect_rows.append(row)
+        for option in risky:
+            for row in option.trace.get("ptt_auditor", []):
+                if isinstance(row, dict) and row.get("call_id") == call_id:
+                    row["ranking_changed"] = ranking_changed
         return
     except Exception as exc:  # pragma: no cover - remote failures vary.
         qwen_preference_compiler.STATS.api_error_count += 1
@@ -310,6 +401,56 @@ def maybe_audit_high_risk(
             qwen_preference_compiler.STATS.last_error_type = exc.__class__.__name__
 
 
+def finalize_auditor_effect_trace(
+    *,
+    options: list[CandidateOption],
+    chosen: CandidateOption,
+    stats: FirewallStats,
+) -> None:
+    if stats._auditor_trace_finalized or not stats.qwen_effect_rows:
+        return
+    stats._auditor_trace_finalized = True
+    chosen_hash = _hash(chosen.id)
+    eligible = [
+        option
+        for option in options
+        if not (option.action_cert and not option.action_cert.safe)
+    ]
+    if not eligible:
+        eligible = options
+    without_qwen_best = max(
+        eligible,
+        key=lambda option: float(option.score) - _option_qwen_adjustment(option),
+        default=chosen,
+    )
+    action_changed = without_qwen_best.id != chosen.id
+    if action_changed:
+        stats.auditor_changed_decision_count += 1
+        ptt_transducer.STATS.auditor_changed_decision_count += 1
+        ptt_transducer.STATS.auditor_changed_action_count += 1
+    for row in stats.qwen_effect_rows:
+        candidate_hash = row.get("candidate_hash")
+        row["final_action_used"] = candidate_hash == chosen_hash
+        row["action_changed"] = bool(action_changed)
+    for option in options:
+        for row in option.trace.get("ptt_auditor", []):
+            if not isinstance(row, dict):
+                continue
+            row["final_action_used"] = row.get("candidate_hash") == chosen_hash
+            row["action_changed"] = bool(action_changed)
+
+
+def _option_qwen_adjustment(option: CandidateOption) -> float:
+    for key in ("qwen_audit_adjustment_applied", "qwen_audit_adjustment", "ptt_auditor_adjustment"):
+        try:
+            value = float(option.score_components.get(key, 0.0) or 0.0)
+        except (TypeError, ValueError):
+            value = 0.0
+        if abs(value) > 1e-9:
+            return value
+    return 0.0
+
+
 def _combined_decision(impacts: list[ControllerImpact]) -> str:
     if any(item.decision == "block" for item in impacts):
         return "block"
@@ -360,18 +501,81 @@ def _close_preference_score_gap(options: list[CandidateOption]) -> bool:
     return abs(ranked[0].score - ranked[1].score) <= 180.0
 
 
-def _audit_adjustment(relation: str, effect: str, risk: str, repair: str, confidence: Any) -> float:
+def _rank_order(options: list[CandidateOption], *, include_pending_audit: bool) -> list[str]:
+    return [
+        _hash(option.id)
+        for option in sorted(
+            options,
+            key=lambda item: float(item.score)
+            + (float(item.score_components.get("qwen_audit_adjustment", 0.0) or 0.0) if include_pending_audit else 0.0),
+            reverse=True,
+        )
+    ]
+
+
+def _decision_index(decision_id: str) -> int:
+    tail = str(decision_id).rsplit(":", 1)[-1]
+    try:
+        return int(tail)
+    except (TypeError, ValueError):
+        return 0
+
+
+def _affected_rule_ids(option: CandidateOption, item: dict[str, Any]) -> list[str]:
+    out: list[str] = []
+    rule_id = item.get("rule_id") if isinstance(item, dict) else None
+    if rule_id not in (None, ""):
+        out.append(_hash(rule_id))
+    for impact in (option.trace.get("ptt_firewall") or {}).get("top_impacts", []):
+        if not isinstance(impact, dict):
+            continue
+        value = impact.get("rule_hash")
+        if value not in (None, ""):
+            out.append(str(value))
+    return list(dict.fromkeys(out))[:8]
+
+
+def _audit_level_score(level: str, option: CandidateOption, *, kind: str) -> float:
+    firewall = option.trace.get("ptt_firewall") or {}
+    remaining = max(
+        float(firewall.get("marginal_penalty", 0.0) or 0.0),
+        float(firewall.get("lost_repair_window_cost", 0.0) or 0.0),
+        float(firewall.get("future_repairability_delta", 0.0) or 0.0),
+        120.0,
+    )
+    risk_scale = {"none": 0.0, "low": 0.25, "medium": 0.55, "high": 1.0, "catastrophic": 1.8}
+    repair_scale = {"none": 0.0, "low": 0.2, "medium": 0.5, "high": 0.9, "catastrophic": 1.25}
+    scale = repair_scale if kind == "repair" else risk_scale
+    return remaining * scale.get(level, 0.0)
+
+
+def _audit_adjustment(
+    relation: str,
+    effect: str,
+    risk: str,
+    repair: str,
+    confidence: Any,
+    *,
+    option: CandidateOption,
+    risk_score: float,
+    repair_score: float,
+    has_assessment: bool,
+) -> float:
+    if not has_assessment:
+        return 0.0
     conf = _conf(confidence)
-    risk_scale = {"none": 0.0, "low": 40.0, "medium": 120.0, "high": 300.0, "catastrophic": 700.0}
-    repair_scale = {"none": 0.0, "low": 35.0, "medium": 100.0, "high": 240.0, "catastrophic": 500.0}
-    penalty = risk_scale.get(risk, 0.0)
-    bonus = repair_scale.get(repair, 0.0)
+    penalty = risk_score
+    bonus = repair_score
+    if relation in {"unknown", "uncertain"} or effect == "unknown":
+        penalty = max(penalty, getattr(config, "TRIDENT_UNKNOWN_AUDIT_SOFT_RISK", 35.0))
     if relation == "violation" or effect == "violates":
-        penalty = max(penalty, 180.0)
+        cap = max(0.0, float(option.direct_money)) + 420.0
+        remaining = max(penalty, float((option.trace.get("ptt_firewall") or {}).get("marginal_penalty", 0.0) or 0.0), 180.0)
+        penalty = min(remaining, cap) if conf >= 0.7 else remaining * 0.75
     if effect == "repairs" or relation == "supports":
         bonus = max(bonus, 100.0)
     if effect == "reduces_repairability":
-        penalty = max(penalty, 140.0)
+        penalty = max(penalty, risk_score, 140.0)
     return (bonus - penalty) * max(0.15, conf)
 
 

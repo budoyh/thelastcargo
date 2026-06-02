@@ -78,6 +78,15 @@ class CompiledPreferenceRule:
     penalty_cap: float | None = None
     evidence_hash: str = ""
     unresolved_reason: str = ""
+    contract_version: str = "legacy_v1"
+    polarity: str = "unknown"
+    observable: str = "unknown"
+    metric: str = "unknown"
+    counting: str = "unknown"
+    slots: dict[str, Any] = field(default_factory=dict)
+    repair: tuple[str, ...] = ()
+    uncertainty: tuple[str, ...] = ()
+    penalty_amount_source: str = "unknown"
 
 
 @dataclass(frozen=True)

@@ -25,6 +25,9 @@ class ControllerImpact:
     effect: str
     decision: str
     reason: str
+    past_debt: float = 0.0
+    candidate_delta: float = 0.0
+    future_repairability_delta: float = 0.0
 
 
 class PreferenceController:
@@ -393,17 +396,20 @@ def _impact(
             decision = "massive_penalty"
         else:
             decision = "pass"
+    failure_delta = round(min(1.0, max(0.0, (penalty + lost) / max(1.0, rule.penalty_scale() * 2.0))), 4)
     return ControllerImpact(
         rule_id=rule.rule_id,
         controller_type=rule.type,
         marginal_penalty=round(max(0.0, penalty), 2),
         repair_value=round(max(0.0, repair), 2),
         lost_repair_window_cost=round(max(0.0, lost), 2),
-        future_failure_probability_delta=round(min(1.0, max(0.0, (penalty + lost) / max(1.0, rule.penalty_scale() * 2.0))), 4),
+        future_failure_probability_delta=failure_delta,
         confidence=round(max(0.0, min(1.0, rule.confidence)), 4),
         effect=effect,
         decision=decision,
         reason=reason,
+        candidate_delta=round(max(0.0, penalty) - max(0.0, repair), 2),
+        future_repairability_delta=round(max(0.0, lost) + failure_delta * rule.penalty_scale(), 2),
     )
 
 

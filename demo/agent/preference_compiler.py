@@ -239,6 +239,67 @@ def _predicate_spec(
     }
 
 
+def _contract_v2_fields(
+    *,
+    kind: str,
+    scope: str,
+    condition: dict[str, Any],
+    repair_actions: tuple[str, ...],
+    evidence: str,
+) -> dict[str, Any]:
+    observable_map = {
+        "location_relation": "location",
+        "time_window_constraint": "time_window",
+        "distance_budget": "distance",
+        "quota_constraint": "count",
+        "cargo_field_constraint": "cargo_attribute",
+    }
+    metric_map = {
+        "location_relation": "near",
+        "time_window_constraint": "continuous_minutes",
+        "distance_budget": "<=",
+        "quota_constraint": ">=",
+        "cargo_field_constraint": "match",
+    }
+    counting_map = {
+        "location_relation": "once_if_failed",
+        "time_window_constraint": "continuous_window",
+        "distance_budget": "per_action",
+        "quota_constraint": "month_end",
+        "cargo_field_constraint": "per_action",
+    }
+    runtime_values = condition.get("target_coordinates") or []
+    runtime_hashes = [
+        hashlib.sha256(json.dumps(item, ensure_ascii=False, sort_keys=True, default=str).encode("utf-8")).hexdigest()[:16]
+        for item in runtime_values
+    ]
+    return {
+        "contract_version": "trident_v2_fallback",
+        "polarity": "avoid" if kind in {"distance_budget", "cargo_field_constraint"} else "require",
+        "observable": observable_map.get(kind, "unknown"),
+        "metric": metric_map.get(kind, "unknown"),
+        "counting": counting_map.get(kind, "unknown"),
+        "slots": {
+            "field": None,
+            "operator": None,
+            "runtime_values": [],
+            "runtime_value_hashes": runtime_hashes,
+            "time_window": condition.get("time_window_minutes"),
+            "date_window": condition.get("date_window"),
+            "duration_minutes": condition.get("duration_minutes"),
+            "distance_km": condition.get("numeric_min") if kind == "distance_budget" else None,
+            "count": condition.get("required_count"),
+            "target_ref": None,
+            "target_ref_hash": runtime_hashes[0] if runtime_hashes else "",
+            "sequence_refs": [],
+            "sequence_ref_hashes": [],
+        },
+        "repair": repair_actions,
+        "uncertainty": tuple() if kind != "unknown" else ("no_executable_predicate",),
+        "penalty_amount_source": "runtime_preference" if float(condition.get("penalty_amount", 0.0) or 0.0) > 0 else "unknown",
+    }
+
+
 def compile_if_changed(
     *,
     api: SimulationApiPort | None = None,
@@ -272,6 +333,13 @@ def compile_if_changed(
         amount_payload = amount_payloads[idx]
         kind, scope, condition, repairability, confidence, repair_actions = _compile_shape(evidence, amount_payload)
         spec = _predicate_spec(kind=kind, scope=scope, condition=condition, amount_payload=amount_payload, evidence=evidence)
+        contract_v2 = _contract_v2_fields(
+            kind=kind,
+            scope=scope,
+            condition=condition,
+            repair_actions=repair_actions,
+            evidence=evidence,
+        )
         rules.append(
             CompiledPreferenceRule(
                 rule_id=f"pref_{idx}",
@@ -284,6 +352,7 @@ def compile_if_changed(
                 confidence=confidence,
                 repair_action_kinds=repair_actions,
                 **spec,
+                **contract_v2,
             )
         )
     return CompiledPreferenceSet(pref_hash=pref_hash, rules=tuple(rules))
