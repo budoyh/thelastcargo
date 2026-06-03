@@ -40,6 +40,8 @@ def _wait_option(world: World, decision_id: str) -> CandidateOption:
         duration = config.WAIT_MINUTES_SHORT
     else:
         duration = config.WAIT_MINUTES_DEFAULT
+    if config.ENABLE_RESCUE_SCORER and not world.debt_market.emergency:
+        duration = config.RESCUE_WAIT_MINUTES_DEFAULT
     if remaining <= 0:
         duration = 0
     elif remaining < config.MIN_WAIT_MINUTES:

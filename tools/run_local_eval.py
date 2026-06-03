@@ -27,7 +27,6 @@ def main() -> int:
     args = parser.parse_args()
 
     env = os.environ.copy()
-    env.setdefault("DASHSCOPE_API_KEY", "local-dummy-key-not-used")
     if args.variant:
         env["CROWN_Y_VARIANT"] = args.variant
     args.results_dir.mkdir(parents=True, exist_ok=True)

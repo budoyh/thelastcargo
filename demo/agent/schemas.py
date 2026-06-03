@@ -50,6 +50,9 @@ class NormalizedCargo:
     load_start_minutes: int | None
     load_end_minutes: int | None
     haul_distance_km: float
+    cargo_name: str = ""
+    start_city: str = ""
+    end_city: str = ""
 
 
 @dataclass(frozen=True)
@@ -62,6 +65,28 @@ class CompiledPreferenceRule:
     reward_or_penalty: dict[str, Any]
     evidence: str
     confidence: float
+    repair_action_kinds: tuple[str, ...] = ()
+    predicate_type: str = "unknown"
+    fields: tuple[str, ...] = ()
+    operator: str = "unknown"
+    values: tuple[Any, ...] = ()
+    time_scope: str = "unknown"
+    deadline: Any = "unknown"
+    counter: Any = "unknown"
+    coordinate_target: Any = "unknown"
+    penalty_amount: float | None = None
+    penalty_cap: float | None = None
+    evidence_hash: str = ""
+    unresolved_reason: str = ""
+    contract_version: str = "legacy_v1"
+    polarity: str = "unknown"
+    observable: str = "unknown"
+    metric: str = "unknown"
+    counting: str = "unknown"
+    slots: dict[str, Any] = field(default_factory=dict)
+    repair: tuple[str, ...] = ()
+    uncertainty: tuple[str, ...] = ()
+    penalty_amount_source: str = "unknown"
 
 
 @dataclass(frozen=True)
@@ -193,4 +218,3 @@ class CandidateOption:
     action_cert: ActionCertificate | None = None
     rollout: RolloutValue = field(default_factory=RolloutValue)
     trace: dict[str, Any] = field(default_factory=dict)
-

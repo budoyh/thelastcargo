@@ -1,5 +1,34 @@
 # EXPERIMENT LOG
 
+## EXP-008 CROWN-PCE Oracle Gap Start
+
+- branch: `crown-pce-oracle-gap`
+- start point: current `crown-y-next-build` worktree with prior Next Build evidence retained.
+- stop states: `PCE_STRONG_SUCCESS`, `PCE_PARTIAL_SUCCESS`, `DO_NOT_SUBMIT_WITH_ORACLE_EVIDENCE`, or `EXTERNAL_BLOCKER`.
+- known 20260529 evidence: best Next Build frontier official net `2240.98`; rescue reference official net `5067.69`.
+- required order: score accountant and redaction guard, offline oracle gap, marginal predicate labels, executable predicate compiler, observed vocabulary linker, candidate verifier, repair planner, runtime repair-first probe, 0529/0509/synthetic verification.
+- score accounting rule: official net already includes preference penalty; no double-count proxy.
+- final PCE report set: `reports/pce_final_report.md`, `reports/pce_experiments.csv`, `reports/oracle_gap.csv`, `reports/predicate_eval.csv`, `reports/action_forensics.csv`.
+- protected literal policy: write `literal banned terms redacted`, `scenario shortcuts redacted`, or `raw value redacted`; do not commit literal scanner lists.
+
+## EXP-007 Next Build v4 Start
+
+- branch: `crown-y-next-build`
+- start point: `crown-y-score-rescue` commit `0f2af10`
+- rescue baseline reference: 20260529 net `5067.69`, preference penalty `38140.0`, take/wait/reposition `89/163/0`, wait ratio `0.6468`, Qwen compile calls `5`.
+- stage order: setup guardrails, four diagnostics, six minimal strategies, conditional module only for the largest named regret, compact Pareto frontier, final verification.
+- final score gate: official net under `40000` must be reported as `DO_NOT_SUBMIT_WITH_FRONTIER_EVIDENCE`.
+- final artifacts: `reports/next_build_final_report.md`, `reports/next_build_experiments.csv`, `reports/score_accountant.csv`, `reports/preference_state_ledger.csv`, `reports/forensics_samples.csv`.
+- existing report files from older branches are legacy references; Next Build must not add reports outside the five v4 artifacts.
+
+## EXP-006 Score Rescue Workstream
+
+- branch: `crown-y-score-rescue`
+- baseline failure reference: 20260529 31-day run had net `-18953.97`, preference penalty `24700`, take `13`, wait `1806`, query minutes `8499`, wait_regret `1797`, Qwen runtime calls `0`.
+- implemented rescue line: SafeProfitGreedy query, post-query World refresh, RescueScorer, wait-lock forensic trace, repeated-wait loop breaker, current-visible micro-reposition candidate, capped soft preference/time/two-hop scoring, Qwen preference DSL compiler.
+- final evidence files: `reports/baseline_comparison.md`, `reports/score_rescue_ablation.md`, `reports/score_forensic_audit.md`, `reports/regret_dashboard_v2.md`, `reports/qwen_preference_compile_report.md`, `reports/subagent_reviews_score_rescue.md`, `reports/score_rescue_final_report.md`.
+- final result is determined only by `reports/score_rescue_final_report.md`; negative-net or wait-heavy rescue variants remain forensic failures.
+
 ## EXP-001 Unit and Compliance Baseline
 
 - time: 2026-05-31 local

@@ -6,10 +6,15 @@ import argparse
 import json
 from dataclasses import dataclass, field
 from pathlib import Path
+import sys
 from typing import Any
 
 ROOT = Path(__file__).resolve().parents[1]
 REPORT = ROOT / "reports" / "regret_dashboard.md"
+if str(ROOT) not in sys.path:
+    sys.path.insert(0, str(ROOT))
+
+from tools.score_rescue_metrics import markdown_table, summarize_run  # noqa: E402
 REGRET_KEYS = (
     "query_too_big",
     "query_too_small",
@@ -18,6 +23,7 @@ REGRET_KEYS = (
     "reposition_not_recovered",
     "preference_late_panic",
 )
+RESCUE_ABLATION_RUNS = ("a0", "a1", "a2", "a3", "a4", "a5", "a6", "a7")
 
 
 @dataclass
@@ -114,8 +120,8 @@ def build_stats(results_dir: Path) -> RegretStats:
     return stats
 
 
-def write_report(stats: RegretStats, results_dir: Path) -> None:
-    REPORT.parent.mkdir(parents=True, exist_ok=True)
+def write_report(stats: RegretStats, results_dir: Path, out: Path = REPORT) -> None:
+    out.parent.mkdir(parents=True, exist_ok=True)
     lines = [
         "# Regret Dashboard",
         "",
@@ -131,16 +137,103 @@ def write_report(stats: RegretStats, results_dir: Path) -> None:
     ]
     for key in REGRET_KEYS:
         lines.append(f"| {key} | {stats.counts.get(key, 0)} |")
-    REPORT.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    out.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def write_rescue_report(runs_root: Path, out: Path) -> list[dict[str, Any]]:
+    payload = []
+    rows = []
+    if any((runs_root / name).is_dir() for name in RESCUE_ABLATION_RUNS):
+        paths = [runs_root / name for name in RESCUE_ABLATION_RUNS if (runs_root / name).is_dir()]
+    else:
+        paths = sorted(p for p in runs_root.iterdir() if p.is_dir())
+    for path in paths:
+        if not (path / "actions_202603_D001.jsonl").exists() and not (path / "monthly_income_202603.json").exists():
+            continue
+        item = summarize_run(path)
+        regret = build_stats(path)
+        payload.append({"name": path.name, **item, "regret_counts": regret.counts})
+        counts = item["counts"]
+        rows.append(
+            [
+                path.name,
+                item["net"],
+                counts["take_order"],
+                counts["wait"],
+                counts["reposition"],
+                item["wait_ratio"],
+                item["query_minutes_per_take"],
+                item["wait_regret_v2"],
+                item["feasible_positive_cargo_but_wait"],
+                counts["rejected_take"],
+                item["illegal_actions"],
+                regret.counts.get("query_too_big", 0),
+                regret.counts.get("query_too_small", 0),
+                regret.counts.get("long_order_trap", 0),
+                regret.counts.get("wait_regret", 0),
+                regret.counts.get("reposition_not_recovered", 0),
+                regret.counts.get("preference_late_panic", 0),
+            ]
+        )
+    out.parent.mkdir(parents=True, exist_ok=True)
+    lines = [
+        "# Regret Dashboard V2",
+        "",
+        f"- runs_root: `{runs_root}`",
+        "- categories: query_too_big, query_too_small, long_order_trap, wait_regret, reposition_not_recovered, preference_late_panic",
+        "- v2 additions: feasible_positive_cargo_but_wait, query_minutes_per_take, wait_ratio, rejected_take, illegal_actions",
+        "",
+        *markdown_table(
+            [
+                "run",
+                "net",
+                "take",
+                "wait",
+                "repo",
+                "wait_ratio",
+                "q_min/take",
+                "wait_regret_v2",
+                "positive_wait",
+                "rejected",
+                "illegal",
+                "query_too_big",
+                "query_too_small",
+                "long_order_trap",
+                "wait_regret",
+                "reposition_not_recovered",
+                "preference_late_panic",
+            ],
+            rows,
+        ),
+        "",
+    ]
+    if payload:
+        best = max(payload, key=lambda item: float(item.get("net", 0.0)))
+        lines.extend(
+            [
+                f"Best net run: `{best['name']}` with net `{best['net']}`, wait_ratio `{best['wait_ratio']}`, "
+                f"wait_regret_v2 `{best['wait_regret_v2']}`, positive_wait `{best['feasible_positive_cargo_but_wait']}`.",
+                "",
+            ]
+        )
+    out.write_text("\n".join(lines), encoding="utf-8")
+    (out.with_suffix(".json")).write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    return payload
 
 
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--results-dir", type=Path, default=ROOT / "demo" / "results")
+    parser.add_argument("--runs-root", type=Path, default=None)
+    parser.add_argument("--out", type=Path, default=REPORT)
     args = parser.parse_args()
+    if args.runs_root is not None:
+        payload = write_rescue_report(args.runs_root.resolve(), args.out.resolve())
+        print(json.dumps({"runs": len(payload), "report": str(args.out.resolve())}, ensure_ascii=False))
+        return 0
     stats = build_stats(args.results_dir.resolve())
-    write_report(stats, args.results_dir.resolve())
-    print(json.dumps({"steps": stats.steps, "regret": stats.counts, "report": str(REPORT)}, ensure_ascii=False))
+    write_report(stats, args.results_dir.resolve(), args.out.resolve())
+    print(json.dumps({"steps": stats.steps, "regret": stats.counts, "report": str(args.out.resolve())}, ensure_ascii=False))
     return 0
 
 

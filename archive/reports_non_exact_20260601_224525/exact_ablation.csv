@@ -1,0 +1,10 @@
+stage,variant,dataset,run_id,official_net,gross_minus_cost,preference_penalty,take_count,wait_count,reposition_count,query_minutes_per_take,qwen_compile_calls,qwen_compile_or_cache_hit_count,qwen_link_or_cache_hit_count,qwen_audit_or_cache_hit_count,blocks_or_massive,controller_scored_candidate_count,scorer_semantics_aligned_controller_count,illegal_count,rejected_take_count,income_abort_count,simulation_failures,notes
+B0_rescue,best_rescue,20260529,runs/latest_rescue,5067.69,43207.69,38140.0,89,163,0,37.15,5,5,0,0,,,,0,0,0,0,rescue reference
+B1_adapter_only,best_rescue,20260529,runs/latest_rescue,5067.69,43207.69,38140.0,89,163,0,37.15,5,5,0,0,,,,0,0,0,0,adapter-only summarized by rescue reference
+B2_rbt_compiler,crown_exact_rbt_mpc,20260529,runs/exact/20260529/crown_exact_rbt_mpc,-163.93,41296.06,41460.0,85,169,1,39.95,12,12,0,0,,,,0,0,0,0,exact default
+B3_field_region_controller,crown_exact_rbt_mpc,20260529,runs/exact/20260529/crown_exact_rbt_mpc,-163.93,41296.06,41460.0,85,169,1,39.95,12,12,0,0,,,,0,0,0,0,included in exact default
+B4_rest_inactive_controller,crown_exact_rbt_mpc,20260529,runs/exact/20260529/crown_exact_rbt_mpc,-163.93,41296.06,41460.0,85,169,1,39.95,12,12,0,0,,,,0,0,0,0,included in exact default
+B5_distance_count_quota,crown_exact_rbt_mpc,20260529,runs/exact/20260529/crown_exact_rbt_mpc,-163.93,41296.06,41460.0,85,169,1,39.95,12,12,0,0,,,,0,0,0,0,included in exact default
+B6_location_dwell_sequence,crown_exact_rbt_mpc,20260529,runs/exact/20260529/crown_exact_rbt_mpc,-163.93,41296.06,41460.0,85,169,1,39.95,12,12,0,0,,,,0,0,0,0,included in exact default
+B7_visible_graph_mpc_2hop,crown_exact_rbt_mpc,20260529,C:\budostudy\only_for_codex\thelatstcargo\runs\exact\20260529\crown_exact_rbt_mpc_mpc,,,,,,,,,,,,,,,,,,,missing_run
+B11_final_selected,crown_exact_rbt_mpc,20260529,runs/exact/20260529/crown_exact_rbt_mpc,-163.93,41296.06,41460.0,85,169,1,39.95,12,12,0,0,,,,0,0,0,0,final selected unless gates disable

@@ -1,6 +1,6 @@
 # Compliance Audit
 
-- scanned_files: 29
+- scanned_files: 41
 - findings_total: 0
 - p0_findings: 0
 - status: PASS
