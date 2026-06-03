@@ -3,8 +3,8 @@ FUSE_REVIEW_PACKAGES_ONLY
 # CROWN-FUSE / RESCUE-SWITCH v10 Final Report
 
 - git branch: `crown-fuse-rescue-switch`
-- source_code_commit: `d53c05ca4db4d9bd08021641247a911869c9d55d`
-- evidence_commit: `working-tree-final-evidence-before-commit`
+- source_code_commit: `39144174b14eff7e2edd2b146e19575be6036bb0`
+- evidence_commit: `39144174b14eff7e2edd2b146e19575be6036bb0`
 - stop_state_reason: no targeted-repair knee preserved B0 gross enough to become a submission candidate; B11 is explicit B0 fallback.
 
 ## Decision
