@@ -4,8 +4,8 @@ DO NOT SUBMIT: EXTERNAL_BLOCKER_QWEN_API - compile benchmark below gate schema_v
 stop_state: EXTERNAL_BLOCKER_QWEN_API
 stop_reason: compile benchmark below gate schema_valid_rate=0.894, primitive_family_accuracy=1.000
 branch: crown-pref-forge-v1
-source_commit: 77e738a32c14a36f622c52ee037954e3cb591160
-evidence_commit: pending_until_git_commit
+source_commit: 832919d81d8a091ad19c15737b0a480bed46bcba
+evidence_commit: 832919d81d8a091ad19c15737b0a480bed46bcba
 package_path: 
 package_sha256: 
 
