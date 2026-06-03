@@ -78,6 +78,14 @@ ALLOWED_FUSE_REPORTS = {
     "fuse_package_audit.md",
 }
 REQUIRED_FUSE_REPORTS = set(ALLOWED_FUSE_REPORTS)
+ALLOWED_PREF_FORGE_REPORTS = {
+    "pref_forge_final_report.md",
+    "pref_forge_compile_benchmark.csv",
+    "pref_forge_experiment_grid.csv",
+    "pref_forge_penalty_diff.csv",
+    "pref_forge_package_audit.md",
+}
+REQUIRED_PREF_FORGE_REPORTS = set(ALLOWED_PREF_FORGE_REPORTS)
 SUBMISSION_STOP_STATES = {
     "CROWN_TRIDENT_RECOMMENDED_SUBMISSION",
     "CROWN_TRIDENT_EXPERIMENTAL_SUBMISSION",
@@ -85,9 +93,13 @@ SUBMISSION_STOP_STATES = {
     "SURGE_EXPERIMENTAL_SUBMISSION",
     "FUSE_RECOMMENDED_SUBMISSION",
     "FUSE_EXPERIMENTAL_SUBMISSION",
+    "PREF_FORGE_CROWN_TARGET_READY",
+    "PREF_FORGE_RECOMMENDED_SUBMISSION_READY",
+    "PREF_FORGE_EXPERIMENTAL_SUBMISSION_READY",
 }
 REVIEW_PACKAGE_STATES = {
     "FUSE_REVIEW_PACKAGES_ONLY",
+    "PREF_FORGE_HIDDEN_SAFE_REVIEW_READY",
 }
 DISALLOWED_PACKAGE_DEFAULT_VARIANTS = {
     "best_rescue",
@@ -526,7 +538,12 @@ def check_final_reports(*, require_final_evidence: bool = False) -> list[Finding
     findings: list[Finding] = []
     report_files = iter_report_files()
     report_names = {path.name for path in report_files}
-    if "fuse_final_report.md" in report_names or any(name.startswith("fuse_") for name in report_names):
+    if "pref_forge_final_report.md" in report_names or any(name.startswith("pref_forge_") for name in report_names):
+        allowed_reports = ALLOWED_PREF_FORGE_REPORTS
+        required_reports = REQUIRED_PREF_FORGE_REPORTS
+        report_label = "Pref-Forge"
+        final_report = ROOT / "reports" / "pref_forge_final_report.md"
+    elif "fuse_final_report.md" in report_names or any(name.startswith("fuse_") for name in report_names):
         allowed_reports = ALLOWED_FUSE_REPORTS
         required_reports = REQUIRED_FUSE_REPORTS
         report_label = "Fuse"
@@ -562,7 +579,7 @@ def check_final_reports(*, require_final_evidence: bool = False) -> list[Finding
     first_line = text.splitlines()[0].strip() if text.splitlines() else ""
     stop_state = _extract_stop_state(text)
     net = _extract_numeric_metric(text, "official_net")
-    if report_label != "Fuse" and net is not None and net < 30000 and not first_line.startswith("DO NOT SUBMIT:"):
+    if report_label not in {"Fuse"} and net is not None and net < 30000 and not first_line.startswith("DO NOT SUBMIT:"):
         findings.append(
             Finding(
                 "P0",
@@ -583,9 +600,9 @@ def check_final_reports(*, require_final_evidence: bool = False) -> list[Finding
 
 def _extract_stop_state(text: str) -> str:
     for line in text.splitlines()[:80]:
-        if "CROWN_TRIDENT_" in line or "SURGE_" in line or "FUSE_" in line or "DO_NOT_SUBMIT" in line or "EXTERNAL_BLOCKER" in line:
+        if "CROWN_TRIDENT_" in line or "SURGE_" in line or "FUSE_" in line or "PREF_FORGE_" in line or "DO_NOT_SUBMIT" in line or "EXTERNAL_BLOCKER" in line:
             for token in re.split(r"[^A-Z0-9_]+", line):
-                if token in SUBMISSION_STOP_STATES or token in REVIEW_PACKAGE_STATES or token.startswith("SURGE_") or token.startswith("FUSE_") or token.startswith("DO_NOT_SUBMIT") or token.startswith("EXTERNAL_BLOCKER"):
+                if token in SUBMISSION_STOP_STATES or token in REVIEW_PACKAGE_STATES or token.startswith("SURGE_") or token.startswith("FUSE_") or token.startswith("PREF_FORGE_") or token.startswith("DO_NOT_SUBMIT") or token.startswith("EXTERNAL_BLOCKER"):
                     return token
     return ""
 
@@ -603,7 +620,9 @@ def _extract_numeric_metric(text: str, metric: str) -> float | None:
 def check_submission_packages(*, require_final_evidence: bool = False) -> list[Finding]:
     findings: list[Finding] = []
     packages = iter_submission_zips()
-    if (ROOT / "reports" / "fuse_final_report.md").is_file() or any(path.name.startswith("fuse_") for path in iter_report_files()):
+    if (ROOT / "reports" / "pref_forge_final_report.md").is_file() or any(path.name.startswith("pref_forge_") for path in iter_report_files()):
+        final_report = ROOT / "reports" / "pref_forge_final_report.md"
+    elif (ROOT / "reports" / "fuse_final_report.md").is_file() or any(path.name.startswith("fuse_") for path in iter_report_files()):
         final_report = ROOT / "reports" / "fuse_final_report.md"
     elif (ROOT / "reports" / "surge_final_report.md").is_file():
         final_report = ROOT / "reports" / "surge_final_report.md"

@@ -1,0 +1,17 @@
+- 2026-06-03T22:52:59 extracted public preference rows=46 to private store
+- 2026-06-03T23:22:42 pref forge grid mode=mandatory rows=6 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
+- 2026-06-03T23:26:20 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
+- 2026-06-03T23:28:16 built compile benchmark rows=66 qwen_mode=full blocker=none
+- 2026-06-03T23:30:40 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
+- 2026-06-03T23:33:53 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
+- 2026-06-03T23:36:57 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
+- 2026-06-03T23:40:41 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
+- 2026-06-03T23:43:40 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
+- 2026-06-03T23:47:11 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
+- 2026-06-03T23:49:47 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
+- 2026-06-03T23:53:04 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
+- 2026-06-03T23:55:50 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
+- 2026-06-03T23:58:38 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
+- 2026-06-04T00:02:15 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
+- 2026-06-04T00:02:48 qwen prompt ablation summary total=1058 ok=1001
+- 2026-06-04T00:02:48 built penalty diff rows=76

@@ -60,6 +60,15 @@ def _scheduled_full_rest_overlap(start: int, finish: int) -> bool:
     return False
 
 
+def _qwen_audit_adjustment(option: CandidateOption) -> float:
+    raw = float(option.score_components.get("qwen_audit_adjustment", 0.0) or 0.0)
+    if config.RESCUE_VARIANT == "crown_pref_forge" or not config.ENABLE_PTT_AUDITOR:
+        if raw:
+            option.score_components["qwen_audit_adjustment_ignored"] = raw
+        return 0.0
+    return raw
+
+
 def hard_block_reason(option: CandidateOption, min_direct: float, min_per_hour: float) -> str | None:
     if option.action_cert and not option.action_cert.safe:
         return ",".join(option.action_cert.reasons) or "action_cert_unsafe"
@@ -125,7 +134,10 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
             repair_bonus = preference_repair.take_repair_bonus(option, world)
             soft_pref = 0.0
             if config.ENABLE_RESCUE_PREFERENCE_SOFT and option.pref_cert:
-                soft_pref = min(config.RESCUE_SOFT_RISK_CAP, option.pref_cert.violation_debt + option.pref_cert.unknown_risk * 4.0)
+                soft_cap = config.PREF_FORGE_SOFT_PREF_CAP if config.ENABLE_PREF_FORGE_HUNTER else config.RESCUE_SOFT_RISK_CAP
+                soft_mult = config.PREF_FORGE_SOFT_PREF_MULT if config.ENABLE_PREF_FORGE_HUNTER else 4.0
+                debt_mult = config.PREF_FORGE_PREF_DEBT_MULT if config.ENABLE_PREF_FORGE_HUNTER else 1.0
+                soft_pref = min(soft_cap, option.pref_cert.violation_debt * debt_mult + option.pref_cert.unknown_risk * soft_mult)
             twohop = 0.0
             if config.ENABLE_RESCUE_TWOHOP_LITE:
                 rollout = visible_rollout.evaluate(option, world, [o.cargo for o in take_options if o.cargo is not None])
@@ -139,18 +151,28 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
             ptt_lost_window = max(0.0, -float(option.score_components.get("ptt_lost_repair_window_cost", 0.0) or 0.0))
             ptt_failure_risk = max(0.0, -float(option.score_components.get("ptt_failure_probability_delta", 0.0) or 0.0))
             ptt_low_conf = max(0.0, -float(option.score_components.get("ptt_low_confidence_risk", 0.0) or 0.0))
-            qwen_audit_adjustment = float(option.score_components.get("qwen_audit_adjustment", 0.0) or 0.0)
+            qwen_audit_adjustment = _qwen_audit_adjustment(option)
             rest_penalty = 0.0
             if (config.ENABLE_RESCUE_REST_GUARD or config.ENABLE_NEXT_MARGINAL_PREF) and world.status.preferences:
                 overlap = _rest_window_overlap_minutes(world.status.simulation_progress_minutes, option.finish_minutes)
                 if config.ENABLE_NEXT_MARGINAL_PREF:
-                    rest_penalty = min(3_500.0, overlap * 9.0)
+                    soft_weight = config.PREF_FORGE_SOFT_REST_WEIGHT if config.ENABLE_PREF_FORGE_HUNTER else 9.0
+                    full_rest_penalty = config.PREF_FORGE_FULL_REST_PENALTY if config.ENABLE_PREF_FORGE_HUNTER else 850.0
+                    rest_penalty = min(8_000.0, overlap * soft_weight)
                     if _scheduled_full_rest_overlap(world.status.simulation_progress_minutes, option.finish_minutes):
-                        rest_penalty += 850.0
+                        rest_penalty += full_rest_penalty
                 else:
                     rest_penalty = min(25_000.0, overlap * 80.0)
             duration_penalty = max(0.0, option.occupied_minutes - 720) * 8.0
             deadhead_penalty = max(0.0, option.deadhead_km - 55.0) * 15.0
+            hunter_bonus = 0.0
+            hunter_lockup_penalty = 0.0
+            hunter_deadhead_penalty = 0.0
+            if config.ENABLE_PREF_FORGE_HUNTER:
+                max_duration = config.PREF_FORGE_MAX_DURATION_HOURS * 60.0
+                hunter_bonus = option.direct_money * config.PREF_FORGE_DIRECT_NET_WEIGHT + per_hour * config.PREF_FORGE_PPH_WEIGHT
+                hunter_lockup_penalty = max(0.0, option.occupied_minutes - max_duration) * config.PREF_FORGE_LOCKUP_WEIGHT
+                hunter_deadhead_penalty = max(0.0, option.deadhead_km - config.PREF_FORGE_DEADHEAD_THRESHOLD_KM) * config.PREF_FORGE_DEADHEAD_WEIGHT
             score = (
                 option.direct_money
                 + per_hour * 4.0
@@ -168,6 +190,9 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
                 - rest_penalty
                 - duration_penalty
                 - deadhead_penalty
+                + hunter_bonus
+                - hunter_lockup_penalty
+                - hunter_deadhead_penalty
             )
             if reason in {"below_direct_net_threshold", "below_profit_per_hour_threshold"}:
                 score -= 120.0
@@ -192,8 +217,21 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
                     "rest_window_penalty": -rest_penalty,
                     "duration_penalty": -duration_penalty,
                     "deadhead_penalty": -deadhead_penalty,
+                    "pref_forge_hunter_bonus": hunter_bonus,
+                    "pref_forge_hunter_lockup_penalty": -hunter_lockup_penalty,
+                    "pref_forge_hunter_deadhead_penalty": -hunter_deadhead_penalty,
                 }
             )
+            if config.ENABLE_PREF_FORGE_HUNTER:
+                option.trace["pref_forge_hunter"] = {
+                    "direct_net": round(option.direct_money, 2),
+                    "profit_per_hour": round(per_hour, 2),
+                    "occupied_minutes": int(option.occupied_minutes),
+                    "pickup_deadhead_km": round(float(option.deadhead_km), 2),
+                    "bonus": round(hunter_bonus, 2),
+                    "lockup_penalty": round(hunter_lockup_penalty, 2),
+                    "deadhead_penalty": round(hunter_deadhead_penalty, 2),
+                }
             option.trace["hard_block_reason"] = reason or ""
         elif option.action_type == "wait":
             penalty = wait_score_penalty(state)
@@ -206,7 +244,7 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
             )
             repair_value += max(0.0, float(option.score_components.get("ptt_repair_value", 0.0) or 0.0))
             ptt_penalty = max(0.0, -float(option.score_components.get("ptt_marginal_penalty", 0.0) or 0.0))
-            qwen_audit_adjustment = float(option.score_components.get("qwen_audit_adjustment", 0.0) or 0.0)
+            qwen_audit_adjustment = _qwen_audit_adjustment(option)
             option.score = repair_value - penalty
             option.score -= ptt_penalty
             option.score += qwen_audit_adjustment
@@ -221,7 +259,7 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
             )
             repair_value += max(0.0, float(option.score_components.get("ptt_repair_value", 0.0) or 0.0))
             ptt_penalty = max(0.0, -float(option.score_components.get("ptt_marginal_penalty", 0.0) or 0.0))
-            qwen_audit_adjustment = float(option.score_components.get("qwen_audit_adjustment", 0.0) or 0.0)
+            qwen_audit_adjustment = _qwen_audit_adjustment(option)
             option.score = repair_value - abs(option.direct_money) - 40.0
             option.score -= ptt_penalty
             option.score += qwen_audit_adjustment
@@ -248,12 +286,29 @@ def choose(options: list[CandidateOption], stats: RescueStats, state: WaitLockSt
     if viable:
         return max(viable, key=lambda o: o.score)
     if state.consecutive_wait >= config.RESCUE_FORCE_TAKE_AFTER_WAITS:
+        allowed_reasons = {"", "below_direct_net_threshold", "below_profit_per_hour_threshold"}
+        if (
+            config.ENABLE_PREF_FORGE_HUNTER
+            and state.consecutive_wait >= config.PREF_FORGE_REST_ESCAPE_MIN_WAITS
+            and config.PREF_FORGE_REST_ESCAPE_DIRECT_NET > 0.0
+        ):
+            allowed_reasons.add("rest_window_overlap")
+        def _allowed_for_force_take(o: CandidateOption) -> bool:
+            reason = o.trace.get("hard_block_reason", "")
+            if reason not in allowed_reasons:
+                return False
+            if reason != "rest_window_overlap":
+                return not (o.pref_cert and o.pref_cert.high_confidence_irreversible_violation)
+            return (
+                config.ENABLE_PREF_FORGE_HUNTER
+                and o.direct_money >= config.PREF_FORGE_REST_ESCAPE_DIRECT_NET
+                and o.occupied_minutes <= config.PREF_FORGE_REST_ESCAPE_MAX_HOURS * 60.0
+            )
         positive = [
             o for o in take_options
             if o.direct_money > 0
             and not (o.action_cert and not o.action_cert.safe)
-            and not (o.pref_cert and o.pref_cert.high_confidence_irreversible_violation)
-            and o.trace.get("hard_block_reason", "") in {"", "below_direct_net_threshold", "below_profit_per_hour_threshold"}
+            and _allowed_for_force_take(o)
         ]
         if positive:
             return max(positive, key=lambda o: (o.direct_money, profit_per_hour(o)))

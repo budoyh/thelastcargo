@@ -170,9 +170,31 @@ FUSE_CAP_DISCOUNT = _float_env("CROWN_FUSE_CAP_DISCOUNT", 0.5, 0.0, 1.0)
 FUSE_OVERRIDE_MARGIN = _float_env("CROWN_FUSE_OVERRIDE_MARGIN", 80.0, 0.0, 1000.0)
 FUSE_AUDITOR_NUMERIC = os.environ.get("CROWN_FUSE_AUDITOR_NUMERIC", "0").strip() == "1"
 FUSE_GRAPH_TAKE_ONLY = os.environ.get("CROWN_FUSE_GRAPH_TAKE_ONLY", "0").strip() == "1"
+PREF_FORGE_STAGE = os.environ.get("CROWN_PREF_FORGE_STAGE", "").strip().lower()
+PREF_FORGE_MIN_DIRECT_NET = _float_env("CROWN_PREF_FORGE_MIN_DIRECT_NET", 1.0, -200.0, 1000.0)
+PREF_FORGE_MIN_PROFIT_PER_HOUR = _float_env("CROWN_PREF_FORGE_MIN_PROFIT_PER_HOUR", 0.0, -50.0, 300.0)
+PREF_FORGE_QUERY_K = _int_env("CROWN_PREF_FORGE_QUERY_K", 300, 50, 600)
+PREF_FORGE_MAX_DURATION_HOURS = _float_env("CROWN_PREF_FORGE_MAX_DURATION_HOURS", 16.0, 1.0, 72.0)
+PREF_FORGE_LOCKUP_WEIGHT = _float_env("CROWN_PREF_FORGE_LOCKUP_WEIGHT", 5.0, 0.0, 40.0)
+PREF_FORGE_DEADHEAD_THRESHOLD_KM = _float_env("CROWN_PREF_FORGE_DEADHEAD_THRESHOLD_KM", 75.0, 0.0, 300.0)
+PREF_FORGE_DEADHEAD_WEIGHT = _float_env("CROWN_PREF_FORGE_DEADHEAD_WEIGHT", 4.0, 0.0, 50.0)
+PREF_FORGE_DIRECT_NET_WEIGHT = _float_env("CROWN_PREF_FORGE_DIRECT_NET_WEIGHT", 1.8, 0.0, 8.0)
+PREF_FORGE_PPH_WEIGHT = _float_env("CROWN_PREF_FORGE_PPH_WEIGHT", 7.0, 0.0, 50.0)
+PREF_FORGE_TERMINAL_VALUE_WEIGHT = _float_env("CROWN_PREF_FORGE_TERMINAL_VALUE_WEIGHT", 0.0, 0.0, 0.2)
+PREF_FORGE_SOFT_REST_GUARD = os.environ.get("CROWN_PREF_FORGE_SOFT_REST_GUARD", "0").strip() == "1"
+PREF_FORGE_SOFT_REST_WEIGHT = _float_env("CROWN_PREF_FORGE_SOFT_REST_WEIGHT", 9.0, 0.0, 120.0)
+PREF_FORGE_FULL_REST_PENALTY = _float_env("CROWN_PREF_FORGE_FULL_REST_PENALTY", 850.0, 0.0, 12000.0)
+PREF_FORGE_REST_ESCAPE_DIRECT_NET = _float_env("CROWN_PREF_FORGE_REST_ESCAPE_DIRECT_NET", 0.0, 0.0, 5000.0)
+PREF_FORGE_REST_ESCAPE_MIN_WAITS = _int_env("CROWN_PREF_FORGE_REST_ESCAPE_MIN_WAITS", 99, 0, 20)
+PREF_FORGE_REST_ESCAPE_MAX_HOURS = _float_env("CROWN_PREF_FORGE_REST_ESCAPE_MAX_HOURS", 18.0, 1.0, 72.0)
+PREF_FORGE_SOFT_PREF_CAP = _float_env("CROWN_PREF_FORGE_SOFT_PREF_CAP", RESCUE_SOFT_RISK_CAP, 0.0, 1000.0)
+PREF_FORGE_PREF_DEBT_MULT = _float_env("CROWN_PREF_FORGE_PREF_DEBT_MULT", 1.0, 0.0, 20.0)
+PREF_FORGE_SOFT_PREF_MULT = _float_env("CROWN_PREF_FORGE_SOFT_PREF_MULT", 4.0, 0.0, 20.0)
+ENABLE_PREF_FORGE_HUNTER = False
 
 _VARIANT = os.environ.get("CROWN_Y_VARIANT", "best_rescue").strip().lower()
 _FUSE_VARIANTS = {"fuse_rescue_core", "fuse_targeted_repair", "fuse_targeted_repair_graph", "fuse_hidden_safe"}
+_PREF_FORGE_VARIANTS = {"crown_pref_forge"}
 RESCUE_VARIANT = _VARIANT
 ENABLE_LEGACY_RESCUE_QWEN = _VARIANT in {"a6", "a7", "best_rescue"}
 if _VARIANT in _FUSE_VARIANTS:
@@ -244,6 +266,7 @@ if _VARIANT in {
     "fuse_targeted_repair",
     "fuse_targeted_repair_graph",
     "fuse_hidden_safe",
+    "crown_pref_forge",
 }:
     ENABLE_RESCUE_SCORER = True
     ENABLE_SCOUT_THEN_DEEPEN = False
@@ -469,6 +492,99 @@ if _VARIANT == "crown_trident_gold2":
         ENABLE_PTT_LINKER = True
         ENABLE_PTT_AUDITOR = True
         ENABLE_VISIBLE_GRAPH_MPC = True
+
+if _VARIANT == "crown_pref_forge":
+    RESCUE_VARIANT = _VARIANT
+    ENABLE_QWEN_PREFERENCE_COMPILER = True
+    ENABLE_RESCUE_WAIT_PENALTY = True
+    ENABLE_RESCUE_MICRO_REPOSITION = True
+    ENABLE_RESCUE_PREFERENCE_SOFT = True
+    ENABLE_RESCUE_REST_GUARD = os.environ.get("CROWN_PREF_FORGE_REST_GUARD", "1").strip() != "0"
+    ENABLE_RESCUE_TWOHOP_LITE = True
+    ENABLE_RESCUE_TIME_SHADOW_LITE = True
+    ENABLE_GOLD_CONTRACT_MPC = True
+    ENABLE_EXACT_RBT = True
+    ENABLE_PTT_LINKER = PREF_FORGE_STAGE not in {"e1", "compile_log_only_noop", "e5", "hunter_only"}
+    ENABLE_PTT_FIREWALL = PREF_FORGE_STAGE in {
+        "e3",
+        "preference_delta_scorer_only",
+        "e4",
+        "shield_only",
+        "e6",
+        "hunter_plus_shield",
+        "e7",
+        "repair_take_bonus_only",
+        "e8",
+        "minimal_repair_planner",
+        "e9",
+        "adaptive_query",
+        "e10",
+        "small_terminal_value",
+        "e12",
+        "gross_refill",
+        "e13",
+        "final_selected",
+        "grid",
+    }
+    ENABLE_PTT_AUDITOR = False
+    ENABLE_PREF_FORGE_HUNTER = PREF_FORGE_STAGE in {
+        "e5",
+        "hunter_only",
+        "e6",
+        "hunter_plus_shield",
+        "e7",
+        "repair_take_bonus_only",
+        "e8",
+        "minimal_repair_planner",
+        "e9",
+        "adaptive_query",
+        "e10",
+        "small_terminal_value",
+        "e12",
+        "gross_refill",
+        "e13",
+        "final_selected",
+        "grid",
+    }
+    ENABLE_NEXT_DYNAMIC_QUERY_K = PREF_FORGE_STAGE in {
+        "e9",
+        "adaptive_query",
+        "e10",
+        "small_terminal_value",
+        "e12",
+        "gross_refill",
+        "e13",
+        "final_selected",
+        "grid",
+    }
+    ENABLE_NEXT_PREFERENCE_STATE_MACHINE = PREF_FORGE_STAGE in {
+        "e8",
+        "minimal_repair_planner",
+        "e12",
+        "gross_refill",
+        "e13",
+        "final_selected",
+    }
+    ENABLE_PCE_REPAIR_FIRST = ENABLE_NEXT_PREFERENCE_STATE_MACHINE
+    ENABLE_VISIBLE_GRAPH_MPC = PREF_FORGE_STAGE in {"e10", "small_terminal_value"} and PREF_FORGE_TERMINAL_VALUE_WEIGHT > 0.0
+    ENABLE_FUSE_TARGETED_REPAIR = PREF_FORGE_STAGE in {
+        "e8",
+        "minimal_repair_planner",
+        "e11",
+        "trial017_like",
+        "e12",
+        "gross_refill",
+        "e13",
+        "final_selected",
+    }
+    RESCUE_QUERY_K_DEFAULT = PREF_FORGE_QUERY_K
+    RESCUE_QUERY_K_HIGH = max(RESCUE_QUERY_K_HIGH, min(MAX_QUERY_K, PREF_FORGE_QUERY_K))
+    RESCUE_DIRECT_NET_FLOOR = PREF_FORGE_MIN_DIRECT_NET
+    RESCUE_PROFIT_PER_HOUR_FLOOR = PREF_FORGE_MIN_PROFIT_PER_HOUR
+    RESCUE_FORCE_TAKE_AFTER_WAITS = _int_env("CROWN_PREF_FORGE_FORCE_TAKE_AFTER_WAITS", RESCUE_FORCE_TAKE_AFTER_WAITS, 1, 20)
+    if PREF_FORGE_SOFT_REST_GUARD:
+        ENABLE_NEXT_MARGINAL_PREF = True
+    TRIDENT_QWEN_AUDIT_SCALE = 0.0
 
 if _VARIANT in {"best_rescue", "a7"} or _VARIANT in _FUSE_VARIANTS:
     RESCUE_QUERY_K_DEFAULT = 120

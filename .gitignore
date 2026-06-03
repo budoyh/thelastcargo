@@ -2,6 +2,11 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+.private/
+**/qwen_raw_io_untracked.jsonl
+**/raw_preferences_untracked.json
+**/*raw_literal*
+**/*raw_preference*
 
 # Local source packages and raw data are kept for development only.
 demo/server/data/
@@ -26,3 +31,4 @@ submissions/
 archive/packages_old_*/
 archive/submissions_old_*/
 archive/compliance_audit_*/
+archive/pref_forge_old_packages_*/

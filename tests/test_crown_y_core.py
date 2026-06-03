@@ -627,6 +627,34 @@ def test_rescue_scorer_takes_safe_positive_net(monkeypatch):
     assert chosen.direct_money > 0
 
 
+def test_pref_forge_ignores_qwen_auditor_adjustment_in_rescue_score(monkeypatch):
+    monkeypatch.setattr(config, "RESCUE_VARIANT", "crown_pref_forge")
+    monkeypatch.setattr(config, "ENABLE_PTT_AUDITOR", True)
+    monkeypatch.setattr(config, "ENABLE_RESCUE_PREFERENCE_SOFT", False)
+    monkeypatch.setattr(config, "ENABLE_RESCUE_REST_GUARD", False)
+    monkeypatch.setattr(config, "ENABLE_NEXT_MARGINAL_PREF", False)
+    monkeypatch.setattr(config, "ENABLE_RESCUE_TWOHOP_LITE", False)
+    monkeypatch.setattr(config, "ENABLE_RESCUE_TIME_SHADOW_LITE", False)
+    monkeypatch.setattr(config, "ENABLE_PREF_FORGE_HUNTER", False)
+    monkeypatch.setattr(config, "RESCUE_DIRECT_NET_FLOOR", 1.0)
+    monkeypatch.setattr(config, "RESCUE_PROFIT_PER_HOUR_FLOOR", 0.0)
+    world1, _, _ = build_world()
+    option = CandidateOption(
+        id="take:pref-forge-auditor-guard",
+        action_type="take_order",
+        decision_id="d1",
+        direct_money=100.0,
+        occupied_minutes=60,
+        finish_minutes=60,
+        score_components={"qwen_audit_adjustment": 9999.0},
+    )
+    scored, _ = rescue_scorer.score_options([option], world1, wait_lock.WaitLockState())
+    take = scored[0]
+    assert take.score_components["qwen_audit_adjustment_applied"] == 0.0
+    assert take.score_components["qwen_audit_adjustment_ignored"] == 9999.0
+    assert take.score < 9999.0
+
+
 def test_wait_forensic_contains_required_fields(monkeypatch):
     monkeypatch.setattr(config, "ENABLE_RESCUE_SCORER", True)
     monkeypatch.setattr(config, "RESCUE_DIRECT_NET_FLOOR", 35.0)

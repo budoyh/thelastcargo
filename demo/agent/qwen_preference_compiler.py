@@ -702,6 +702,8 @@ def completion_with_runtime_order(
         try:
             return _completion_with_retries(api=api, payload=payload, api_key="", use_injected_api=True)
         except Exception as exc:  # pragma: no cover - transport failures vary.
+            if isinstance(exc, AssertionError):
+                raise
             last_exc = exc
     _, api_key, state = _active_api_key()
     if state == "dummy":

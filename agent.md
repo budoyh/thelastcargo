@@ -2,6 +2,21 @@
 
 This lowercase rule file mirrors `AGENTS.md` for tools that look for `agent.md`.
 
+## Active Pref-Forge Build
+
+- Branch: `crown-pref-forge-v1`.
+- Task: CROWN-PREF-FORGE v1.1 = multi-step Qwen Preference Compiler + RuntimeRuleState/Monitor primitives + Preference Shield + High-Quality Order Hunter + minimal ROI-positive repair + full official ablation.
+- Valid stop states: `PREF_FORGE_CROWN_TARGET_READY`, `PREF_FORGE_RECOMMENDED_SUBMISSION_READY`, `PREF_FORGE_EXPERIMENTAL_SUBMISSION_READY`, `PREF_FORGE_HIDDEN_SAFE_REVIEW_READY`, `PREF_FORGE_DO_NOT_SUBMIT_WITH_EVIDENCE`, `EXTERNAL_BLOCKER_EVAL_INFRA`, `EXTERNAL_BLOCKER_QWEN_API`, `EXTERNAL_BLOCKER_GIT_OR_NETWORK`, and `EXTERNAL_BLOCKER_MISSING_DATA`.
+- Final reports are limited to `pref_forge_final_report.md`, `pref_forge_compile_benchmark.csv`, `pref_forge_experiment_grid.csv`, `pref_forge_penalty_diff.csv`, and `pref_forge_package_audit.md`.
+- Required completion verifier phases: benchmark, noop, experiments, final. Final mode must fail on planned/missing/proxy rows, fewer than 60 executed full 20260529 search rows, missing E0-E13, wrong package policy, raw literal leakage, or stop-state inconsistency.
+- B0 rescue must reproduce official_net >= 5000, gross_minus_cost >= 43000, preference_penalty <= 38200, and 0 invalid/failure/rejected before any overlay evidence is meaningful.
+- E1/E2 no-op isolation must match E0 before strategy search. E5 Hunter must prove gross before E6-E13 expansion.
+- Qwen numeric auditor stays OFF. Qwen may compile/link/audit relationships only; it cannot choose/veto actions or invent penalty amounts/caps.
+- Runtime may use only injected current state, current post-query visible cargo, same-driver current-run legal summaries, and generic weights/primitive families. No future cargo, raw data reads, public literal hardcoding, driver/cargo id switches, fixed coordinates, fixed places, route templates, reports, scorer outputs, or income internals.
+- Raw preferences and raw Qwen IO belong only under `.private/pref_forge/` and are never committed. Committed artifacts use hashes and abstract primitive families only.
+- Packages are forbidden unless weak improvement is reached; weak-only packages must be review-only and not submission-shaped.
+- Required reviewer scopes are Instruction Compliance, Preference Compiler, Runtime Integration, Execution Evidence, and Leakage/Package, with concrete file/row/command evidence.
+
 ## Current Fuse Build
 
 - Branch: `crown-fuse-rescue-switch`.

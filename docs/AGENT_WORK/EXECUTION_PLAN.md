@@ -1,3 +1,14 @@
+# Pref-Forge Execution Plan
+
+1. Freeze public preference extraction privately and build redacted compile benchmark.
+2. Validate primitive registry and scorer semantics.
+3. Execute E0/E1/E2 no-op isolation on 20260529.
+4. Execute E3-E13 mandatory 20260529 official rows.
+5. If E5 gross gate passes, execute at least 60 focused full 20260529 search rows.
+6. Execute 0509 sanity for B0 and top candidates.
+7. Build penalty diff, package audit, final report, and run all mandatory verification commands.
+8. Run read-only reviewer QA, fix blocking findings, then commit and push.
+
 # CROWN-FUSE / RESCUE-SWITCH Execution Plan
 
 ## Current Branch

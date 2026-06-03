@@ -1,3 +1,27 @@
+# CROWN-PREF-FORGE v1.1 Active Build Rules
+
+- Active build: CROWN-PREF-FORGE v1.1 on branch `crown-pref-forge-v1`.
+- Continue from the existing repository and executed Fuse/Surge/Trident evidence; do not rebuild from scratch and do not treat report shape, smoke, proxy, synthetic, planned, or copied historical rows as success.
+- Mission: multi-step Qwen Preference Compiler, RuntimeRuleState/Monitor primitives, Preference Shield, High-Quality Order Hunter, minimal ROI-positive repair, full official ablation, and phase-aware completion proof.
+- Valid stop states are only `PREF_FORGE_CROWN_TARGET_READY`, `PREF_FORGE_RECOMMENDED_SUBMISSION_READY`, `PREF_FORGE_EXPERIMENTAL_SUBMISSION_READY`, `PREF_FORGE_HIDDEN_SAFE_REVIEW_READY`, `PREF_FORGE_DO_NOT_SUBMIT_WITH_EVIDENCE`, `EXTERNAL_BLOCKER_EVAL_INFRA`, `EXTERNAL_BLOCKER_QWEN_API`, `EXTERNAL_BLOCKER_GIT_OR_NETWORK`, or `EXTERNAL_BLOCKER_MISSING_DATA`.
+- Final `reports/` artifacts are limited to exactly `pref_forge_final_report.md`, `pref_forge_compile_benchmark.csv`, `pref_forge_experiment_grid.csv`, `pref_forge_penalty_diff.csv`, and `pref_forge_package_audit.md`.
+- Mandatory verifier commands: `python tools/pref_forge_verify_completion.py --phase benchmark`, `--phase noop`, `--phase experiments`, and `--phase final`. Final mode must fail on incomplete mandatory rows, fewer than 60 executed full 20260529 grid rows, wrong package policy, raw literal leakage, or stop-state inconsistency.
+- B0 rescue gate: 20260529 official_net >= 5000, gross_minus_cost >= 43000, preference_penalty <= 38200, and 0 failure/abort/illegal/rejected. If B0 fails due to code/config drift, fix it before continuing.
+- No-op isolation gate: E1/E2 must match E0 with action_signature_match_rate >= 0.999, score deltas <= 100, and 0 failure/abort/illegal/rejected before strategy search.
+- E5 High-Quality Hunter is a hard gate: if gross_minus_cost is below both B0_gross + 3000 and 48000, stop to fix Hunter rather than expanding E6-E13. If penalty_delta_vs_B0 > 8000, kill or retune Hunter.
+- Mandatory rows E0-E13 and at least 60 additional full 20260529 executed grid rows are required unless a true external eval-infra blocker is documented.
+- Qwen numeric auditor remains OFF by default. Qwen may compile preferences, link observed vocabulary, and perform gated relation/match audits only; it must not choose, veto, output final actions, or invent penalty amounts/caps.
+- Real Qwen compile/link is required for non-empty preferences when an injected or environment API path exists. Do not set `CROWN_Y_DISABLE_RUNTIME_QWEN=1` for final evidence.
+- Public preference raw text, raw driver/cargo ids, raw place/category literals, fixed coordinates, future cargo, offline heatmaps, reports, scorer outputs, and raw Qwen IO must stay out of committed runtime/reports/packages. Use hashes, `.private/pref_forge/`, and abstract primitive family names.
+- Runtime under `demo/agent` must not read raw cargo/driver data, reports, oracle artifacts, scorer internals, income calculators, server/bench internals, or future cargo.
+- `query_cargo` must be followed by `refresh_world`; filtering, scoring, action certificates, B0 shadow, and `take_order` must use the same post-query `current_actionable` observed set. B0 shadow must be pure with no extra API calls or Qwen calls.
+- Packages are forbidden unless weak improvement is reached. Weak-but-not-experimental may create only `CROWN_PREF_FORGE_REVIEW_ONLY_NOT_FOR_SUBMISSION.zip`; otherwise no zip.
+- Subagents/reviewers are read-only QA gates. Required scopes: Instruction Compliance Auditor, Preference Compiler Auditor, Runtime Integration Auditor, Execution Evidence Auditor, and Leakage/Package Gatekeeper; findings must cite files, CSV rows, commands, exit codes, and metrics.
+
+---
+
+# Historical Build Rules
+
 # CROWN-FUSE / RESCUE-SWITCH v10 Active Build Rules
 
 - Active build: CROWN-FUSE / RESCUE-SWITCH v10 on branch `crown-fuse-rescue-switch`.
