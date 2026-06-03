@@ -673,6 +673,7 @@ def _completion_with_retries(
     api_key: str,
     use_injected_api: bool,
 ) -> dict[str, Any]:
+    payload = _bounded_completion_payload(payload)
     last_exc: Exception | None = None
     for attempt in range(3):
         try:
@@ -715,6 +716,15 @@ def completion_with_runtime_order(
             raise last_exc
         raise RuntimeError("api_key_missing")
     return _completion_with_retries(api=None, payload=payload, api_key=api_key, use_injected_api=False)
+
+
+def _bounded_completion_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Keep runtime Qwen calls compact when a legacy caller omits output caps."""
+
+    bounded = dict(payload)
+    bounded.setdefault("max_tokens", min(int(config.LLM_MAX_OUTPUT_TOKENS), 512))
+    bounded.setdefault("enable_thinking", False)
+    return bounded
 
 
 def has_cached(pref_hash: str) -> bool:

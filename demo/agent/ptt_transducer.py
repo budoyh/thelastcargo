@@ -351,6 +351,11 @@ def compile_ptt_rules(api: SimulationApiPort | None, world: World) -> tuple[PTTR
     if not compiled:
         compiled = from_compiled_rules(world, compile_source="deterministic_fallback")
         _record_compiled_rule_stats(compiled)
+    elif all(rule.type == "unknown_soft" for rule in compiled):
+        fallback = from_compiled_rules(world, compile_source="deterministic_unknown_repair")
+        if any(rule.type != "unknown_soft" for rule in fallback):
+            compiled = fallback
+            _record_compiled_rule_stats(compiled)
     _CACHE[world.pref_hash] = compiled
     return compiled
 

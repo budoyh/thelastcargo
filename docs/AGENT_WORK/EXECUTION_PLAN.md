@@ -1,4 +1,141 @@
-# CROWN-TRIDENT / GOLD-2 Execution Plan
+# CROWN-FUSE / RESCUE-SWITCH Execution Plan
+
+## Current Branch
+
+- `crown-fuse-rescue-switch`
+- Continue from the existing repository and executed Surge evidence; do not rebuild from scratch.
+
+## Fuse Stop States
+
+- `FUSE_RECOMMENDED_SUBMISSION`: recommended score gates pass, final verifier passes, recommended package is generated and unpack-audited.
+- `FUSE_EXPERIMENTAL_SUBMISSION`: experimental gates pass, final verifier passes, experimental package is generated and unpack-audited.
+- `FUSE_REVIEW_PACKAGES_ONLY`: all required execution is complete, no submission gate passes, and at most one honest review-only package is generated.
+- `DO_NOT_SUBMIT_WITH_FUSE_EVIDENCE`: all required execution is complete but no package gate passes.
+- `EXTERNAL_BLOCKER_RESCUE_ISOLATION`: B0 cannot be evaluated because runner/data/eval/income infrastructure cannot run.
+- `EXTERNAL_BLOCKER_EVAL_INFRA`: official-style evaluation is broken for infrastructure reasons.
+- `EXTERNAL_BLOCKER_QWEN`: real Qwen compile/link cannot be called or cached despite valid environment and retries.
+
+## Fuse Work Order
+
+1. Create and push branch `crown-fuse-rescue-switch`.
+2. Update durable rules and implement `tools/verify_fuse_completion.py`.
+3. Reproduce B0 `best_rescue` on 20260529 and fix drift until the B0 gate passes.
+4. Run B1/B2/B3 no-op isolation and fix any action/score drift before search.
+5. Keep Qwen compile/link ON, Qwen numeric auditor OFF by default, and build targeted repair overlay plus B0 Shadow Guard.
+6. Run current-branch B9c reference and generate `reports/fuse_rule_ledger.csv` with only generic family-level exports.
+7. Execute at least 60 full 20260529 fuse grid runs; continue to at least 100 if the prompt's promising-signal trigger is met.
+8. Run tiny graph diagnostic, auditor numeric off/low/high ablation, top 5 20260509 full sanity, and B10/B11 final selected runs.
+9. Run read-only QA gates with concrete evidence, then final verifier.
+10. Generate and unpack-audit exactly the allowed package class, or stop honestly with complete evidence.
+
+## Required Commands Or Equivalents
+
+- `python tools/run_local_eval.py --simulation-days 31 --variant best_rescue --results-dir runs/fuse/b0_rescue`
+- `python tools/verify_fuse_completion.py --phase isolation`
+- `python tools/verify_fuse_completion.py --phase search`
+- `python tools/verify_fuse_completion.py --phase final`
+- `python -m compileall demo tools tests`
+- `python -m pytest tests -q`
+## Current CROWN-FUSE / RESCUE-SWITCH v10 Plan Status
+
+- Branch and push: completed for `crown-fuse-rescue-switch`.
+- Completion verifier: `tools/verify_fuse_completion.py` implemented and used for `--phase isolation`, `--phase search`, and final gate preparation.
+- B0 rescue: reproduced and preserved after freeze.
+- No-op isolation: completed after freeze; B1/B2/B3 match B0 exactly on score and action signature.
+- Fuse search: completed 100 executed 20260529 TRIAL configs around the B0+B9c knee point; no eligible gross-preserving improvement found.
+- Rule ledger: `reports/fuse_rule_ledger.csv` generated with only generic family-level columns.
+- Graph diagnostic: completed G0/G1/G2/G3 and killed.
+- Qwen auditor numeric ablation: completed A0/A1/A2; auditor numeric remains OFF.
+- Top5 0509 sanity: completed 5 full rows; all have `income_abort_count=0`.
+- Final selection: B11 is explicit `best_rescue` B0 fallback; B10 search-best rerun collapsed gross.
+- Packaging: below score gates, create one review-only package only.
+- Remaining before final response: write `reports/fuse_final_report.md`, run package/final verifier, commit/push if clean enough.
+
+- `python tools/audit_guard.py --fail-on-p0`
+
+## Current Progress
+
+- Branch `crown-fuse-rescue-switch` was created and pushed.
+- Long Fuse prompt read and adopted.
+- Durable rule files are being updated before runtime strategy changes.
+- `verify_fuse_completion.py` is being created before B0/no-op/search execution.
+
+# CROWN-SURGE / LEDGER-HUNTER Execution Plan
+
+## Current Branch
+
+- `crown-surge-ledger-hunter`
+- Work continues from existing repository and failed `crown-trident-gold2`; no from-scratch rebuild.
+
+## Surge Stop States
+
+- `SURGE_RECOMMENDED_SUBMISSION`: recommended score, final verifier, Qwen, graph, ablation, parameter search, compliance, package audit, commit, and push gates pass.
+- `SURGE_EXPERIMENTAL_SUBMISSION`: experimental gates pass without claiming recommended status.
+- `DO_NOT_SUBMIT_WITH_SURGE_EVIDENCE`: complete evidence exists but score/package gates fail.
+- `DO_NOT_SUBMIT_WITH_INCOMPLETE_EXECUTION`: any required official matrix row, parameter trial set, Qwen effect, official/replan delta, graph evidence, reviewer transcript, report hygiene, or final verifier gate is incomplete.
+- `EXTERNAL_BLOCKER_RESCUE_CORE`: B0 cannot run or reproduce because official runner/data/eval infrastructure is blocked.
+- `EXTERNAL_BLOCKER_QWEN`: real Qwen path is unavailable for required full runs.
+- `EXTERNAL_BLOCKER_EVAL_INFRA`: official-style evaluation cannot run for infrastructure reasons outside runtime strategy.
+
+## Surge Score Gates
+
+- B0 rescue: 20260529 official_net >= 5000, gross_minus_cost >= 43000, preference_penalty <= 38200, and 0 failure/abort/illegal/rejected.
+- Experimental: official_net >= 30000, preference_penalty <= 28000, gross_minus_cost >= 50000, 0 failure/abort/illegal/rejected, B0-B11 executed, 100+ real trials executed, auditor effective or killed by ablation, and `verify_surge_completion.py --phase final` PASS.
+- Recommended: official_net >= 38000, preference_penalty <= 22000, gross_minus_cost >= 60000, clean package audit, default variant final selected strategy, and final verifier PASS.
+
+## Surge Work Order
+
+1. Create and push branch `crown-surge-ledger-hunter`.
+2. Implement `tools/verify_surge_completion.py` before strategy changes.
+3. Update `AGENTS.md`, `agent.md`, `PROJECT_MEMORY`, `EXPERIMENT_LOG`, and `EXECUTION_PLAN` to Surge rules.
+4. Restore/run B0 immutable `best_rescue`; stop if B0 gate fails due to rescue core or eval infra.
+5. Fix execution harness so Surge ablation/search tools default to execution and never create final planned/missing rows.
+6. Run B0-B9c official 31-day matrix with required metrics.
+7. Fix Qwen auditor parser/schema/numeric mapping; run off/low/high auditor evidence.
+8. Build and run changed-decision official/replan delta lab for 60 selected decisions.
+9. Build and run rule doctor for top 6 penalty rules and export only generic family-level scales.
+10. Implement/run runtime-only Online Opportunity Graph attack with alpha 0.00/0.05/0.10/0.20/0.35 and B7/B8 evidence.
+11. Distill only generic historical behavior stats; never copy ids, places, coordinates, routes, or future cargo.
+12. Execute parameter search: Stage A 100 real 20260529 trials, Stage B top20 full, Stage C top5 0509, Stage D top10 confirmation.
+13. Select final B11, build the five Surge reports, run reviewers, run final verifier, and package only if gates pass.
+
+## Required Commands Or Equivalents
+
+- `python -m pytest tests -q`
+- `python -m compileall demo tools tests`
+- `python tools/audit_guard.py --fail-on-p0`
+- `python tools/fix_eval_round_bug.py`
+- `python tools/qwen_preference_smoke_test.py`
+- `python tools/run_local_eval.py --simulation-days 31 --variant best_rescue --results-dir runs/surge/b0_rescue`
+- `python tools/run_surge_ablation_matrix.py --execute --phase base --simulation-days 31 --results-root runs/surge/ablations`
+- `python tools/run_penalty_calibration_lab.py --execute --simulation-days 31 --results-root runs/surge/penalty_lab`
+- `python tools/run_rule_doctor.py --execute --simulation-days 31 --results-root runs/surge/rule_doctor`
+- `python tools/run_opportunity_graph_ablation.py --execute --simulation-days 31 --results-root runs/surge/opportunity_graph`
+- `python tools/run_surge_param_search.py --execute --trials 100 --simulation-days 31 --results-root runs/surge/search`
+- `python tools/run_surge_ablation_matrix.py --execute --phase final --simulation-days 31 --results-root runs/surge/ablations`
+- `python tools/build_surge_reports.py --strict`
+- `python tools/verify_surge_completion.py --phase final`
+
+## Current Progress
+
+- Local branch `crown-surge-ledger-hunter` created.
+- Initial push failed due HTTPS TLS handshake; retry after commit.
+- Long Surge prompt, previous reports, Qwen effect, and decision deltas read.
+- `tools/verify_surge_completion.py` implemented and `--phase stage0` passed.
+- Project rule files updated before runtime strategy changes.
+- B0 immutable `best_rescue` ran and passed stage1 gate.
+- B0-B9c base matrix ran and passed stage2 verifier.
+- Qwen auditor numeric schema was repaired and validated by unit tests; patched B5 produced nonzero numeric adjustments but worsened official score, so auditor is killed by current evidence.
+- Surge five reports were generated; old Trident reports were archived.
+- Final verifier currently fails for missing B10/B11, 0 executed parameter trials, Qwen valid-rate gap from old auditor traces, and 0 replay-valid decision deltas.
+
+## Current Stop Decision
+
+- Do not submit and do not package.
+- Current report first line: `DO NOT SUBMIT: DO_NOT_SUBMIT_WITH_INCOMPLETE_EXECUTION - missing executed rows: ['B10_parameter_search_best', 'B11_final_selected']`.
+- Smallest next step if resuming: execute Stage A parameter trials or implement official suffix replay lab; either path must produce real official/replay-valid evidence before changing final strategy.
+
+# Historical CROWN-TRIDENT / GOLD-2 Execution Plan
 
 ## Stop States
 

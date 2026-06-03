@@ -62,9 +62,32 @@ ALLOWED_TRIDENT_REPORTS = {
     "trident_qwen_effect.csv",
 }
 REQUIRED_TRIDENT_REPORTS = set(ALLOWED_TRIDENT_REPORTS)
+ALLOWED_SURGE_REPORTS = {
+    "surge_final_report.md",
+    "surge_experiments.csv",
+    "surge_decision_deltas.csv",
+    "surge_rule_doctor.csv",
+    "surge_qwen_effect.csv",
+}
+REQUIRED_SURGE_REPORTS = set(ALLOWED_SURGE_REPORTS)
+ALLOWED_FUSE_REPORTS = {
+    "fuse_final_report.md",
+    "fuse_grid.csv",
+    "fuse_noop_isolation.csv",
+    "fuse_rule_ledger.csv",
+    "fuse_package_audit.md",
+}
+REQUIRED_FUSE_REPORTS = set(ALLOWED_FUSE_REPORTS)
 SUBMISSION_STOP_STATES = {
     "CROWN_TRIDENT_RECOMMENDED_SUBMISSION",
     "CROWN_TRIDENT_EXPERIMENTAL_SUBMISSION",
+    "SURGE_RECOMMENDED_SUBMISSION",
+    "SURGE_EXPERIMENTAL_SUBMISSION",
+    "FUSE_RECOMMENDED_SUBMISSION",
+    "FUSE_EXPERIMENTAL_SUBMISSION",
+}
+REVIEW_PACKAGE_STATES = {
+    "FUSE_REVIEW_PACKAGES_ONLY",
 }
 DISALLOWED_PACKAGE_DEFAULT_VARIANTS = {
     "best_rescue",
@@ -503,29 +526,43 @@ def check_final_reports(*, require_final_evidence: bool = False) -> list[Finding
     findings: list[Finding] = []
     report_files = iter_report_files()
     report_names = {path.name for path in report_files}
+    if "fuse_final_report.md" in report_names or any(name.startswith("fuse_") for name in report_names):
+        allowed_reports = ALLOWED_FUSE_REPORTS
+        required_reports = REQUIRED_FUSE_REPORTS
+        report_label = "Fuse"
+        final_report = ROOT / "reports" / "fuse_final_report.md"
+    elif "surge_final_report.md" in report_names:
+        allowed_reports = ALLOWED_SURGE_REPORTS
+        required_reports = REQUIRED_SURGE_REPORTS
+        report_label = "Surge"
+        final_report = ROOT / "reports" / "surge_final_report.md"
+    else:
+        allowed_reports = ALLOWED_TRIDENT_REPORTS
+        required_reports = REQUIRED_TRIDENT_REPORTS
+        report_label = "Trident"
+        final_report = ROOT / "reports" / "trident_final_report.md"
     for path in report_files:
-        if path.name not in ALLOWED_TRIDENT_REPORTS:
+        if path.name not in allowed_reports:
             findings.append(
                 Finding(
                     "P0",
                     path,
                     0,
                     "forbidden_report_file",
-                    "Trident final reports may contain only the five trident_* artifacts",
+                    f"{report_label} final reports may contain only the five selected artifacts",
                 )
             )
     if require_final_evidence:
-        for name in sorted(REQUIRED_TRIDENT_REPORTS - report_names):
-            findings.append(Finding("P0", ROOT / "reports" / name, 0, "missing_final_report", "required Trident report missing"))
+        for name in sorted(required_reports - report_names):
+            findings.append(Finding("P0", ROOT / "reports" / name, 0, "missing_final_report", f"required {report_label} report missing"))
 
-    final_report = ROOT / "reports" / "trident_final_report.md"
     if not final_report.is_file():
         return findings
     text = final_report.read_text(encoding="utf-8", errors="ignore")
     first_line = text.splitlines()[0].strip() if text.splitlines() else ""
     stop_state = _extract_stop_state(text)
     net = _extract_numeric_metric(text, "official_net")
-    if net is not None and net < 30000 and not first_line.startswith("DO NOT SUBMIT:"):
+    if report_label != "Fuse" and net is not None and net < 30000 and not first_line.startswith("DO NOT SUBMIT:"):
         findings.append(
             Finding(
                 "P0",
@@ -536,7 +573,7 @@ def check_final_reports(*, require_final_evidence: bool = False) -> list[Finding
             )
         )
     if stop_state in SUBMISSION_STOP_STATES and require_final_evidence:
-        missing = REQUIRED_TRIDENT_REPORTS - report_names
+        missing = required_reports - report_names
         if missing:
             findings.append(
                 Finding("P0", final_report, 0, "submission_state_missing_reports", ",".join(sorted(missing)))
@@ -546,9 +583,9 @@ def check_final_reports(*, require_final_evidence: bool = False) -> list[Finding
 
 def _extract_stop_state(text: str) -> str:
     for line in text.splitlines()[:80]:
-        if "CROWN_TRIDENT_" in line or "DO_NOT_SUBMIT" in line or "EXTERNAL_BLOCKER" in line:
+        if "CROWN_TRIDENT_" in line or "SURGE_" in line or "FUSE_" in line or "DO_NOT_SUBMIT" in line or "EXTERNAL_BLOCKER" in line:
             for token in re.split(r"[^A-Z0-9_]+", line):
-                if token in SUBMISSION_STOP_STATES or token.startswith("DO_NOT_SUBMIT") or token.startswith("EXTERNAL_BLOCKER"):
+                if token in SUBMISSION_STOP_STATES or token in REVIEW_PACKAGE_STATES or token.startswith("SURGE_") or token.startswith("FUSE_") or token.startswith("DO_NOT_SUBMIT") or token.startswith("EXTERNAL_BLOCKER"):
                     return token
     return ""
 
@@ -566,7 +603,12 @@ def _extract_numeric_metric(text: str, metric: str) -> float | None:
 def check_submission_packages(*, require_final_evidence: bool = False) -> list[Finding]:
     findings: list[Finding] = []
     packages = iter_submission_zips()
-    final_report = ROOT / "reports" / "trident_final_report.md"
+    if (ROOT / "reports" / "fuse_final_report.md").is_file() or any(path.name.startswith("fuse_") for path in iter_report_files()):
+        final_report = ROOT / "reports" / "fuse_final_report.md"
+    elif (ROOT / "reports" / "surge_final_report.md").is_file():
+        final_report = ROOT / "reports" / "surge_final_report.md"
+    else:
+        final_report = ROOT / "reports" / "trident_final_report.md"
     final_text = final_report.read_text(encoding="utf-8", errors="ignore") if final_report.is_file() else ""
     first_line = final_text.splitlines()[0].strip() if final_text.splitlines() else ""
     stop_state = _extract_stop_state(final_text)
@@ -590,7 +632,8 @@ def _check_one_package(package: Path, *, first_line: str, stop_state: str) -> li
                 findings.append(
                     Finding("P0", package, 0, "package_created_for_do_not_submit", "DO NOT SUBMIT state must not ship a submission zip")
                 )
-            if stop_state and stop_state not in SUBMISSION_STOP_STATES:
+            review_only_fuse = package.name.startswith("CROWN_FUSE_REVIEW_ONLY") and stop_state in REVIEW_PACKAGE_STATES
+            if stop_state and stop_state not in SUBMISSION_STOP_STATES and not review_only_fuse:
                 findings.append(
                     Finding("P0", package, 0, "package_created_for_non_submission_state", stop_state)
                 )
@@ -610,7 +653,8 @@ def _check_one_package(package: Path, *, first_line: str, stop_state: str) -> li
             if "demo/agent/config.py" in names:
                 config_text = zf.read("demo/agent/config.py").decode("utf-8", errors="ignore")
                 match = CONFIG_DEFAULT_VARIANT_PATTERN.search(config_text)
-                if match and match.group(1) in DISALLOWED_PACKAGE_DEFAULT_VARIANTS:
+                fuse_review_default = package.name.startswith("CROWN_FUSE_REVIEW_ONLY") and match and match.group(1) == "best_rescue"
+                if match and match.group(1) in DISALLOWED_PACKAGE_DEFAULT_VARIANTS and not fuse_review_default:
                     findings.append(
                         Finding(
                             "P0",

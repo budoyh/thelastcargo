@@ -1232,6 +1232,69 @@ def test_qwen_auditor_records_nonzero_trident_effect_trace(monkeypatch):
     assert qwen_preference_compiler.STATS.audit_adjustment_nonzero_count == before + 1
 
 
+def test_qwen_auditor_accepts_numeric_scores_with_positional_candidate(monkeypatch):
+    class PositionalAuditorApi:
+        def model_chat_completion(self, payload):
+            content = payload["messages"][1]["content"]
+            assert "risk_score" in content
+            assert "repair_score" in content
+            return {
+                "choices": [
+                    {
+                        "message": {
+                            "content": json.dumps(
+                                {
+                                    "assessments": [
+                                        {
+                                            "relation": "violation",
+                                            "effect": "violates",
+                                            "risk_score": 0.8,
+                                            "repair_score": 0.0,
+                                            "confidence": 0.85,
+                                            "evidence": "runtime-only evidence",
+                                        }
+                                    ]
+                                }
+                            )
+                        }
+                    }
+                ],
+                "usage": {},
+            }
+
+    monkeypatch.setattr(config, "ENABLE_PTT_AUDITOR", True)
+    monkeypatch.setattr(config, "DISABLE_RUNTIME_QWEN", False)
+    world1, _, _ = build_world(preferences=[{"content": "abstract runtime preference", "penalty_amount": 1000}])
+    risky = CandidateOption(
+        id="take:numeric-audited",
+        action_type="take_order",
+        decision_id="D_TEST:8",
+        direct_money=300,
+        occupied_minutes=60,
+        finish_minutes=60,
+        score=200,
+    )
+    risky.trace["ptt_firewall"] = {
+        "decision": "qwen_audit_required",
+        "marginal_penalty": 600.0,
+        "future_repairability_delta": 200.0,
+        "top_impacts": [{"rule_hash": "abc123", "effect": "violates"}],
+    }
+    stats = preference_firewall.FirewallStats()
+    preference_firewall.maybe_audit_high_risk(
+        api=PositionalAuditorApi(),
+        world=world1,
+        options=[risky],
+        stats=stats,
+        limit=1,
+    )
+    row = stats.payload()["qwen_effect_rows"][0]
+    assert row["json_valid"] is True
+    assert row["output_relation"] == "violation"
+    assert row["raw_risk_score"] > 0
+    assert row["applied_score_adjustment"] < 0
+
+
 def test_score_accountant_no_double_count_and_redacts_preferences(tmp_path):
     from tools import score_accountant
 

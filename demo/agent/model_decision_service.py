@@ -14,6 +14,7 @@ from . import (
     cargo_filter,
     config,
     endgame_planner,
+    fuse_repair,
     learned_ranker,
     llm_preference_judge,
     macro_commitment,
@@ -54,6 +55,7 @@ class DriverRuntime:
     wait_lock: WaitLockState = field(default_factory=WaitLockState)
     active_macro: macro_commitment.MacroCommitment | None = None
     macro_stats: macro_commitment.MacroStats = field(default_factory=macro_commitment.MacroStats)
+    fuse_repair_wait_by_day: dict[int, int] = field(default_factory=dict)
 
 
 class ModelDecisionService:
@@ -139,7 +141,11 @@ class ModelDecisionService:
             )
 
     def _decide_rescue(self, driver_id: str, runtime: DriverRuntime, world0: World, decision_id: str) -> dict[str, Any]:
-        ptt_rules = ptt_transducer.compile_ptt_rules(self._api, world0) if (config.ENABLE_PTT_FIREWALL or config.ENABLE_EXACT_RBT) else tuple()
+        ptt_rules = (
+            ptt_transducer.compile_ptt_rules(self._api, world0)
+            if (config.ENABLE_PTT_FIREWALL or config.ENABLE_EXACT_RBT or config.ENABLE_FUSE_TARGETED_REPAIR)
+            else tuple()
+        )
         ptt_controllers = preference_controllers.build_controllers(ptt_rules, world0) if ptt_rules else []
         ptt_firewall_stats = preference_firewall.FirewallStats()
         committed, active_macro = macro_commitment.next_committed_option(
@@ -280,7 +286,7 @@ class ModelDecisionService:
         )
         filter_rejections = cargo_filter.rejection_summary(decision_id)
         runtime.memory.update_current_observation(world_after_query, visible, query_minutes)
-        if config.ENABLE_PTT_FIREWALL or config.ENABLE_EXACT_RBT:
+        if config.ENABLE_PTT_FIREWALL or config.ENABLE_EXACT_RBT or config.ENABLE_FUSE_TARGETED_REPAIR:
             ptt_rules = ptt_transducer.compile_ptt_rules(self._api, world_after_query)
             ptt_controllers = preference_controllers.build_controllers(ptt_rules, world_after_query)
         if config.ENABLE_PTT_LINKER and world_after_query.status.preferences and visible:
@@ -347,7 +353,21 @@ class ModelDecisionService:
         if config.ENABLE_PCE_REPAIR_FIRST:
             options = candidate_preference_verifier.apply_to_options(options, world_after_query, vocab_links)
         rest_option, rest_reason = self._rescue_rest_option(runtime, world_after_query, decision_id)
-        chosen = rest_option if rest_option is not None else rescue_scorer.choose(options, rescue_stats, runtime.wait_lock)
+        b0_shadow_chosen = rest_option if rest_option is not None else rescue_scorer.choose(options, rescue_stats, runtime.wait_lock)
+        fuse_selection = fuse_repair.apply_overlay(
+            options=options,
+            world=world_after_query,
+            b0_action=b0_shadow_chosen,
+            decision_id=decision_id,
+            repair_wait_by_day=runtime.fuse_repair_wait_by_day,
+            vocab_links=vocab_links,
+            ptt_rules=ptt_rules,
+        )
+        chosen = fuse_selection.chosen
+        options = fuse_selection.options
+        if fuse_selection.repair_wait_minutes:
+            fuse_day = day_index(world_after_query.status.simulation_progress_minutes)
+            runtime.fuse_repair_wait_by_day[fuse_day] = runtime.fuse_repair_wait_by_day.get(fuse_day, 0) + fuse_selection.repair_wait_minutes
         _record_controller_decision_change(options, chosen)
         preference_firewall.finalize_auditor_effect_trace(options=options, chosen=chosen, stats=ptt_firewall_stats)
         runtime.active_macro = macro_commitment.record_selection(runtime.active_macro, runtime.macro_stats, chosen, world_after_query)
@@ -412,6 +432,7 @@ class ModelDecisionService:
                 },
                 "visible_graph_mpc": mpc_stats.payload(),
                 "qwen": qwen_preference_compiler.stats_payload(),
+                "fuse": fuse_selection.trace,
             },
         )
         runtime.prev_world = world_after_query

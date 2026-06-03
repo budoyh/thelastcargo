@@ -1,3 +1,58 @@
+# CROWN-FUSE / RESCUE-SWITCH v10 Active Build Rules
+
+- Active build: CROWN-FUSE / RESCUE-SWITCH v10 on branch `crown-fuse-rescue-switch`.
+- Continue from the existing repository and the executed Surge evidence; do not rebuild from scratch and do not extend Delta-MPC, TCM, PTT, Trident, or broad new architecture names.
+- Mission: find the B0 `best_rescue` + B9c targeted-repair knee point, preserving most B0 gross while taking only profitable penalty reduction.
+- Known reference: B0 official_net `5067.69`, gross_minus_cost `43207.69`, preference_penalty `38140.0`, 89 take / 163 wait / 0 reposition, 0 failure/abort/illegal/rejected.
+- Known reference: B9c_wait_repair_full official_net `-157.97`, gross_minus_cost `29142.03`, preference_penalty `29300.0`; it reduced penalty by `8840` but lost `14065.66` gross.
+- Valid stop states are only `FUSE_RECOMMENDED_SUBMISSION`, `FUSE_EXPERIMENTAL_SUBMISSION`, `FUSE_REVIEW_PACKAGES_ONLY`, `DO_NOT_SUBMIT_WITH_FUSE_EVIDENCE`, `EXTERNAL_BLOCKER_RESCUE_ISOLATION`, `EXTERNAL_BLOCKER_EVAL_INFRA`, or `EXTERNAL_BLOCKER_QWEN`.
+- No `PLANNED`, `MISSING_RUN`, `planned_not_evaluated`, proxy-only, diagnostic-only, smoke-only, synthetic-only, or report-only row may satisfy completion.
+- `tools/verify_fuse_completion.py` is mandatory. It must pass `--phase isolation`, `--phase search`, and `--phase final` before any success claim or package claim.
+- Final `reports/` artifacts are limited to at most `fuse_final_report.md`, `fuse_grid.csv`, `fuse_noop_isolation.csv`, `fuse_rule_ledger.csv`, and `fuse_package_audit.md`.
+- B0 rescue gate: 20260529 official_net >= 5000, gross_minus_cost >= 43000, preference_penalty <= 38200, and 0 failure/abort/illegal/rejected. If B0 fails due to code/config drift, fix it before continuing.
+- No-op isolation gate: `B1_all_overlays_off`, `B2_contract_compile_logging_only`, and `B3_contract_monitor_no_score` must match B0 with action_signature_match_rate >= 0.999, score deltas <= 100, and take/wait/reposition counts within deterministic tolerance <= 1.
+- Do not run fuse search until B0/B1/B2/B3 no-op isolation passes.
+- Qwen preference contract compile/link stays ON for real non-empty preferences when an API path exists. Do not set `CROWN_Y_DISABLE_RUNTIME_QWEN=1` for final evidence.
+- Qwen numeric auditor score adjustment defaults OFF. Only enable it if A1/A2 official ablation beats auditor OFF with json_valid_rate >= 0.90 and nonzero adjustment > 0.
+- Qwen may compile contracts, link observed vocabulary, and log/explain gated candidate audits only; it must not choose, veto, or output final actions.
+- Targeted repair overlay may override B0 only when expected_avoided_penalty >= lost_gross * repair_roi_threshold, daily repair budget is available, gross floor is intact, and the B0 action is not high-profit high-confidence.
+- B0 Shadow Guard is mandatory for non-B0 Fuse variants: compute B0_action and new_action from the same post-query world/current_actionable snapshot, then fall back to B0 unless ROI/gross/legality guards pass.
+- Runtime under `demo/agent` must not read raw cargo/driver data, reports, oracle artifacts, exact labels, scorer outputs, income calculators, server/bench internals, or future cargo.
+- Runtime must not import `server.*`, `bench.*`, scorer internals, income-calculation internals, or local evaluation helpers.
+- `query_cargo` must be followed by `refresh_world`; filtering, scoring, action certificates, and `take_order` must use the post-query world.
+- `take_order` can only use cargo from the current post-query `current_actionable` observed set. `no_query` cannot take remembered cargo.
+- Destination Shadow Query remains OFF.
+- Reposition coordinates keep full precision and must not be rounded in action output.
+- Runtime must not hardcode driver ids, cargo ids, static place names, fixed coordinates, fixed routes, route templates, offline heatmaps, public protected literals, or future-cargo facts.
+- `reports/fuse_rule_ledger.csv` may export only generic family-level parameters: controller_family_scale, primitive_family_scale, counting_unit_scale, deadline_curve, repair_multiplier, already_failed_discount, and cap_discount.
+- Fuse grid must include at least 60 complete 20260529 31-day official runs, all `status=EXECUTED`. If any variant improves net by >= 3000 or lowers penalty by >= 3000 with gross >= 39000, continue to at least 100 full configs.
+- Opportunity graph is tiny diagnostic only: alpha 0/0.03/0.05/0.10, take ranking only, no graph-driven wait/reposition, no auditor numeric, no preference controller change. Keep only if official net improves without penalty explosion.
+- Top 5 20260529 configs must run full 20260509 sanity before package recommendation. Any income abort disqualifies recommended packaging.
+- B10 and B11 are mandatory executed rows. B11 must be a fresh full 31-day run after code/config freeze; if no search variant beats B0, B11 is an explicit B0 fallback rerun.
+- Subagents/reviewers are read-only QA gates only: Execution Evidence Auditor, Rescue Isolation Auditor, Fuse Grid Auditor, Qwen Auditor Reviewer, and Package Gatekeeper. Each must cite CSV rows, run_dir, commands, exit codes, and metrics.
+- Packages go under `runs/packages/`, must be unpack-audited, root must be `demo/`, include `demo/agent/` and `demo/SUBMISSION.md`, exclude server/data/reports/runs/archive/docs/keys/prompts/pyc/cache, and record SHA256/size.
+- If no recommended or experimental gate passes, create at most one `REVIEW_ONLY_NOT_FOR_SUBMISSION` zip and make `demo/SUBMISSION.md` start with `NOT RECOMMENDED FOR B榜 SUBMISSION`.
+
+# CROWN-SURGE / LEDGER-HUNTER Build Rules
+
+- Active build: CROWN-SURGE / LEDGER-HUNTER on branch `crown-surge-ledger-hunter`.
+- This round continues from the existing repository and the failed `crown-trident-gold2` evidence. Do not rebuild from scratch.
+- The only valid proof is executed official-score evidence: no `PLANNED`, `MISSING_RUN`, `planned_not_evaluated`, smoke-only, synthetic-only, diagnostic-only, or report-only completion may be treated as success.
+- Valid stop states are only `SURGE_RECOMMENDED_SUBMISSION`, `SURGE_EXPERIMENTAL_SUBMISSION`, `DO_NOT_SUBMIT_WITH_SURGE_EVIDENCE`, `DO_NOT_SUBMIT_WITH_INCOMPLETE_EXECUTION`, `EXTERNAL_BLOCKER_RESCUE_CORE`, `EXTERNAL_BLOCKER_QWEN`, or `EXTERNAL_BLOCKER_EVAL_INFRA`.
+- Final `reports/` artifacts are limited to exactly `surge_final_report.md`, `surge_experiments.csv`, `surge_decision_deltas.csv`, `surge_rule_doctor.csv`, and `surge_qwen_effect.csv`.
+- `tools/verify_surge_completion.py --phase final` must PASS before any success claim or package creation. Final mode must fail on missing B0-B9c/B10/B11 evidence, fewer than 100 executed parameter trials, all-zero Qwen auditor adjustment when auditor is enabled, diagnostic-only decision deltas used for tuning, missing B7/B8 graph usage, report head mismatch, package gate violation, or final report hygiene violation.
+- B0 immutable rescue must reproduce 20260529 official_net >= 5000, gross_minus_cost >= 43000, preference_penalty <= 38200, and 0 failure/abort/illegal/rejected before any Surge overlay evidence is meaningful.
+- Required official matrix rows are B0, B1, B2, B3, B4, B5, B6, B7, B8, B9a, B9b, B9c, B10, and B11; every row must include official_net, gross_minus_cost, preference_penalty, action mix, Qwen stats, controller stats, run_dir, command, and exit_code.
+- Parameter search must execute Stage A 100 real 20260529 trials, Stage B top20 full 31-day, Stage C top5 0509 sanity, and Stage D top10 rerun confirmation. No trial row may be planned.
+- Qwen runtime calls are mandatory for non-empty preferences when an API path exists. Do not set `CROWN_Y_DISABLE_RUNTIME_QWEN=1` for final evidence. Qwen timeout is 120 seconds with up to 3 retries; use cache/batching rather than disabling Qwen.
+- Qwen may compile contracts, link observed vocabulary, and audit gated candidates only. It must output schema-valid JSON relation/effect/risk_score/repair_score/confidence and must not choose or veto final actions.
+- If Qwen auditor calls are present but numeric adjustment is all zero, stop `DO_NOT_SUBMIT_WITH_QWEN_DECORATION` as the reason inside `DO_NOT_SUBMIT_WITH_INCOMPLETE_EXECUTION`; kill auditor unless an ablation proves it useful.
+- Changed-decision tuning requires official or runtime-replan-valid delta labels. Diagnostic-only labels must never tune controller scale.
+- Rule doctor may export only controller_family, primitive_family, counting_unit, deadline curve, repair multiplier, cap discount, and already-failed discount level parameters. Never export rule_hash, driver_hash, preference_hash, cargo_id, place, coordinate, route, or future-cargo facts.
+- Online Opportunity Graph may use only current post-query `current_actionable` cargo and same-driver current-run legal observations. It must not use offline heatmaps, future cargo, fixed places, fixed coordinates, fixed routes, route templates, driver ids, or cargo ids. B7/B8 and terminal_value_alpha 0.00/0.05/0.10/0.20/0.35 must be executed before retaining graph.
+- Subagents/reviewers are QA gates only, not parallel implementers. Required reviewer scopes are Prompt-Adherence, Qwen Auditor, Penalty Delta, Opportunity Graph, Compliance, and Completion Gatekeeper, each with concrete file paths, CSV row/count evidence, commands, and pass/fail findings.
+- Low score or incomplete evidence forbids a submission-shaped ZIP. If final official_net < 30000 or evidence is incomplete, the first line of `reports/surge_final_report.md` must be `DO NOT SUBMIT: <precise reason>`.
+
 # CROWN-TRIDENT / GOLD-2 Build Rules
 
 - Active build: CROWN-TRIDENT / GOLD-2 on branch `crown-trident-gold2`.

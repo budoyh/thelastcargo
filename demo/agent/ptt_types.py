@@ -182,6 +182,21 @@ def _bytecode_for_rule_type(rule_type: str) -> list[dict[str, Any]]:
 
 
 def _classify_from_rule(rule: CompiledPreferenceRule, pref_text: str) -> tuple[str, str, str, str, tuple[str, ...]]:
+    lower = " ".join(
+        [
+            pref_text,
+            rule.evidence,
+            rule.kind,
+            rule.scope,
+            rule.observable,
+            rule.metric,
+            rule.counting,
+            rule.predicate_type,
+            str(rule.values),
+            str(rule.slots),
+            str(rule.repair_action_kinds),
+        ]
+    ).lower()
     if rule.observable == "cargo_attribute":
         if rule.polarity in {"require", "prefer"}:
             return "required_cargo_attribute_distinct_days", "cargo_name", "distinct_days_count", "month_end", ("take",)
@@ -200,7 +215,6 @@ def _classify_from_rule(rule: CompiledPreferenceRule, pref_text: str) -> tuple[s
         return "location_visit_or_dwell", "position", "near", "once_if_failed", ("reposition", "wait", "take")
     if rule.observable == "sequence":
         return "ordered_multi_stop_task", "position", "ordered_visit", "once_if_failed", ("reposition", "take", "wait")
-    lower = pref_text.lower()
     if rule.predicate_type == "continuous_wait":
         if _time_window(pref_text):
             return "scheduled_quiet_window", "action_interval", "not_overlaps", "continuous_window", ("wait",)
@@ -223,6 +237,17 @@ def _classify_from_rule(rule: CompiledPreferenceRule, pref_text: str) -> tuple[s
     if rule.predicate_type == "route_sequence":
         return "ordered_multi_stop_task", "position", "ordered_visit", "once_if_failed", ("reposition", "take", "wait")
     nums = _numbers(pref_text)
+    required_words = ("required", "need", "must include", "distinct", "count", "至少", "必须", "需要", "不同天", "天数")
+    if any(word in lower for word in ("off day", "off_day", "inactive day", "full inactive", "rest day", "全天休息", "整天休息", "整日休息", "休息日")):
+        return "full_inactive_day_quota", "day_action_count", "count_ge", "month_end", ("wait",)
+    if any(word in lower for word in ("no order", "no_order", "不接单", "不接货")):
+        return "no_order_day_quota", "day_order_count", "count_eq", "month_end", ("wait",)
+    if any(word in lower for word in required_words):
+        return "required_cargo_attribute_distinct_days", "cargo_name", "distinct_days_count", "month_end", ("take",)
+    if any(word in lower for word in ("quiet", "安静")):
+        return "scheduled_quiet_window", "action_interval", "not_overlaps", "continuous_window", ("wait",)
+    if any(word in lower for word in ("continuous rest", "daily rest", "连续休息", "每天休息")):
+        return "daily_continuous_rest", "wait_interval", "continuous_minutes", "per_day", ("wait",)
     if "haul" in lower:
         return "haul_distance_limit", "haul_km", "<=", "per_take", ("avoid_take",)
     if "cumulative" in lower or "budget" in lower:

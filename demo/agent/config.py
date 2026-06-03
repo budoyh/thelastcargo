@@ -137,6 +137,7 @@ ENABLE_GOLD_CONTRACT_MPC = False
 ENABLE_LEGACY_RESCUE_QWEN = False
 DISABLE_RUNTIME_QWEN = os.environ.get("CROWN_Y_DISABLE_RUNTIME_QWEN", "").strip() == "1"
 PTT_MAX_AUDITOR_CALLS_TOTAL = _int_env("CROWN_GOLD_MAX_AUDITOR_CALLS_TOTAL", 4096, 1, 20000)
+PTT_AUDITOR_CANDIDATE_LIMIT = _int_env("CROWN_GOLD_AUDITOR_CANDIDATE_LIMIT", 4, 1, 14)
 PTT_SOFT_RISK_MULTIPLIER = 0.45
 PTT_MASSIVE_PENALTY_MULTIPLIER = 2.5
 PTT_UNKNOWN_HIGH_PENALTY_SCALE = 1200.0
@@ -152,10 +153,38 @@ VISIBLE_GRAPH_ALPHA_TEST_VALUES = (0.05, 0.10, 0.20, 0.35)
 VISIBLE_GRAPH_BONUS_CAP = _float_env("CROWN_TRIDENT_VISIBLE_GRAPH_BONUS_CAP", 160.0, 0.0, 300.0)
 VISIBLE_GRAPH_NEGATIVE_BONUS_CAP = _float_env("CROWN_TRIDENT_VISIBLE_GRAPH_NEGATIVE_BONUS_CAP", 120.0, 0.0, 300.0)
 VISIBLE_GRAPH_CELL_DEGREES = _float_env("CROWN_TRIDENT_VISIBLE_GRAPH_CELL_DEGREES", 0.25, 0.05, 1.0)
+FUSE_WAIT_REPAIR_STRENGTH = _float_env("CROWN_FUSE_WAIT_REPAIR_STRENGTH", 0.0, 0.0, 1.0)
+FUSE_REPAIR_VALUE_SCALE = _float_env("CROWN_FUSE_REPAIR_VALUE_SCALE", 0.0, 0.0, 1.0)
+FUSE_VERIFIED_PENALTY_SCALE = _float_env("CROWN_FUSE_VERIFIED_PENALTY_SCALE", 0.5, 0.0, 1.0)
+FUSE_REPAIR_ROI_THRESHOLD = _float_env("CROWN_FUSE_REPAIR_ROI_THRESHOLD", 1.5, 0.1, 10.0)
+FUSE_LOST_GROSS_CAP = _float_env("CROWN_FUSE_LOST_GROSS_CAP", 1000.0, 0.0, 20000.0)
+FUSE_MAX_REPAIR_WAIT_PER_DAY = _int_env("CROWN_FUSE_MAX_REPAIR_WAIT_PER_DAY", 0, 0, 1440)
+FUSE_REPAIR_START_DAY = _int_env("CROWN_FUSE_REPAIR_START_DAY", 1, 1, 31)
+FUSE_REPAIR_END_DAY = _int_env("CROWN_FUSE_REPAIR_END_DAY", 31, 1, 31)
+FUSE_GROSS_FLOOR_CURVE = os.environ.get("CROWN_FUSE_GROSS_FLOOR_CURVE", "off").strip().lower()
+FUSE_MIN_PROFIT_TO_OVERRIDE_REPAIR = _float_env("CROWN_FUSE_MIN_PROFIT_TO_OVERRIDE_REPAIR", 350.0, 0.0, 5000.0)
+FUSE_SOFT_VIOLATION_PROFIT_THRESHOLD = _float_env("CROWN_FUSE_SOFT_VIOLATION_PROFIT_THRESHOLD", 500.0, 0.0, 5000.0)
+FUSE_UNKNOWN_SOFT_RISK = _float_env("CROWN_FUSE_UNKNOWN_SOFT_RISK", 0.10, 0.0, 1.0)
+FUSE_ALREADY_FAILED_DISCOUNT = _float_env("CROWN_FUSE_ALREADY_FAILED_DISCOUNT", 0.5, 0.0, 1.0)
+FUSE_CAP_DISCOUNT = _float_env("CROWN_FUSE_CAP_DISCOUNT", 0.5, 0.0, 1.0)
+FUSE_OVERRIDE_MARGIN = _float_env("CROWN_FUSE_OVERRIDE_MARGIN", 80.0, 0.0, 1000.0)
+FUSE_AUDITOR_NUMERIC = os.environ.get("CROWN_FUSE_AUDITOR_NUMERIC", "0").strip() == "1"
+FUSE_GRAPH_TAKE_ONLY = os.environ.get("CROWN_FUSE_GRAPH_TAKE_ONLY", "0").strip() == "1"
 
-_VARIANT = os.environ.get("CROWN_Y_VARIANT", "crown_trident_gold2").strip().lower()
+_VARIANT = os.environ.get("CROWN_Y_VARIANT", "best_rescue").strip().lower()
+_FUSE_VARIANTS = {"fuse_rescue_core", "fuse_targeted_repair", "fuse_targeted_repair_graph", "fuse_hidden_safe"}
 RESCUE_VARIANT = _VARIANT
 ENABLE_LEGACY_RESCUE_QWEN = _VARIANT in {"a6", "a7", "best_rescue"}
+if _VARIANT in _FUSE_VARIANTS:
+    ENABLE_LEGACY_RESCUE_QWEN = True
+    ENABLE_PTT_LINKER = True
+    ENABLE_PTT_FIREWALL = False
+    ENABLE_PTT_AUDITOR = False
+    if FUSE_AUDITOR_NUMERIC:
+        ENABLE_PTT_FIREWALL = True
+        ENABLE_PTT_AUDITOR = True
+ENABLE_FUSE_TARGETED_REPAIR = _VARIANT in {"fuse_targeted_repair", "fuse_targeted_repair_graph", "fuse_hidden_safe"} and os.environ.get("CROWN_FUSE_ENABLE_TARGETED_REPAIR", "1").strip() != "0"
+ENABLE_FUSE_HIDDEN_SAFE = _VARIANT == "fuse_hidden_safe"
 if _VARIANT in {"a", "baseline", "safe_greedy"}:
     ENABLE_TIME_SHADOW = False
     ENABLE_VISIBLE_TWO_HOP = False
@@ -211,6 +240,10 @@ if _VARIANT in {
     "crown_exact_rbt_mpc",
     "crown_gold_contract_mpc",
     "crown_trident_gold2",
+    "fuse_rescue_core",
+    "fuse_targeted_repair",
+    "fuse_targeted_repair_graph",
+    "fuse_hidden_safe",
 }:
     ENABLE_RESCUE_SCORER = True
     ENABLE_SCOUT_THEN_DEEPEN = False
@@ -220,19 +253,19 @@ if _VARIANT in {
     ENABLE_REPOSITION = False
     TIME_SHADOW_MODE = "rescue_lite"
 
-if _VARIANT in {"a1", "a2", "a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"}:
+if _VARIANT in {"a1", "a2", "a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"} or _VARIANT in _FUSE_VARIANTS:
     ENABLE_RESCUE_WAIT_PENALTY = True
-if _VARIANT in {"a2", "a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"}:
+if _VARIANT in {"a2", "a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"} or _VARIANT in _FUSE_VARIANTS:
     ENABLE_RESCUE_MICRO_REPOSITION = True
-if _VARIANT in {"a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"}:
+if _VARIANT in {"a3", "a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"} or _VARIANT in _FUSE_VARIANTS:
     ENABLE_RESCUE_PREFERENCE_SOFT = True
-if _VARIANT in {"a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"}:
+if _VARIANT in {"a4", "a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"} or _VARIANT in _FUSE_VARIANTS:
     ENABLE_RESCUE_TWOHOP_LITE = True
-if _VARIANT in {"a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"}:
+if _VARIANT in {"a5", "a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"} or _VARIANT in _FUSE_VARIANTS:
     ENABLE_RESCUE_TIME_SHADOW_LITE = True
-if _VARIANT in {"a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"}:
+if _VARIANT in {"a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"} or _VARIANT in _FUSE_VARIANTS:
     ENABLE_QWEN_PREFERENCE_COMPILER = True
-if _VARIANT in {"a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"}:
+if _VARIANT in {"a6", "a7", "best_rescue", "preference_firewall_profit", "crown_gold_contract_mpc", "crown_trident_gold2"} or _VARIANT in _FUSE_VARIANTS:
     ENABLE_RESCUE_REST_GUARD = True
 
 if _VARIANT in {
@@ -437,7 +470,7 @@ if _VARIANT == "crown_trident_gold2":
         ENABLE_PTT_AUDITOR = True
         ENABLE_VISIBLE_GRAPH_MPC = True
 
-if _VARIANT in {"best_rescue", "a7"}:
+if _VARIANT in {"best_rescue", "a7"} or _VARIANT in _FUSE_VARIANTS:
     RESCUE_QUERY_K_DEFAULT = 120
     RESCUE_DIRECT_NET_FLOOR = 1.0
     RESCUE_PROFIT_PER_HOUR_FLOOR = 0.0

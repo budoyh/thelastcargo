@@ -68,7 +68,18 @@ def apply_visible_graph_mpc(
     reposition_count = 0
     pair_count = 0
     total_bonus = 0.0
+    take_ranking_only = bool(getattr(config, "FUSE_GRAPH_TAKE_ONLY", False))
     for option in options:
+        if take_ranking_only and option.action_type != "take_order":
+            option.trace["visible_graph_mpc"] = {
+                "plan_type": "take_ranking_only_skipped",
+                "alpha": round(alpha, 4),
+                "bonus": 0.0,
+                "uses_current_actionable_only": True,
+                "no_wait_or_reposition_generation": True,
+                "no_offline_heatmap": True,
+            }
+            continue
         direct = option.score
         plan_type = "single_take"
         current_visible = _current_visible(visible, option.decision_id)

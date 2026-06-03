@@ -222,6 +222,7 @@ def maybe_audit_high_risk(
 ) -> None:
     if not config.ENABLE_PTT_AUDITOR or config.DISABLE_RUNTIME_QWEN or not qwen_preference_compiler.runtime_completion_available(api):
         return
+    limit = min(limit, int(getattr(config, "PTT_AUDITOR_CANDIDATE_LIMIT", limit) or limit))
     risky = _audit_candidates(options, limit)
     if not risky:
         return
@@ -253,9 +254,14 @@ def maybe_audit_high_risk(
                         {
                             "role": "user",
                             "content": (
-                                "Audit candidate preference effects. Return JSON {assessments:[{candidate_id,rule_id,relation,effect,risk_level,repair_level,confidence,evidence,missing_info}]}. "
-                                "relation is irrelevant/supports/risk/violation/uncertain. effect is repairs/violates/neutral/reduces_repairability/unknown. "
-                                "risk_level and repair_level are none/low/medium/high/catastrophic. "
+                                "Audit each candidate preference effect. Return compact JSON only: "
+                                "{\"assessments\":[{\"candidate_hash\":\"one input candidate_hash\","
+                                "\"rule_id\":\"redacted_or_empty\",\"relation\":\"violation|repair|neutral|unknown\","
+                                "\"effect\":\"violates|repairs|neutral|reduces_repairability|unknown\","
+                                "\"risk_score\":0.0,\"repair_score\":0.0,\"confidence\":0.0,"
+                                "\"evidence\":\"short runtime evidence\",\"missing_info\":\"\"}]}. "
+                                "risk_score and repair_score are numeric 0..1. Include one compact assessment for every input candidate_hash, in the same order. "
+                                "Keep evidence under 6 words and missing_info empty unless required. "
                                 "Do not choose an action, do not veto an action, and do not output a final action. "
                                 "Input is current runtime-only visible data: "
                                 + json.dumps(payloads, ensure_ascii=False, sort_keys=True)
@@ -263,32 +269,32 @@ def maybe_audit_high_risk(
                         },
                     ],
                     "temperature": 0,
-                    "max_tokens": 192,
+                    "max_tokens": 1024,
                     "enable_thinking": False,
                 },
             )
             qwen_preference_compiler._usage_from_response(resp)
             data = qwen_preference_compiler._extract_json(qwen_preference_compiler._content_from_response(resp)) or {}
+            if isinstance(data, list):
+                data = {"assessments": data}
             if isinstance(data, dict):
                 data = {k: v for k, v in data.items() if k not in {"action", "final_action", "chosen_action"}}
                 _AUDIT_CACHE[audit_key] = data
         retry_count = qwen_preference_compiler.STATS.retry_count - retry_before
-        audits = data.get("assessments", data.get("audits", [])) if isinstance(data, dict) else []
+        audits = _coerce_audits(data)
         json_valid = isinstance(data, dict) and isinstance(audits, list)
         if not isinstance(audits, list):
             audits = []
-        by_hash = {
-            str(item.get("candidate_hash") or item.get("candidate_id") or ""): item
-            for item in audits
-            if isinstance(item, dict)
-        }
+        by_hash = _audit_items_by_candidate(audits)
         rank_before = _rank_order(options, include_pending_audit=False)
         pending_rows: list[dict[str, Any]] = []
-        for option in risky:
-            item = by_hash.get(_hash(option.id))
+        for offset, option in enumerate(risky):
+            item = by_hash.get(_hash(option.id)) or by_hash.get(option.id)
+            if item is None and offset < len(audits) and isinstance(audits[offset], dict):
+                item = audits[offset]
             has_assessment = isinstance(item, dict)
-            relation = str(item.get("relation", item.get("match", "unknown"))) if has_assessment else "unknown"
-            effect = str(item.get("effect", "unknown")) if has_assessment else "unknown"
+            relation = _normalize_relation(item.get("relation", item.get("match", "unknown"))) if has_assessment else "unknown"
+            effect = _normalize_effect(item.get("effect", "unknown")) if has_assessment else "unknown"
             risk = str(item.get("risk_level", "none")) if has_assessment else "none"
             repair = str(item.get("repair_level", "none")) if has_assessment else "none"
             evidence_value = item.get("evidence", "") if isinstance(item, dict) else ""
@@ -296,8 +302,20 @@ def maybe_audit_high_risk(
             if relation in {"unknown", "uncertain"} or effect == "unknown":
                 ptt_transducer.STATS.auditor_unknown_count += 1
             confidence = _conf(item.get("confidence", 0.0)) if has_assessment else 0.0
-            risk_score = _audit_level_score(risk, option, kind="risk") if has_assessment else 0.0
-            repair_score = _audit_level_score(repair, option, kind="repair") if has_assessment else 0.0
+            risk_score = (
+                _audit_numeric_score(item.get("risk_score"), option, kind="risk")
+                if has_assessment
+                else None
+            )
+            repair_score = (
+                _audit_numeric_score(item.get("repair_score"), option, kind="repair")
+                if has_assessment
+                else None
+            )
+            if risk_score is None:
+                risk_score = _audit_level_score(risk, option, kind="risk") if has_assessment else 0.0
+            if repair_score is None:
+                repair_score = _audit_level_score(repair, option, kind="repair") if has_assessment else 0.0
             adjustment = _audit_adjustment(
                 relation,
                 effect,
@@ -322,7 +340,7 @@ def maybe_audit_high_risk(
                 "candidate_hash": _hash(option.id),
                 "candidate_count": len(risky),
                 "affected_rule_ids": _affected_rule_ids(option, item if has_assessment else {}),
-                "output_relation": relation if relation in {"irrelevant", "supports", "risk", "violation", "uncertain", "yes", "no", "unknown"} else "unknown",
+                "output_relation": relation if relation in {"irrelevant", "supports", "repair", "risk", "neutral", "violation", "uncertain", "yes", "no", "unknown"} else "unknown",
                 "output_effect": effect if effect in {"violates", "repairs", "neutral", "reduces_repairability", "unknown"} else "unknown",
                 "raw_risk_score": round(risk_score, 2),
                 "raw_repair_score": round(repair_score, 2),
@@ -521,6 +539,75 @@ def _decision_index(decision_id: str) -> int:
         return 0
 
 
+def _coerce_audits(data: Any) -> list[Any]:
+    if isinstance(data, list):
+        return data
+    if not isinstance(data, dict):
+        return []
+    for key in ("assessments", "audits", "assessment", "results"):
+        value = data.get(key)
+        if isinstance(value, list):
+            return value
+        if isinstance(value, dict):
+            return [value]
+    return []
+
+
+def _audit_items_by_candidate(audits: list[Any]) -> dict[str, dict[str, Any]]:
+    out: dict[str, dict[str, Any]] = {}
+    for item in audits:
+        if not isinstance(item, dict):
+            continue
+        for key in ("candidate_hash", "candidate_id", "candidate", "id"):
+            value = item.get(key)
+            if value in (None, ""):
+                continue
+            out[str(value)] = item
+    return out
+
+
+def _normalize_relation(value: Any) -> str:
+    raw = str(value or "unknown").strip().lower()
+    mapping = {
+        "violates": "violation",
+        "violate": "violation",
+        "bad": "violation",
+        "risk": "violation",
+        "risky": "violation",
+        "supports": "repair",
+        "support": "repair",
+        "repair": "repair",
+        "repairs": "repair",
+        "irrelevant": "neutral",
+        "none": "neutral",
+        "no": "neutral",
+        "yes": "violation",
+        "uncertain": "unknown",
+        "unclear": "unknown",
+    }
+    raw = mapping.get(raw, raw)
+    return raw if raw in {"violation", "repair", "neutral", "unknown"} else "unknown"
+
+
+def _normalize_effect(value: Any) -> str:
+    raw = str(value or "unknown").strip().lower()
+    mapping = {
+        "violation": "violates",
+        "violate": "violates",
+        "risk": "violates",
+        "risky": "violates",
+        "repair": "repairs",
+        "support": "repairs",
+        "supports": "repairs",
+        "none": "neutral",
+        "irrelevant": "neutral",
+        "uncertain": "unknown",
+        "unclear": "unknown",
+    }
+    raw = mapping.get(raw, raw)
+    return raw if raw in {"violates", "repairs", "neutral", "reduces_repairability", "unknown"} else "unknown"
+
+
 def _affected_rule_ids(option: CandidateOption, item: dict[str, Any]) -> list[str]:
     out: list[str] = []
     rule_id = item.get("rule_id") if isinstance(item, dict) else None
@@ -536,17 +623,37 @@ def _affected_rule_ids(option: CandidateOption, item: dict[str, Any]) -> list[st
 
 
 def _audit_level_score(level: str, option: CandidateOption, *, kind: str) -> float:
+    remaining = _audit_remaining_value(option)
+    risk_scale = {"none": 0.0, "low": 0.25, "medium": 0.55, "high": 1.0, "catastrophic": 1.8}
+    repair_scale = {"none": 0.0, "low": 0.2, "medium": 0.5, "high": 0.9, "catastrophic": 1.25}
+    scale = repair_scale if kind == "repair" else risk_scale
+    return remaining * scale.get(level, 0.0)
+
+
+def _audit_remaining_value(option: CandidateOption) -> float:
     firewall = option.trace.get("ptt_firewall") or {}
-    remaining = max(
+    return max(
         float(firewall.get("marginal_penalty", 0.0) or 0.0),
         float(firewall.get("lost_repair_window_cost", 0.0) or 0.0),
         float(firewall.get("future_repairability_delta", 0.0) or 0.0),
         120.0,
     )
-    risk_scale = {"none": 0.0, "low": 0.25, "medium": 0.55, "high": 1.0, "catastrophic": 1.8}
-    repair_scale = {"none": 0.0, "low": 0.2, "medium": 0.5, "high": 0.9, "catastrophic": 1.25}
-    scale = repair_scale if kind == "repair" else risk_scale
-    return remaining * scale.get(level, 0.0)
+
+
+def _audit_numeric_score(value: Any, option: CandidateOption, *, kind: str) -> float | None:
+    if value in (None, ""):
+        return None
+    try:
+        score = float(value)
+    except (TypeError, ValueError):
+        return None
+    if score < 0.0:
+        score = 0.0
+    remaining = _audit_remaining_value(option)
+    if score <= 1.0:
+        cap = 1.25 if kind == "repair" else 1.8
+        return remaining * min(score, cap)
+    return min(score, remaining * (1.25 if kind == "repair" else 1.8))
 
 
 def _audit_adjustment(
@@ -568,11 +675,11 @@ def _audit_adjustment(
     bonus = repair_score
     if relation in {"unknown", "uncertain"} or effect == "unknown":
         penalty = max(penalty, getattr(config, "TRIDENT_UNKNOWN_AUDIT_SOFT_RISK", 35.0))
-    if relation == "violation" or effect == "violates":
+    if relation in {"violation", "risk"} or effect == "violates":
         cap = max(0.0, float(option.direct_money)) + 420.0
         remaining = max(penalty, float((option.trace.get("ptt_firewall") or {}).get("marginal_penalty", 0.0) or 0.0), 180.0)
         penalty = min(remaining, cap) if conf >= 0.7 else remaining * 0.75
-    if effect == "repairs" or relation == "supports":
+    if effect == "repairs" or relation in {"supports", "repair"}:
         bonus = max(bonus, 100.0)
     if effect == "reduces_repairability":
         penalty = max(penalty, risk_score, 140.0)
