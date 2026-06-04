@@ -2,22 +2,49 @@
 
 from __future__ import annotations
 
+import hashlib
 from typing import Any
 
-from . import config
+from . import action_scorer, config
 from .schemas import CandidateOption, NormalizedCargo, World
 from .time_utils import remaining_minutes
+
+
+def _hash_value(value: Any) -> str:
+    return hashlib.sha256(str(value).encode("utf-8")).hexdigest()[:12]
+
+
+def _sanitize_trace_payload(value: Any, key: str = "") -> Any:
+    lowered = key.lower()
+    if lowered in {"id", "rule_id", "cargo_id", "driver_id", "candidate_id", "decision_id", "macro_id", "active_macro_id"}:
+        return None if value in (None, "") else _hash_value(value)
+    if lowered.endswith("_id") and value not in (None, ""):
+        return _hash_value(value)
+    if lowered.endswith("_ids") and isinstance(value, (list, tuple, set)):
+        return [_hash_value(item) for item in value]
+    if isinstance(value, dict):
+        return {str(k): _sanitize_trace_payload(v, str(k)) for k, v in value.items()}
+    if isinstance(value, list):
+        return [_sanitize_trace_payload(item, key) for item in value]
+    if isinstance(value, tuple):
+        return [_sanitize_trace_payload(item, key) for item in value]
+    return value
 
 
 def _cert_payload(option: CandidateOption) -> dict[str, Any]:
     action_cert = option.action_cert
     cargo_id = action_cert.cargo_id if action_cert else (option.cargo.cargo_id if option.cargo else None)
     source_scope = action_cert.source_scope if action_cert else (option.cargo.source_scope if option.cargo else None)
+    cargo_hash = _hash_value(cargo_id) if cargo_id else None
+    cert_decision_id = action_cert.decision_id if action_cert else option.decision_id
     return {
-        "candidate_id": option.id,
+        "candidate_id": None,
+        "candidate_id_hash": _hash_value(option.id),
         "action_type": option.action_type,
-        "cert_decision_id": action_cert.decision_id if action_cert else option.decision_id,
-        "cargo_id": cargo_id,
+        "cert_decision_id": None,
+        "cert_decision_id_hash": _hash_value(cert_decision_id),
+        "cargo_id": None,
+        "cargo_id_hash": cargo_hash,
         "source_scope": source_scope,
         "action_safe": bool(action_cert.safe) if action_cert else False,
         "action_reasons": list(action_cert.reasons) if action_cert else [],
@@ -36,13 +63,18 @@ def attach_trace(
     chosen: CandidateOption,
     options: list[CandidateOption] | None = None,
     query_minutes: int,
+    observed_count: int | None = None,
+    rescue: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     if config.SUBMIT_MODE:
         action["agent_trace"] = {
             "trace_level": "minimal",
-            "decision_id": chosen.decision_id,
+            "decision_id": None,
+            "decision_id_hash": _hash_value(chosen.decision_id),
             "chosen": _cert_payload(chosen),
         }
+        if rescue:
+            action["agent_trace"]["rescue"] = rescue
         return action
     reposition_candidates = []
     for option in options or []:
@@ -50,18 +82,22 @@ def attach_trace(
             continue
         reposition_candidates.append(
             {
-                "candidate_id": option.id,
+                "candidate_id": None,
+                "candidate_id_hash": _hash_value(option.id),
                 "score": round(float(option.score), 4),
                 "action_safe": bool(option.action_cert.safe) if option.action_cert else False,
                 "reasons": list(option.action_cert.reasons) if option.action_cert else [],
-                "gate": dict(option.trace),
+                "gate": _sanitize_trace_payload(option.trace),
             }
         )
     action["agent_trace"] = {
         "trace_level": config.TRACE_LEVEL,
-        "decision_id": chosen.decision_id,
+        "decision_id": None,
+        "decision_id_hash": _hash_value(chosen.decision_id),
         "query_plan": getattr(query_plan, "kind", "unknown"),
+        "query_k": int(getattr(query_plan, "k", 0) or 0),
         "query_minutes": int(query_minutes),
+        "returned_count": int(observed_count if observed_count is not None else len(visible_cargos)),
         "visible_count": len(visible_cargos),
         "time_market": {
             "productive_time_shadow_price": round(world.time_market.productive_time_shadow_price, 4),
@@ -71,9 +107,13 @@ def attach_trace(
         "endgame_intensity": round(world.endgame.intensity, 4),
         "debt_value": round(world.debt_market.debt_value, 4),
         "chosen": _cert_payload(chosen),
-        "reposition_gate": dict(chosen.trace) if chosen.action_type == "reposition" else {},
+        "top5_ptt_decomposition": action_scorer.top_decompositions(options or [chosen], chosen),
+        "top5_delta_mpc_decomposition": action_scorer.top_decompositions(options or [chosen], chosen),
+        "reposition_gate": _sanitize_trace_payload(chosen.trace) if chosen.action_type == "reposition" else {},
         "reposition_candidates": reposition_candidates,
     }
+    if rescue:
+        action["agent_trace"]["rescue"] = rescue
     return action
 
 
@@ -89,19 +129,48 @@ def attach_exception_trace(
         action["params"]["duration_minutes"] = 0 if remaining <= 0 else min(1, remaining)
     action["agent_trace"] = {
         "trace_level": "minimal" if config.SUBMIT_MODE else "full",
-        "decision_id": decision_id,
+        "decision_id": None,
+        "decision_id_hash": _hash_value(decision_id),
         "query_plan": "exception_fallback",
+        "query_k": 0,
+        "query_minutes": 0,
+        "returned_count": 0,
         "visible_count": 0,
         "chosen": {
-            "candidate_id": "exception_fallback_wait",
+            "candidate_id": None,
+            "candidate_id_hash": _hash_value("exception_fallback_wait"),
             "action_type": "wait",
-            "cert_decision_id": decision_id,
+            "cert_decision_id": None,
+            "cert_decision_id_hash": _hash_value(decision_id),
             "cargo_id": None,
+            "cargo_id_hash": None,
             "source_scope": None,
             "action_safe": True,
             "action_reasons": ["decision_exception", reason],
             "score": 0.0,
             "components": {},
+        },
+        "rescue": {
+            "variant": config.RESCUE_VARIANT,
+            "positive_count": 0,
+            "safe_positive_count": 0,
+            "best_order_net": 0.0,
+            "best_order_per_hour": 0.0,
+            "hard_block_reason_counts": {"decision_exception": 1},
+            "wait_forensic": {
+                "wait_reason": "decision_exception",
+                "best_available_order": None,
+                "best_order_net": 0.0,
+                "best_order_per_hour": 0.0,
+                "why_not_take": reason,
+                "why_not_reposition": "decision_exception",
+                "why_wait_minutes": int(action.get("params", {}).get("duration_minutes", 0) or 0),
+                "why_wait_won": {"fallback": "exception", "exception_type": reason},
+                "top20_rejected_take": [],
+                "top_5_rejected_take": [],
+                "wait_lock_bug": False,
+                "hard_block_reason_counts": {"decision_exception": 1},
+            },
         },
     }
     return action

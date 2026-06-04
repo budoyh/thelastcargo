@@ -1,0 +1,3 @@
+dataset,variant,results_dir,present,official_net,gross_minus_cost,preference_penalty,failed_driver_count,simulation_failures,illegal_actions,rejected_takes,take,wait,reposition,query_minutes_per_take,qwen_compile_calls,qwen_linker_calls,qwen_auditor_calls,ptt_compile_calls,ptt_linker_required,ptt_linker_calls,ptt_auditor_triggers,ptt_blocks,ptt_massive,macro_started,macro_completed
+20260529,preference_firewall_profit,C:\budostudy\only_for_codex\thelatstcargo\runs\ptt_20260529,True,-8635.06,33364.94,42000.0,0,0,0,0,96,310,9,26.25,0,0,0,0,192,192,0,0,3701,48,40
+20260509,preference_firewall_profit,C:\budostudy\only_for_codex\thelatstcargo\runs\ptt_20260509,True,87591.66,187121.68,99530.0,0,0,0,0,419,969,43,30.37,0,0,0,0,936,936,0,0,26417,45,43

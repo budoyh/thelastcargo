@@ -1,0 +1,17 @@
+variant,dataset,sim_days,gross_income,distance_cost,gross_minus_cost,preference_penalty,official_net,expected_official_net,score_accounting_ok,take_count,wait_count,reposition_count,query_minutes,query_minutes_per_take,illegal_count,rejected_take_count,income_abort_count,simulation_failures,qwen_compile_calls,qwen_auditor_calls,macro_started_count,macro_completed_count,official_delta_measured_macro_gain,top5_decomposition_steps,run_id,notes
+rescue_reference,20260529,31,60293.77,17086.08,43207.69,38140.0,5067.69,5067.69,True,89,163,0,3306,37.15,0,0,0,0,5,0,0,0,0.0,0,runs/latest_rescue,prior rescue reference
+pce_final,20260529,31,47464.59,13349.61,34114.98,37240.0,-3125.02,-3125.02,True,117,199,0,1725,14.74,0,0,0,0,5,0,0,0,0.0,0,runs/pce/20260529/pce_final,prior PCE failure
+strict_pref,20260529,31,55774.59,16873.61,38900.98,36660.0,2240.98,2240.98,True,73,180,0,3109,42.59,0,0,0,0,5,0,0,0,0.0,0,runs/next_build/20260529/strict_pref,strict preference reference
+money_greedy_no_pref,20260529,31,112028.48,34425.96,77602.52,200540.0,-122937.49,-122937.48,True,144,6,0,1452,10.08,0,0,0,0,5,0,0,0,0.0,0,runs/next_build/20260529/money_greedy_no_pref,diagnostic gross reference
+money_trajectory_repair,20260529,31,80436.31,27266.46,53169.85,17320.0,35849.85,35849.85,True,69,147,0,0,0.0,0,0,0,0,0,0,0,0,0.0,0,runs/pce/20260529/money_trajectory_repair,offline diagnostic repair frontier
+visibility_k600_oracle,20260529,31,73817.52,25416.56,48400.96,17440.0,30960.95,30960.96,True,63,146,0,3698,58.7,0,0,0,0,0,0,0,0,0.0,0,runs/pce/20260529/visibility_k600_oracle,online visibility oracle diagnostic
+strict_pref,20260509,31,287297.0,91978.37,195318.63,101800.0,93518.61,93518.63,True,422,866,0,15360,36.4,0,0,0,0,12,0,0,0,0.0,0,runs/next_build/20260509/strict_pref,0509 sanity reference
+money_greedy_no_pref,20260509,31,561014.35,172653.1,388361.25,168210.0,220151.2,220151.25,True,740,70,0,8034,10.86,0,0,0,0,12,0,0,0,0.0,0,runs/next_build/20260509/money_greedy_no_pref,0509 money diagnostic
+best_rescue,20260529,31,60293.77,17086.08,43207.69,38140.0,5067.69,5067.69,True,89,163,0,3306,37.15,0,0,0,0,5,0,0,0,0.0,0,runs/latest_rescue,delta_mpc_ablation
+delta_mpc_delta_only,20260529,31,89888.6,27255.44,62633.16,154280.0,-91646.84,-91646.84,True,124,60,0,2606,21.02,0,0,0,0,5,0,29,29,0.0,184,runs/delta_mpc/20260529/delta_mpc_delta_only,delta_mpc_ablation
+delta_mpc_macro,20260529,31,50178.66,14879.35,35299.31,45920.0,-10620.7,-10620.69,True,109,259,0,1590,14.59,0,0,0,0,5,0,39,31,0.0,368,runs/delta_mpc/20260529/delta_mpc_macro,delta_mpc_ablation
+delta_mpc_fallback,20260529,31,58213.4,16865.42,41347.98,46460.0,-5112.02,-5112.02,True,86,186,1,2449,28.48,0,0,0,0,5,0,32,32,0.0,273,runs/delta_mpc/20260529/delta_mpc_fallback,delta_mpc_ablation
+best_rescue,20260509,,,,,,,,,,,,,,,,,,,,,,,,C:\budostudy\only_for_codex\thelatstcargo\runs\delta_mpc\20260509\best_rescue,missing_run
+delta_mpc_delta_only,20260509,,,,,,,,,,,,,,,,,,,,,,,,C:\budostudy\only_for_codex\thelatstcargo\runs\delta_mpc\20260509\delta_mpc_delta_only,missing_run
+delta_mpc_macro,20260509,,,,,,,,,,,,,,,,,,,,,,,,C:\budostudy\only_for_codex\thelatstcargo\runs\delta_mpc\20260509\delta_mpc_macro,missing_run
+delta_mpc_fallback,20260509,31,288686.46,86700.81,201985.65,99720.0,102265.64,102265.65,True,423,821,0,12075,28.55,0,0,0,0,13,0,31,31,0.0,1244,runs/delta_mpc/20260509/delta_mpc_fallback,delta_mpc_ablation

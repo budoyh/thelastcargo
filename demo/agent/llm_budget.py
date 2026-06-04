@@ -21,6 +21,7 @@ class LLMBudgetManager:
     timeout_seconds: float = config.LLM_TIMEOUT_SECONDS
     cache_by_pref_hash: bool = True
     compile_calls_by_driver: dict[str, int] = field(default_factory=dict)
+    compiled_hashes_by_driver: dict[str, set[str]] = field(default_factory=dict)
     judge_calls_by_driver: dict[str, int] = field(default_factory=dict)
     judge_calls_by_driver_day: dict[tuple[str, int], int] = field(default_factory=dict)
 
@@ -40,4 +41,15 @@ class LLMBudgetManager:
         key = (driver_id, day_index(world.status.simulation_progress_minutes))
         self.judge_calls_by_driver[driver_id] = self.judge_calls_by_driver.get(driver_id, 0) + 1
         self.judge_calls_by_driver_day[key] = self.judge_calls_by_driver_day.get(key, 0) + 1
+    def allow_compile(self, driver_id: str, pref_hash: str, *, cached: bool) -> bool:
+        if cached and self.cache_by_pref_hash:
+            return True
+        seen = self.compiled_hashes_by_driver.setdefault(driver_id, set())
+        if pref_hash in seen:
+            return True
+        return self.compile_calls_by_driver.get(driver_id, 0) < self.max_compile_calls_per_driver
 
+    def record_compile(self, driver_id: str, pref_hash: str | None = None) -> None:
+        self.compile_calls_by_driver[driver_id] = self.compile_calls_by_driver.get(driver_id, 0) + 1
+        if pref_hash:
+            self.compiled_hashes_by_driver.setdefault(driver_id, set()).add(pref_hash)

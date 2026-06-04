@@ -1,0 +1,14 @@
+ablation,run_path,date_tag,status,official_net,gross_minus_cost,preference_penalty,take,wait,reposition,qwen_compile_calls,qwen_cache_hits,qwen_linker_calls,qwen_auditor_calls,controller_scored,candidate_rule_eval,score_changed,changed_decision,hard_block,soft_penalty,repair_value,visible_graph_used,illegal,rejected,abort,notes
+B0_historical_rescue_restored,runs/gold/B0_best_rescue_restored_20260529,20260529,completed,5067.69,43207.69,38140.0,89,163,0,5,2,0,0,0,0,0,0,0,0,0,false,0,0,0,rescue baseline reproduced; B0 gate passed >=5000
+B1_rescue_contract_compile_only,,20260529,not_completed,,,,,,,,,,,,,,,,,,,,,,not promoted: B9 score gate failed; compile-only cannot satisfy controller/auditor hard gates
+B2_rescue_controller_scoring_soft,,20260529,not_completed,,,,,,,,,,,,,,,,,,,,,,not separately promoted; covered by B9 current full controller-scoring evidence
+B3_rescue_verified_hard_firewall,,20260529,not_completed,,,,,,,,,,,,,,,,,,,,,,not separately promoted; hard firewall present in B9 but score gate failed
+B4_rescue_qwen_auditor,,20260529,not_completed,,,,,,,,,,,,,,,,,,,,,,not separately promoted; auditor present in B9 but mostly unknown/no score adjustment
+B5_rescue_observed_vocab_linker,,20260529,not_completed,,,,,,,,,,,,,,,,,,,,,,not separately promoted; linker present in B9 current
+B6_rescue_opportunity_graph,,20260529,disabled,,,,,,,,,,,,,,,,,,,,,,visible graph MPC kept OFF; no ablation proved uplift without gross collapse
+B7_rescue_graph_auditor,,20260529,disabled,,,,,,,,,,,,,,,,,,,,,,graph+auditor not run because graph stayed OFF after score-gate failure
+B8_rescue_parameter_search,,20260529,not_completed,,,,,,,,,,,,,,,,,,,,,,not exported; no module reached positive official-net/penalty gate for tuning
+B9_initial_schema_failure,runs/gold/B9_gold_default_20260529,20260529,completed,-8771.94,32788.06,41560.0,80,262,13,12,0,244,244,12620,58904,12620,240,5974,12620,6630,false,0,0,0,early Gold run before 4096/schema fix; retained as failure evidence
+B9_contract_4096_candidate,runs/gold/B9_gold_contract_4096_20260529,20260529,completed,6373.17,45993.17,39620.0,113,176,4,5,2,245,245,11460,52901,11460,240,14,11074,5796,false,0,0,0,post schema/output fix; same score as final current run
+B9_final_selected,runs/gold/B9_gold_current_20260529,20260529,completed,6373.17,45993.17,39620.0,113,176,4,5,2,245,245,11461,52909,11461,240,14,11073,5798,false,0,0,0,final selected 20260529 evidence; fails recommendation and experimental score gates
+B9_final_selected_regression_check,runs/gold/B9_gold_current_20260509,20260509,completed_with_income_abort,167347.15,167347.14,0.0,422,897,35,12,2,512,256,59904,198607,59887,1122,4683,58120,25458,false,0,0,2,0509 monthly income calculation aborted for 2 drivers; run predates raised default Qwen total-budget constants

@@ -22,6 +22,7 @@ def refresh_world(
     status = normalize_status(api.get_driver_status(driver_id))
     pref_hash = hash_preferences(status.preferences)
     rules = compile_if_changed(
+        api=api,
         status=status,
         pref_hash=pref_hash,
         prev_rules=None if prev_world is None else prev_world.rules,
@@ -57,4 +58,3 @@ def refresh_world(
         memory_view=memory_view,
         horizon=horizon,
     )
-

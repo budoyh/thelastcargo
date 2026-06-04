@@ -1,0 +1,12 @@
+row_type,variant,k,official_net,gross_minus_cost,preference_penalty,gap_value,data_version,checker_version,confidence,approximation,redaction_status
+full_info_oracle_net,full_info_oracle,,35001.19,52081.18,17080.0,0.0,20260529_main,20260529_current,0.8,,raw value redacted
+online_visibility_oracle_net,visibility_k100_oracle,100,29767.84,47407.84,17640.0,5233.35,20260529_main,20260529_current,0.65,nearest_k_approx_validated_by_shared_query_semantics,raw value redacted
+online_visibility_oracle_net,visibility_k300_oracle,300,29843.65,49583.64,19740.0,5157.54,20260529_main,20260529_current,0.65,nearest_k_approx_validated_by_shared_query_semantics,raw value redacted
+online_visibility_oracle_net,visibility_k600_oracle,600,30960.95,48400.96,17440.0,4040.24,20260529_main,20260529_current,0.65,nearest_k_approx_validated_by_shared_query_semantics,raw value redacted
+no_pref_gross_cost,no_pref_money_oracle,,-103632.37,67887.63,171520.0,0.0,20260529_main,20260529_current,0.8,,raw value redacted
+current_rescue_net,rescue_reference,,5067.69,,,0.0,20260529_main,20260529_current,0.8,,raw value redacted
+current_next_build_net,next_build_best_reference,,2240.98,,,0.0,20260529_main,20260529_current,0.8,,raw value redacted
+future_info_gap,full_info_minus_best_online,,,,,4040.24,20260529_main,20260529_current,0.8,,raw value redacted
+preference_evaluator_gap,full_info_minus_next_best,,,,,32760.21,20260529_main,20260529_current,0.8,,raw value redacted
+route_planning_gap,full_info_minus_rescue,,,,,29933.5,20260529_main,20260529_current,0.8,,raw value redacted
+query_reposition_gap,not_isolated,,,,,0.0,20260529_main,20260529_current,0.65,not_isolated_in_current_oracle,raw value redacted

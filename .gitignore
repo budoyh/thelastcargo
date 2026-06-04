@@ -2,6 +2,11 @@
 __pycache__/
 *.pyc
 .pytest_cache/
+.private/
+**/qwen_raw_io_untracked.jsonl
+**/raw_preferences_untracked.json
+**/*raw_literal*
+**/*raw_preference*
 
 # Local source packages and raw data are kept for development only.
 demo/server/data/
@@ -10,6 +15,8 @@ demo/server/config/config.json
 _offline_reference_20260509/
 demo_docs_release_*.zip
 crown_y_tournament_build_codex_prompt.md
+crown_y_score_rescue_codex_prompt.md
+crown_y_next_build_v4_codex_prompt.md
 赛事简介(4).txt
 赛题详情(1).txt
 技术分享与主办法回复整理.md
@@ -18,4 +25,10 @@ crown_y_tournament_build_codex_prompt.md
 runs/
 !runs/.gitkeep
 reports/*.tmp
+submissions/
 
+# Generated local archives that should not enter a submission or source commit.
+archive/packages_old_*/
+archive/submissions_old_*/
+archive/compliance_audit_*/
+archive/pref_forge_old_packages_*/

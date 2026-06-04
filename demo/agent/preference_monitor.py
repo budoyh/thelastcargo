@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from . import config
 from .schemas import CandidateOption, PreferenceCertificate, PreferenceCertificateItem, World
 
 
@@ -14,12 +15,26 @@ def _rule_exposure(option: CandidateOption, kind: str) -> float:
     duration = max(0.0, float(option.occupied_minutes))
     if option.action_type == "wait":
         return _bounded(duration / 720.0) * 0.35
-    if kind == "time_window":
+    if config.ENABLE_LEGACY_RESCUE_QWEN:
+        if kind == "time_window":
+            return _bounded(duration / 720.0)
+        if kind in {"quantitative_limit", "distance_budget"}:
+            distance_risk = _bounded(total_distance / 650.0)
+            duration_risk = _bounded(duration / 840.0)
+            return max(distance_risk, duration_risk)
+        if option.action_type == "reposition":
+            return _bounded(total_distance / 180.0) * 0.65
+        return 0.18
+    if kind in {"time_window", "time_window_constraint", "rest_requirement"}:
         return _bounded(duration / 720.0)
-    if kind == "quantitative_limit":
+    if kind in {"quantitative_limit", "distance_budget", "quota_constraint", "count_target"}:
         distance_risk = _bounded(total_distance / 650.0)
         duration_risk = _bounded(duration / 840.0)
-        return max(distance_risk, duration_risk)
+        return max(distance_risk, duration_risk) * (0.85 if kind in {"quota_constraint", "count_target"} else 1.0)
+    if kind == "sequence_constraint":
+        return _bounded(duration / 960.0) * 0.45
+    if kind == "location_relation":
+        return _bounded(total_distance / 420.0)
     if option.action_type == "reposition":
         return _bounded(total_distance / 180.0) * 0.65
     return 0.18
@@ -41,7 +56,7 @@ def certify(option: CandidateOption, world: World) -> PreferenceCertificate:
             effect = "violates" if exposure >= 0.6 and confidence >= 0.72 else "unknown"
             debt_delta = amount * exposure * (0.008 + 0.008 * confidence)
         if (
-            rule.repairability == "irreversible_after_action"
+            rule.repairability in {"irreversible_after_action", "irreversible"}
             and option.action_type in {"take_order", "reposition"}
             and confidence >= 0.72
             and exposure >= 0.7

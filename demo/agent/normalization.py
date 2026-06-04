@@ -51,7 +51,10 @@ def normalize_cargo_item(
         return None
     if cost_time_minutes < 0:
         return None
-    load_window = parse_load_window(cargo.get("load_time"))
+    raw_load_window = cargo.get("load_time")
+    load_window = parse_load_window(raw_load_window)
+    if raw_load_window is not None and load_window is None:
+        return None
     load_start, load_end = load_window if load_window is not None else (None, None)
     pickup_distance = item.get("distance_km")
     try:
@@ -75,6 +78,9 @@ def normalize_cargo_item(
         load_start_minutes=load_start,
         load_end_minutes=load_end,
         haul_distance_km=haversine_km(start_lat, start_lng, end_lat, end_lng),
+        cargo_name=str(cargo.get("cargo_name", "") or ""),
+        start_city=str(start.get("city", "") or ""),
+        end_city=str(end.get("city", "") or ""),
     )
 
 
@@ -88,11 +94,10 @@ def finish_minutes_for_cargo(cargo: NormalizedCargo, now_minutes: int, pickup_mi
 def is_online(cargo: NormalizedCargo, at_minutes: int) -> bool:
     if cargo.create_minutes is not None and at_minutes < cargo.create_minutes:
         return False
-    if cargo.remove_minutes is not None and at_minutes > cargo.remove_minutes:
+    if cargo.remove_minutes is not None and at_minutes >= cargo.remove_minutes:
         return False
     return True
 
 
 def cost_per_km_from_status(_: DriverStatus) -> float:
     return config.DEFAULT_COST_PER_KM
-

@@ -1,0 +1,4 @@
+artifact,status,feature_family,label_source,row_count,uses_driver_id,uses_cargo_id,uses_fixed_coordinate,uses_future_cargo,used_in_full_run_count,ablation_delta_net,notes
+dragon_conservative_value_model,active,time_bucket_margin_density_lockup_debt,decision_level_suffix_return_from_executed_runs,60,false,false,false,false,2440,0.0,generic features only; no raw ids or future cargo
+dragon_depth_beam,active,visible_current_candidates_only,same decision current visible set,60,false,false,false,false,2366,0.0,beam bonus is bounded and uses no future query results
+qwen_compiler_gym,internal_compiler_debt,preference_contract_visible_vocab,historical compile benchmark plus runtime counters,60,false,false,false,false,11267,0,schema_valid_rate below target does not stop search; numeric auditor off
