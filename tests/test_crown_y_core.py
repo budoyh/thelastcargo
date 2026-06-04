@@ -1208,6 +1208,8 @@ def test_qwen_auditor_records_nonzero_trident_effect_trace(monkeypatch):
             }
 
     monkeypatch.setattr(config, "ENABLE_PTT_AUDITOR", True)
+    monkeypatch.setattr(config, "RESCUE_VARIANT", "crown_trident_gold2")
+    monkeypatch.setattr(config, "TRIDENT_QWEN_AUDIT_SCALE", 1.0)
     monkeypatch.setattr(config, "DISABLE_RUNTIME_QWEN", False)
     world1, _, _ = build_world(preferences=[{"content": "abstract runtime preference", "penalty_amount": 1000}])
     risky = CandidateOption(
@@ -1291,6 +1293,8 @@ def test_qwen_auditor_accepts_numeric_scores_with_positional_candidate(monkeypat
             }
 
     monkeypatch.setattr(config, "ENABLE_PTT_AUDITOR", True)
+    monkeypatch.setattr(config, "RESCUE_VARIANT", "crown_trident_gold2")
+    monkeypatch.setattr(config, "TRIDENT_QWEN_AUDIT_SCALE", 1.0)
     monkeypatch.setattr(config, "DISABLE_RUNTIME_QWEN", False)
     world1, _, _ = build_world(preferences=[{"content": "abstract runtime preference", "penalty_amount": 1000}])
     risky = CandidateOption(

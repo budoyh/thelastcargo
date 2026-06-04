@@ -1,4 +1,23 @@
-# CROWN-PREF-FORGE v1.1 Active Build Rules
+# CROWN-DRAGON-ORCA v1.1 Active Build Rules
+
+- Active build: CROWN-DRAGON-ORCA v1.1 on branch `crown-dragon-orca-v1-1`.
+- Continue from existing Fuse/Surge/Trident/Pref-Forge evidence; do not rebuild from scratch and do not treat copied historical rows, smoke tests, proxy rows, report shape, or planned rows as success.
+- Valid stop states are only `DRAGON_RECOMMENDED_SUBMISSION`, `DRAGON_EXPERIMENTAL_SUBMISSION`, `DO_NOT_SUBMIT_WITH_COMPLETE_NEGATIVE_EVIDENCE`, `DO_NOT_SUBMIT_WITH_REVIEW_ONLY_PACKAGE`, `DO_NOT_SUBMIT_WITH_INCOMPLETE_SEARCH`, `DO_NOT_SUBMIT_WITH_INTERNAL_COMPILER_FAILURE_BUT_SEARCH_COMPLETE`, `PROMPT_NONCOMPLIANCE_FAIL`, `EXTERNAL_BLOCKER_QWEN_API`, `EXTERNAL_BLOCKER_EVAL_INFRA`, or `EXTERNAL_BLOCKER_REPO_OR_RESOURCE`.
+- Final `reports/` artifacts are limited to exactly `dragon_orca_final_report.md`, `dragon_orca_experiment_grid.csv`, `dragon_orca_regret_attribution.csv`, `dragon_orca_value_model_audit.csv`, and `dragon_orca_package_audit.md`; old reports must be archived outside `reports/`.
+- `tools/verify_dragon_orca_completion.py` is mandatory and must support `--phase setup`, `no_op`, `compiler_gym`, `attribution`, `strategy`, `search`, and `final`; final mode must fail on missing rows, fewer than 60 executed full 20260529 rows, planned/proxy/smoke evidence, wrong package policy, raw leakage, Qwen numeric adjustment, or stop-state mismatch.
+- A module can be claimed as active only with real runtime code, deterministic test coverage, trace fields, at least one 31-day full-run used_count, and ablation/counterfactual score evidence; otherwise label it `diagnostic-only`, `inactive`, or `failed-integration`.
+- B0 rescue gate: 20260529 official_net >= 5000, gross_minus_cost >= 43000, preference_penalty <= 38200, and 0 failure/abort/illegal/rejected. D1-D4 no-op/query-noop must action-match B0 with rate >= 0.999 and score/gross/penalty deltas <= 100 before strategy search.
+- Mandatory rows D0-D4, A1-A3, M0-M13, at least 60 additional 20260529 full rows, ReEvo/evolution rows, top-candidate 20260509 sanity, read-only reviewer records, and final package audit are required unless a real external blocker is documented.
+- Qwen numeric auditor must remain OFF. Qwen may compile multi-step preference contracts, link current visible vocabulary, and produce top-conflict risk audit metadata only; it must not choose/veto actions, output cargo IDs, or output numeric score adjustments.
+- Qwen schema_valid_rate below target is an internal compiler robustness issue, not an external blocker and not a reason to stop M0-M13/search/0509/final comparison.
+- Runtime under `demo/agent` may use only injected `SimulationApiPort`, current post-query `current_actionable` cargo, current-run same-driver legal observations, and generic parameters. No raw cargo/driver data, reports, scorer internals, income calculators, future cargo, raw Qwen IO, fixed coordinates, fixed places/routes, driver IDs, cargo IDs, or public preference literals.
+- `query_cargo` must be followed by `refresh_world`; filtering, scoring, action certificates, B0 shadow, and `take_order` must use the same post-query observed set. UnknownSoft must never hard-block high-gross actions.
+- Packages are allowed only after score/package gates. If below gates but code builds and final variant legally runs, at most one `CROWN_DRAGON_ORCA_REVIEW_ONLY_NOT_RECOMMENDED_DO_NOT_SUBMIT_<variant>_<sha>.zip` may exist and `demo/SUBMISSION.md` must start with `NOT RECOMMENDED FOR B榜 SUBMISSION`.
+- Subagents/reviewers are read-only QA gates. Required scopes: Anti-Shell Integration Auditor, Execution Evidence Auditor, Penalty Attribution Auditor, Qwen Compiler/Risk Auditor, Value/Beam/Query Auditor, and Leakage & Package Gatekeeper, each citing files, CSV rows, run dirs, commands, exit codes, and metrics.
+
+---
+
+# CROWN-PREF-FORGE v1.1 Historical Build Rules
 
 - Active build: CROWN-PREF-FORGE v1.1 on branch `crown-pref-forge-v1`.
 - Continue from the existing repository and executed Fuse/Surge/Trident evidence; do not rebuild from scratch and do not treat report shape, smoke, proxy, synthetic, planned, or copied historical rows as success.

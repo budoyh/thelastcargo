@@ -1,17 +1,164 @@
-- 2026-06-03T22:52:59 extracted public preference rows=46 to private store
-- 2026-06-03T23:22:42 pref forge grid mode=mandatory rows=6 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
-- 2026-06-03T23:26:20 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
-- 2026-06-03T23:28:16 built compile benchmark rows=66 qwen_mode=full blocker=none
-- 2026-06-03T23:30:40 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
-- 2026-06-03T23:33:53 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
-- 2026-06-03T23:36:57 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
-- 2026-06-03T23:40:41 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
-- 2026-06-03T23:43:40 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
-- 2026-06-03T23:47:11 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
-- 2026-06-03T23:49:47 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
-- 2026-06-03T23:53:04 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
-- 2026-06-03T23:55:50 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
-- 2026-06-03T23:58:38 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
-- 2026-06-04T00:02:15 pref forge grid mode=mandatory rows=1 out=C:\budostudy\only_for_codex\thelatstcargo\reports\pref_forge_experiment_grid.csv
-- 2026-06-04T00:02:48 qwen prompt ablation summary total=1058 ok=1001
-- 2026-06-04T00:02:48 built penalty diff rows=76
+﻿# CROWN-DRAGON-ORCA Work Log
+
+- 2026-06-04T02:26:24 branch crown-dragon-orca-v1-1 created and pushed; Dragon verifier/runtime/tooling implementation started.
+
+- 2026-06-04T02:34:14 dragon grid D0 D0_B0_rescue status=EXECUTED net=5067.69 run_dir=runs/dragon_orca/eval_20260529/D0_B0_rescue
+- 2026-06-04T02:34:14 dragon grid D0 D0_B0_rescue status=EXECUTED net=5067.69 run_dir=runs/dragon_orca/eval_20260529/D0_B0_rescue
+- 2026-06-04T02:36:24 dragon grid D1 D1_compile_runtime_noop status=EXECUTED net=1977.68 run_dir=runs/dragon_orca/eval_20260529/D1_compile_runtime_noop
+- 2026-06-04T02:36:24 dragon grid D1 D1_compile_runtime_noop status=EXECUTED net=1977.68 run_dir=runs/dragon_orca/eval_20260529/D1_compile_runtime_noop
+- 2026-06-04T02:38:25 dragon grid D2 D2_debt_accountant_monitor_noop status=EXECUTED net=1977.68 run_dir=runs/dragon_orca/eval_20260529/D2_debt_accountant_monitor_noop
+- 2026-06-04T02:38:25 dragon grid D2 D2_debt_accountant_monitor_noop status=EXECUTED net=1977.68 run_dir=runs/dragon_orca/eval_20260529/D2_debt_accountant_monitor_noop
+- 2026-06-04T02:40:21 dragon grid D3 D3_value_model_loaded_noop status=EXECUTED net=1977.68 run_dir=runs/dragon_orca/eval_20260529/D3_value_model_loaded_noop
+- 2026-06-04T02:40:21 dragon grid D3 D3_value_model_loaded_noop status=EXECUTED net=1977.68 run_dir=runs/dragon_orca/eval_20260529/D3_value_model_loaded_noop
+- 2026-06-04T02:42:19 dragon grid D4 D4_query_policy_noop status=EXECUTED net=-163.93 run_dir=runs/dragon_orca/eval_20260529/D4_query_policy_noop
+- 2026-06-04T02:42:19 dragon grid D4 D4_query_policy_noop status=EXECUTED net=-163.93 run_dir=runs/dragon_orca/eval_20260529/D4_query_policy_noop
+- 2026-06-04T02:47:36 dragon grid A1 A1_trial017_like_reference_or_reimplementation status=EXECUTED net=-47060.79 run_dir=runs/dragon_orca/eval_20260529/A1_trial017_like_reference
+- 2026-06-04T02:47:36 dragon grid A1 A1_trial017_like_reference_or_reimplementation status=EXECUTED net=-47060.79 run_dir=runs/dragon_orca/eval_20260529/A1_trial017_like_reference
+- 2026-06-04T02:52:58 dragon grid A2 A2_B9c_reference_or_reimplementation status=EXECUTED net=-32804.09 run_dir=runs/dragon_orca/eval_20260529/A2_B9c_reference
+- 2026-06-04T02:52:58 dragon grid A2 A2_B9c_reference_or_reimplementation status=EXECUTED net=-32804.09 run_dir=runs/dragon_orca/eval_20260529/A2_B9c_reference
+- 2026-06-04T02:54:49 dragon grid A3 A3_E5_like_hunter_reference status=EXECUTED net=1882.36 run_dir=runs/dragon_orca/eval_20260529/A3_E5_like_hunter_reference
+- 2026-06-04T02:54:49 dragon grid A3 A3_E5_like_hunter_reference status=EXECUTED net=1882.36 run_dir=runs/dragon_orca/eval_20260529/A3_E5_like_hunter_reference
+- 2026-06-04T02:56:47 dragon grid M0 M0_money_backbone_only status=EXECUTED net=-2128.96 run_dir=runs/dragon_orca/eval_20260529/M0_money_backbone_only
+- 2026-06-04T02:56:47 dragon grid M0 M0_money_backbone_only status=EXECUTED net=-2128.96 run_dir=runs/dragon_orca/eval_20260529/M0_money_backbone_only
+- 2026-06-04T02:58:47 dragon grid M1 M1_money_basic_per_action_shield status=EXECUTED net=-14409.79 run_dir=runs/dragon_orca/eval_20260529/M1_money_basic_per_action_shield
+- 2026-06-04T02:58:47 dragon grid M1 M1_money_basic_per_action_shield status=EXECUTED net=-14409.79 run_dir=runs/dragon_orca/eval_20260529/M1_money_basic_per_action_shield
+- 2026-06-04T03:04:27 dragon grid M2 M2_money_qwen_ensemble_shield status=EXECUTED net=-20362.11 run_dir=runs/dragon_orca/eval_20260529/M2_money_qwen_ensemble_shield
+- 2026-06-04T03:04:27 dragon grid M2 M2_money_qwen_ensemble_shield status=EXECUTED net=-20362.11 run_dir=runs/dragon_orca/eval_20260529/M2_money_qwen_ensemble_shield
+- 2026-06-04T03:10:03 dragon grid M3 M3_money_shield_plus_repair_take_bonus status=EXECUTED net=-20362.11 run_dir=runs/dragon_orca/eval_20260529/M3_repair_take_bonus
+- 2026-06-04T03:10:03 dragon grid M3 M3_money_shield_plus_repair_take_bonus status=EXECUTED net=-20362.11 run_dir=runs/dragon_orca/eval_20260529/M3_repair_take_bonus
+- 2026-06-04T03:15:46 dragon grid M4 M4_money_shield_plus_adaptive_query status=EXECUTED net=-33540.15 run_dir=runs/dragon_orca/eval_20260529/M4_adaptive_query
+- 2026-06-04T03:15:46 dragon grid M4 M4_money_shield_plus_adaptive_query status=EXECUTED net=-33540.15 run_dir=runs/dragon_orca/eval_20260529/M4_adaptive_query
+- 2026-06-04T03:21:24 dragon grid M5 M5_money_shield_plus_month_end_protection status=EXECUTED net=-25651.02 run_dir=runs/dragon_orca/eval_20260529/M5_month_end_protection
+- 2026-06-04T03:21:24 dragon grid M5 M5_money_shield_plus_month_end_protection status=EXECUTED net=-25651.02 run_dir=runs/dragon_orca/eval_20260529/M5_month_end_protection
+- 2026-06-04T03:27:07 dragon grid M6 M6_money_shield_plus_value_model status=EXECUTED net=-29315.28 run_dir=runs/dragon_orca/eval_20260529/M6_value_model
+- 2026-06-04T03:27:07 dragon grid M6 M6_money_shield_plus_value_model status=EXECUTED net=-29315.28 run_dir=runs/dragon_orca/eval_20260529/M6_value_model
+- 2026-06-04T03:32:48 dragon grid M7 M7_money_shield_plus_depth2_beam status=EXECUTED net=-28676.55 run_dir=runs/dragon_orca/eval_20260529/M7_depth2_beam
+- 2026-06-04T03:32:48 dragon grid M7 M7_money_shield_plus_depth2_beam status=EXECUTED net=-28676.55 run_dir=runs/dragon_orca/eval_20260529/M7_depth2_beam
+- 2026-06-04T03:38:36 dragon grid M8 M8_money_shield_plus_depth3_selected status=EXECUTED net=-28676.55 run_dir=runs/dragon_orca/eval_20260529/M8_depth3_selected
+- 2026-06-04T03:38:36 dragon grid M8 M8_money_shield_plus_depth3_selected status=EXECUTED net=-28676.55 run_dir=runs/dragon_orca/eval_20260529/M8_depth3_selected
+- 2026-06-04T03:44:22 dragon grid M9 M9_repair_skeleton_gross_refill_best status=EXECUTED net=-9649.72 run_dir=runs/dragon_orca/eval_20260529/M9_repair_skeleton_gross_refill
+- 2026-06-04T03:44:22 dragon grid M9 M9_repair_skeleton_gross_refill_best status=EXECUTED net=-9649.72 run_dir=runs/dragon_orca/eval_20260529/M9_repair_skeleton_gross_refill
+- 2026-06-04T03:50:09 dragon grid M10 M10_evolution_best_gen1 status=EXECUTED net=-22750.93 run_dir=runs/dragon_orca/eval_20260529/M10_evolution_gen1
+- 2026-06-04T03:50:09 dragon grid M10 M10_evolution_best_gen1 status=EXECUTED net=-22750.93 run_dir=runs/dragon_orca/eval_20260529/M10_evolution_gen1
+- 2026-06-04T03:55:59 dragon grid M11 M11_evolution_best_gen2 status=EXECUTED net=-10813.21 run_dir=runs/dragon_orca/eval_20260529/M11_evolution_gen2
+- 2026-06-04T03:55:59 dragon grid M11 M11_evolution_best_gen2 status=EXECUTED net=-10813.21 run_dir=runs/dragon_orca/eval_20260529/M11_evolution_gen2
+- 2026-06-04T04:01:44 dragon grid M12 M12_evolution_best_gen3plus status=EXECUTED net=-22750.93 run_dir=runs/dragon_orca/eval_20260529/M12_evolution_gen3plus
+- 2026-06-04T04:01:44 dragon grid M12 M12_evolution_best_gen3plus status=EXECUTED net=-22750.93 run_dir=runs/dragon_orca/eval_20260529/M12_evolution_gen3plus
+- 2026-06-04T04:07:40 dragon grid M13 M13_final_selected status=EXECUTED net=-22750.93 run_dir=runs/dragon_orca/eval_20260529/M13_final_selected
+- 2026-06-04T04:07:40 dragon grid M13 M13_final_selected status=EXECUTED net=-22750.93 run_dir=runs/dragon_orca/eval_20260529/M13_final_selected
+- 2026-06-04T04:10:50 dragon grid D1 D1_compile_runtime_noop status=EXECUTED net=-163.93 run_dir=runs/dragon_orca/eval_20260529/D1_compile_runtime_noop
+- 2026-06-04T04:10:50 dragon grid D1 D1_compile_runtime_noop status=EXECUTED net=-163.93 run_dir=runs/dragon_orca/eval_20260529/D1_compile_runtime_noop
+- 2026-06-04T04:12:45 dragon grid D2 D2_debt_accountant_monitor_noop status=EXECUTED net=-163.93 run_dir=runs/dragon_orca/eval_20260529/D2_debt_accountant_monitor_noop
+- 2026-06-04T04:12:45 dragon grid D2 D2_debt_accountant_monitor_noop status=EXECUTED net=-163.93 run_dir=runs/dragon_orca/eval_20260529/D2_debt_accountant_monitor_noop
+- 2026-06-04T04:14:39 dragon grid D3 D3_value_model_loaded_noop status=EXECUTED net=-163.93 run_dir=runs/dragon_orca/eval_20260529/D3_value_model_loaded_noop
+- 2026-06-04T04:14:39 dragon grid D3 D3_value_model_loaded_noop status=EXECUTED net=-163.93 run_dir=runs/dragon_orca/eval_20260529/D3_value_model_loaded_noop
+- 2026-06-04T04:16:31 dragon grid D4 D4_query_policy_noop status=EXECUTED net=-163.93 run_dir=runs/dragon_orca/eval_20260529/D4_query_policy_noop
+- 2026-06-04T04:16:31 dragon grid D4 D4_query_policy_noop status=EXECUTED net=-163.93 run_dir=runs/dragon_orca/eval_20260529/D4_query_policy_noop
+- 2026-06-04T04:18:23 dragon grid D1 D1_compile_runtime_noop status=EXECUTED net=5067.69 run_dir=runs/dragon_orca/eval_20260529/D1_compile_runtime_noop
+- 2026-06-04T04:18:23 dragon grid D1 D1_compile_runtime_noop status=EXECUTED net=5067.69 run_dir=runs/dragon_orca/eval_20260529/D1_compile_runtime_noop
+- 2026-06-04T04:19:32 dragon grid D2 D2_debt_accountant_monitor_noop status=EXECUTED net=5067.69 run_dir=runs/dragon_orca/eval_20260529/D2_debt_accountant_monitor_noop
+- 2026-06-04T04:19:32 dragon grid D2 D2_debt_accountant_monitor_noop status=EXECUTED net=5067.69 run_dir=runs/dragon_orca/eval_20260529/D2_debt_accountant_monitor_noop
+- 2026-06-04T04:20:42 dragon grid D3 D3_value_model_loaded_noop status=EXECUTED net=5067.69 run_dir=runs/dragon_orca/eval_20260529/D3_value_model_loaded_noop
+- 2026-06-04T04:20:42 dragon grid D3 D3_value_model_loaded_noop status=EXECUTED net=5067.69 run_dir=runs/dragon_orca/eval_20260529/D3_value_model_loaded_noop
+- 2026-06-04T04:21:51 dragon grid D4 D4_query_policy_noop status=EXECUTED net=5067.69 run_dir=runs/dragon_orca/eval_20260529/D4_query_policy_noop
+- 2026-06-04T04:21:51 dragon grid D4 D4_query_policy_noop status=EXECUTED net=5067.69 run_dir=runs/dragon_orca/eval_20260529/D4_query_policy_noop
+- 2026-06-04T04:27:54 dragon grid G001 TierA_search_full_31day status=EXECUTED net=-21716.28 run_dir=runs/dragon_orca/eval_20260529/search/G001
+- 2026-06-04T04:27:54 dragon grid G001 TierA_search_full_31day status=EXECUTED net=-21716.28 run_dir=runs/dragon_orca/eval_20260529/search/G001
+- 2026-06-04T04:33:40 dragon grid G002 TierA_search_full_31day status=EXECUTED net=-21716.28 run_dir=runs/dragon_orca/eval_20260529/search/G002
+- 2026-06-04T04:33:40 dragon grid G002 TierA_search_full_31day status=EXECUTED net=-21716.28 run_dir=runs/dragon_orca/eval_20260529/search/G002
+- 2026-06-04T04:39:40 dragon grid G003 TierA_search_full_31day status=EXECUTED net=-21981.95 run_dir=runs/dragon_orca/eval_20260529/search/G003
+- 2026-06-04T04:39:40 dragon grid G003 TierA_search_full_31day status=EXECUTED net=-21981.95 run_dir=runs/dragon_orca/eval_20260529/search/G003
+- 2026-06-04T04:45:29 dragon grid G004 TierA_search_full_31day status=EXECUTED net=-9831.06 run_dir=runs/dragon_orca/eval_20260529/search/G004
+- 2026-06-04T04:45:29 dragon grid G004 TierA_search_full_31day status=EXECUTED net=-9831.06 run_dir=runs/dragon_orca/eval_20260529/search/G004
+- 2026-06-04T04:51:16 dragon grid G005 TierA_search_full_31day status=EXECUTED net=-17425.64 run_dir=runs/dragon_orca/eval_20260529/search/G005
+- 2026-06-04T04:51:16 dragon grid G005 TierA_search_full_31day status=EXECUTED net=-17425.64 run_dir=runs/dragon_orca/eval_20260529/search/G005
+- 2026-06-04T04:56:47 dragon grid G006 TierA_search_full_31day status=EXECUTED net=-27599.2 run_dir=runs/dragon_orca/eval_20260529/search/G006
+- 2026-06-04T04:56:47 dragon grid G006 TierA_search_full_31day status=EXECUTED net=-27599.2 run_dir=runs/dragon_orca/eval_20260529/search/G006
+- 2026-06-04T05:02:38 dragon grid G007 TierA_search_full_31day status=EXECUTED net=-21981.95 run_dir=runs/dragon_orca/eval_20260529/search/G007
+- 2026-06-04T05:02:38 dragon grid G007 TierA_search_full_31day status=EXECUTED net=-21981.95 run_dir=runs/dragon_orca/eval_20260529/search/G007
+- 2026-06-04T05:08:28 dragon grid G008 TierA_search_full_31day status=EXECUTED net=-22569.59 run_dir=runs/dragon_orca/eval_20260529/search/G008
+- 2026-06-04T05:08:28 dragon grid G008 TierA_search_full_31day status=EXECUTED net=-22569.59 run_dir=runs/dragon_orca/eval_20260529/search/G008
+- 2026-06-04T05:14:17 dragon grid G009 TierA_search_full_31day status=EXECUTED net=-15764.35 run_dir=runs/dragon_orca/eval_20260529/search/G009
+- 2026-06-04T05:14:17 dragon grid G009 TierA_search_full_31day status=EXECUTED net=-15764.35 run_dir=runs/dragon_orca/eval_20260529/search/G009
+- 2026-06-04T05:20:03 dragon grid G010 TierA_search_full_31day status=EXECUTED net=-15764.35 run_dir=runs/dragon_orca/eval_20260529/search/G010
+- 2026-06-04T05:20:03 dragon grid G010 TierA_search_full_31day status=EXECUTED net=-15764.35 run_dir=runs/dragon_orca/eval_20260529/search/G010
+- 2026-06-04T05:25:58 dragon grid G011 TierA_search_full_31day status=EXECUTED net=-16030.02 run_dir=runs/dragon_orca/eval_20260529/search/G011
+- 2026-06-04T05:25:58 dragon grid G011 TierA_search_full_31day status=EXECUTED net=-16030.02 run_dir=runs/dragon_orca/eval_20260529/search/G011
+- 2026-06-04T05:31:39 dragon grid G012 TierA_search_full_31day status=EXECUTED net=-9831.06 run_dir=runs/dragon_orca/eval_20260529/search/G012
+- 2026-06-04T05:31:39 dragon grid G012 TierA_search_full_31day status=EXECUTED net=-9831.06 run_dir=runs/dragon_orca/eval_20260529/search/G012
+- 2026-06-04T05:37:25 dragon grid G013 TierA_search_full_31day status=EXECUTED net=-16977.31 run_dir=runs/dragon_orca/eval_20260529/search/G013
+- 2026-06-04T05:37:25 dragon grid G013 TierA_search_full_31day status=EXECUTED net=-16977.31 run_dir=runs/dragon_orca/eval_20260529/search/G013
+- 2026-06-04T05:43:00 dragon grid G014 TierA_search_full_31day status=EXECUTED net=-21981.95 run_dir=runs/dragon_orca/eval_20260529/search/G014
+- 2026-06-04T05:43:00 dragon grid G014 TierA_search_full_31day status=EXECUTED net=-21981.95 run_dir=runs/dragon_orca/eval_20260529/search/G014
+- 2026-06-04T05:48:42 dragon grid G015 TierA_search_full_31day status=EXECUTED net=-21981.95 run_dir=runs/dragon_orca/eval_20260529/search/G015
+- 2026-06-04T05:48:42 dragon grid G015 TierA_search_full_31day status=EXECUTED net=-21981.95 run_dir=runs/dragon_orca/eval_20260529/search/G015
+- 2026-06-04T05:54:18 dragon grid G016 TierA_search_full_31day status=EXECUTED net=-22750.93 run_dir=runs/dragon_orca/eval_20260529/search/G016
+- 2026-06-04T05:54:18 dragon grid G016 TierA_search_full_31day status=EXECUTED net=-22750.93 run_dir=runs/dragon_orca/eval_20260529/search/G016
+- 2026-06-04T05:59:56 dragon grid G017 TierA_search_full_31day status=EXECUTED net=-21947.09 run_dir=runs/dragon_orca/eval_20260529/search/G017
+- 2026-06-04T05:59:56 dragon grid G017 TierA_search_full_31day status=EXECUTED net=-21947.09 run_dir=runs/dragon_orca/eval_20260529/search/G017
+- 2026-06-04T06:05:43 dragon grid G018 TierA_search_full_31day status=EXECUTED net=-15764.35 run_dir=runs/dragon_orca/eval_20260529/search/G018
+- 2026-06-04T06:05:43 dragon grid G018 TierA_search_full_31day status=EXECUTED net=-15764.35 run_dir=runs/dragon_orca/eval_20260529/search/G018
+- 2026-06-04T06:11:33 dragon grid G019 TierA_search_full_31day status=EXECUTED net=-15653.58 run_dir=runs/dragon_orca/eval_20260529/search/G019
+- 2026-06-04T06:11:33 dragon grid G019 TierA_search_full_31day status=EXECUTED net=-15653.58 run_dir=runs/dragon_orca/eval_20260529/search/G019
+- 2026-06-04T06:17:06 dragon grid G020 TierA_search_full_31day status=EXECUTED net=-10398.52 run_dir=runs/dragon_orca/eval_20260529/search/G020
+- 2026-06-04T06:17:06 dragon grid G020 TierA_search_full_31day status=EXECUTED net=-10398.52 run_dir=runs/dragon_orca/eval_20260529/search/G020
+- 2026-06-04T06:22:55 dragon grid G021 TierA_search_full_31day status=EXECUTED net=-21716.28 run_dir=runs/dragon_orca/eval_20260529/search/G021
+- 2026-06-04T06:22:55 dragon grid G021 TierA_search_full_31day status=EXECUTED net=-21716.28 run_dir=runs/dragon_orca/eval_20260529/search/G021
+- 2026-06-04T06:28:35 dragon grid G022 TierA_search_full_31day status=EXECUTED net=-21716.28 run_dir=runs/dragon_orca/eval_20260529/search/G022
+- 2026-06-04T06:28:35 dragon grid G022 TierA_search_full_31day status=EXECUTED net=-21716.28 run_dir=runs/dragon_orca/eval_20260529/search/G022
+- 2026-06-04T06:34:18 dragon grid G023 TierA_search_full_31day status=EXECUTED net=-21981.95 run_dir=runs/dragon_orca/eval_20260529/search/G023
+- 2026-06-04T06:34:18 dragon grid G023 TierA_search_full_31day status=EXECUTED net=-21981.95 run_dir=runs/dragon_orca/eval_20260529/search/G023
+- 2026-06-04T06:40:04 dragon grid G024 TierA_search_full_31day status=EXECUTED net=-22750.93 run_dir=runs/dragon_orca/eval_20260529/search/G024
+- 2026-06-04T06:40:04 dragon grid G024 TierA_search_full_31day status=EXECUTED net=-22750.93 run_dir=runs/dragon_orca/eval_20260529/search/G024
+- 2026-06-04T06:45:37 dragon grid G025 TierA_search_full_31day status=EXECUTED net=-23377.57 run_dir=runs/dragon_orca/eval_20260529/search/G025
+- 2026-06-04T06:45:37 dragon grid G025 TierA_search_full_31day status=EXECUTED net=-23377.57 run_dir=runs/dragon_orca/eval_20260529/search/G025
+- 2026-06-04T06:51:06 dragon grid G026 TierA_search_full_31day status=EXECUTED net=-33551.13 run_dir=runs/dragon_orca/eval_20260529/search/G026
+- 2026-06-04T06:51:06 dragon grid G026 TierA_search_full_31day status=EXECUTED net=-33551.13 run_dir=runs/dragon_orca/eval_20260529/search/G026
+- 2026-06-04T06:56:44 dragon grid G027 TierA_search_full_31day status=EXECUTED net=-15653.58 run_dir=runs/dragon_orca/eval_20260529/search/G027
+- 2026-06-04T06:56:44 dragon grid G027 TierA_search_full_31day status=EXECUTED net=-15653.58 run_dir=runs/dragon_orca/eval_20260529/search/G027
+- 2026-06-04T07:02:29 dragon grid G028 TierA_search_full_31day status=EXECUTED net=-22569.59 run_dir=runs/dragon_orca/eval_20260529/search/G028
+- 2026-06-04T07:02:29 dragon grid G028 TierA_search_full_31day status=EXECUTED net=-22569.59 run_dir=runs/dragon_orca/eval_20260529/search/G028
+- 2026-06-04T07:08:11 dragon grid G029 TierA_search_full_31day status=EXECUTED net=-21716.28 run_dir=runs/dragon_orca/eval_20260529/search/G029
+- 2026-06-04T07:08:11 dragon grid G029 TierA_search_full_31day status=EXECUTED net=-21716.28 run_dir=runs/dragon_orca/eval_20260529/search/G029
+- 2026-06-04T07:13:58 dragon grid G030 TierA_search_full_31day status=EXECUTED net=-21716.28 run_dir=runs/dragon_orca/eval_20260529/search/G030
+- 2026-06-04T07:13:58 dragon grid G030 TierA_search_full_31day status=EXECUTED net=-21716.28 run_dir=runs/dragon_orca/eval_20260529/search/G030
+- 2026-06-04T07:19:49 dragon grid G031 TierA_search_full_31day status=EXECUTED net=-21981.95 run_dir=runs/dragon_orca/eval_20260529/search/G031
+- 2026-06-04T07:19:49 dragon grid G031 TierA_search_full_31day status=EXECUTED net=-21981.95 run_dir=runs/dragon_orca/eval_20260529/search/G031
+- 2026-06-04T07:25:19 dragon grid G032 TierA_search_full_31day status=EXECUTED net=-9831.06 run_dir=runs/dragon_orca/eval_20260529/search/G032
+- 2026-06-04T07:25:19 dragon grid G032 TierA_search_full_31day status=EXECUTED net=-9831.06 run_dir=runs/dragon_orca/eval_20260529/search/G032
+- 2026-06-04T07:30:50 dragon grid G033 TierA_search_full_31day status=EXECUTED net=-27599.2 run_dir=runs/dragon_orca/eval_20260529/search/G033
+- 2026-06-04T07:30:50 dragon grid G033 TierA_search_full_31day status=EXECUTED net=-27599.2 run_dir=runs/dragon_orca/eval_20260529/search/G033
+- 2026-06-04T07:36:35 dragon grid G034 TierA_search_full_31day status=EXECUTED net=-27599.2 run_dir=runs/dragon_orca/eval_20260529/search/G034
+- 2026-06-04T07:36:35 dragon grid G034 TierA_search_full_31day status=EXECUTED net=-27599.2 run_dir=runs/dragon_orca/eval_20260529/search/G034
+- 2026-06-04T07:42:24 dragon grid G035 TierA_search_full_31day status=EXECUTED net=-21981.95 run_dir=runs/dragon_orca/eval_20260529/search/G035
+- 2026-06-04T07:42:24 dragon grid G035 TierA_search_full_31day status=EXECUTED net=-21981.95 run_dir=runs/dragon_orca/eval_20260529/search/G035
+- 2026-06-04T07:48:08 dragon grid G036 TierA_search_full_31day status=EXECUTED net=-9649.72 run_dir=runs/dragon_orca/eval_20260529/search/G036
+- 2026-06-04T07:48:08 dragon grid G036 TierA_search_full_31day status=EXECUTED net=-9649.72 run_dir=runs/dragon_orca/eval_20260529/search/G036
+- 2026-06-04T07:54:07 dragon grid G037 TierA_search_full_31day status=EXECUTED net=-15764.35 run_dir=runs/dragon_orca/eval_20260529/search/G037
+- 2026-06-04T07:54:07 dragon grid G037 TierA_search_full_31day status=EXECUTED net=-15764.35 run_dir=runs/dragon_orca/eval_20260529/search/G037
+- 2026-06-04T07:59:53 dragon grid G038 TierA_search_full_31day status=EXECUTED net=-15764.35 run_dir=runs/dragon_orca/eval_20260529/search/G038
+- 2026-06-04T07:59:53 dragon grid G038 TierA_search_full_31day status=EXECUTED net=-15764.35 run_dir=runs/dragon_orca/eval_20260529/search/G038
+- 2026-06-04T08:01:59 dragon regret attribution rows=50 out=C:\budostudy\only_for_codex\thelatstcargo\reports\dragon_orca_regret_attribution.csv
+- 2026-06-04T08:01:59 dragon regret attribution rows=50 out=C:\budostudy\only_for_codex\thelatstcargo\reports\dragon_orca_regret_attribution.csv
+- 2026-06-04T08:01:59 dragon regret LNS refill candidates=20 out=C:\budostudy\only_for_codex\thelatstcargo\runs\dragon_orca\evolution\regret_lns_refill_candidates.json
+- 2026-06-04T08:01:59 dragon regret LNS refill candidates=20 out=C:\budostudy\only_for_codex\thelatstcargo\runs\dragon_orca\evolution\regret_lns_refill_candidates.json
+- 2026-06-04T08:01:59 dragon heuristic evolution recipes=24 out=C:\budostudy\only_for_codex\thelatstcargo\runs\dragon_orca\evolution\dragon_heuristics.jsonl
+- 2026-06-04T08:01:59 dragon heuristic evolution recipes=24 out=C:\budostudy\only_for_codex\thelatstcargo\runs\dragon_orca\evolution\dragon_heuristics.jsonl
+- 2026-06-04T08:05:48 dragon grid S0 S0_0509_B0_rescue status=EXECUTED net=86900.14 run_dir=runs/dragon_orca/sanity_20260509/S0_B0_rescue
+- 2026-06-04T08:05:48 dragon grid S0 S0_0509_B0_rescue status=EXECUTED net=86900.14 run_dir=runs/dragon_orca/sanity_20260509/S0_B0_rescue
+- 2026-06-04T08:09:08 dragon grid S1 S1_0509_top_candidate status=EXECUTED net=86900.14 run_dir=runs/dragon_orca/sanity_20260509/S1_top_D0
+- 2026-06-04T08:09:08 dragon grid S1 S1_0509_top_candidate status=EXECUTED net=86900.14 run_dir=runs/dragon_orca/sanity_20260509/S1_top_D0
+- 2026-06-04T08:12:32 dragon grid S2 S2_0509_top_candidate status=EXECUTED net=86900.14 run_dir=runs/dragon_orca/sanity_20260509/S2_top_D1
+- 2026-06-04T08:12:32 dragon grid S2 S2_0509_top_candidate status=EXECUTED net=86900.14 run_dir=runs/dragon_orca/sanity_20260509/S2_top_D1
+- 2026-06-04T08:15:56 dragon grid S3 S3_0509_top_candidate status=EXECUTED net=86900.14 run_dir=runs/dragon_orca/sanity_20260509/S3_top_D2
+- 2026-06-04T08:15:56 dragon grid S3 S3_0509_top_candidate status=EXECUTED net=86900.14 run_dir=runs/dragon_orca/sanity_20260509/S3_top_D2
+- 2026-06-04T08:19:16 dragon grid S4 S4_0509_top_candidate status=EXECUTED net=86900.14 run_dir=runs/dragon_orca/sanity_20260509/S4_top_D3
+- 2026-06-04T08:19:16 dragon grid S4 S4_0509_top_candidate status=EXECUTED net=86900.14 run_dir=runs/dragon_orca/sanity_20260509/S4_top_D3
+- 2026-06-04T08:22:35 dragon grid S5 S5_0509_top_candidate status=EXECUTED net=86900.14 run_dir=runs/dragon_orca/sanity_20260509/S5_top_D4
+- 2026-06-04T08:22:35 dragon grid S5 S5_0509_top_candidate status=EXECUTED net=86900.14 run_dir=runs/dragon_orca/sanity_20260509/S5_top_D4
+- 2026-06-04T08:22:53 dragon final report stop_state=DO_NOT_SUBMIT_WITH_INCOMPLETE_SEARCH reason=executed 20260529 full rows 60 reached the 60-row minimum but did not exhaust the 120-row Dragon search target
+- 2026-06-04T08:22:53 dragon final report stop_state=DO_NOT_SUBMIT_WITH_INCOMPLETE_SEARCH reason=executed 20260529 full rows 60 reached the 60-row minimum but did not exhaust the 120-row Dragon search target
+- 2026-06-04T08:22:54 dragon final report stop_state=DO_NOT_SUBMIT_WITH_INCOMPLETE_SEARCH reason=executed 20260529 full rows 60 reached the 60-row minimum but did not exhaust the 120-row Dragon search target
+- 2026-06-04T08:22:54 dragon final report stop_state=DO_NOT_SUBMIT_WITH_INCOMPLETE_SEARCH reason=executed 20260529 full rows 60 reached the 60-row minimum but did not exhaust the 120-row Dragon search target
+- 2026-06-04T08:31:16 dragon final report stop_state=DO_NOT_SUBMIT_WITH_INCOMPLETE_SEARCH reason=executed 20260529 full rows 60 reached the 60-row minimum but did not exhaust the 120-row Dragon search target
+- 2026-06-04T08:31:16 dragon final report stop_state=DO_NOT_SUBMIT_WITH_INCOMPLETE_SEARCH reason=executed 20260529 full rows 60 reached the 60-row minimum but did not exhaust the 120-row Dragon search target

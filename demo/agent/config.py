@@ -191,10 +191,37 @@ PREF_FORGE_SOFT_PREF_CAP = _float_env("CROWN_PREF_FORGE_SOFT_PREF_CAP", RESCUE_S
 PREF_FORGE_PREF_DEBT_MULT = _float_env("CROWN_PREF_FORGE_PREF_DEBT_MULT", 1.0, 0.0, 20.0)
 PREF_FORGE_SOFT_PREF_MULT = _float_env("CROWN_PREF_FORGE_SOFT_PREF_MULT", 4.0, 0.0, 20.0)
 ENABLE_PREF_FORGE_HUNTER = False
+DRAGON_STAGE = os.environ.get("CROWN_DRAGON_STAGE", "").strip().lower()
+DRAGON_QUERY_K = _int_env("CROWN_DRAGON_QUERY_K", 300, 50, 600)
+DRAGON_MONEY_WEIGHT = _float_env("CROWN_DRAGON_MONEY_WEIGHT", 1.2, 0.0, 8.0)
+DRAGON_PPH_WEIGHT = _float_env("CROWN_DRAGON_PPH_WEIGHT", 5.0, 0.0, 50.0)
+DRAGON_LOCKUP_WEIGHT = _float_env("CROWN_DRAGON_LOCKUP_WEIGHT", 4.0, 0.0, 80.0)
+DRAGON_DEADHEAD_WEIGHT = _float_env("CROWN_DRAGON_DEADHEAD_WEIGHT", 4.0, 0.0, 80.0)
+DRAGON_DEADHEAD_THRESHOLD_KM = _float_env("CROWN_DRAGON_DEADHEAD_THRESHOLD_KM", 80.0, 0.0, 300.0)
+DRAGON_PREF_DEBT_WEIGHT = _float_env("CROWN_DRAGON_PREF_DEBT_WEIGHT", 1.0, 0.0, 20.0)
+DRAGON_UNKNOWN_SOFT_WEIGHT = _float_env("CROWN_DRAGON_UNKNOWN_SOFT_WEIGHT", 2.0, 0.0, 20.0)
+DRAGON_UNKNOWN_SOFT_CAP = _float_env("CROWN_DRAGON_UNKNOWN_SOFT_CAP", 220.0, 0.0, 1000.0)
+DRAGON_VALUE_WEIGHT = _float_env("CROWN_DRAGON_VALUE_WEIGHT", 0.0, 0.0, 1.0)
+DRAGON_BEAM_DEPTH = _int_env("CROWN_DRAGON_BEAM_DEPTH", 1, 1, 3)
+DRAGON_BEAM_WIDTH = _int_env("CROWN_DRAGON_BEAM_WIDTH", 0, 0, 12)
+DRAGON_BEAM_WEIGHT = _float_env("CROWN_DRAGON_BEAM_WEIGHT", 0.0, 0.0, 1.0)
+DRAGON_MONTH_END_LOCKUP_WEIGHT = _float_env("CROWN_DRAGON_MONTH_END_LOCKUP_WEIGHT", 0.0, 0.0, 80.0)
+DRAGON_QUERY_COST_WEIGHT = _float_env("CROWN_DRAGON_QUERY_COST_WEIGHT", 0.0, 0.0, 20.0)
+DRAGON_EVOLUTION_GENERATION = _int_env("CROWN_DRAGON_EVOLUTION_GENERATION", 0, 0, 99)
+ENABLE_DRAGON_ORCA = False
+ENABLE_DRAGON_HIGH_GROSS = False
+ENABLE_DRAGON_DEBT_SHIELD = False
+ENABLE_DRAGON_QWEN_ENSEMBLE = False
+ENABLE_DRAGON_VALUE_MODEL = False
+ENABLE_DRAGON_BEAM = False
+ENABLE_DRAGON_ADAPTIVE_QUERY = False
+ENABLE_DRAGON_MONTH_END = False
+ENABLE_DRAGON_REGRET_LNS = False
 
-_VARIANT = os.environ.get("CROWN_Y_VARIANT", "best_rescue").strip().lower()
+_VARIANT = os.environ.get("CROWN_Y_VARIANT", "crown_dragon_orca").strip().lower()
 _FUSE_VARIANTS = {"fuse_rescue_core", "fuse_targeted_repair", "fuse_targeted_repair_graph", "fuse_hidden_safe"}
 _PREF_FORGE_VARIANTS = {"crown_pref_forge"}
+_DRAGON_ORCA_VARIANTS = {"crown_dragon_orca"}
 RESCUE_VARIANT = _VARIANT
 ENABLE_LEGACY_RESCUE_QWEN = _VARIANT in {"a6", "a7", "best_rescue"}
 if _VARIANT in _FUSE_VARIANTS:
@@ -267,6 +294,7 @@ if _VARIANT in {
     "fuse_targeted_repair_graph",
     "fuse_hidden_safe",
     "crown_pref_forge",
+    "crown_dragon_orca",
 }:
     ENABLE_RESCUE_SCORER = True
     ENABLE_SCOUT_THEN_DEEPEN = False
@@ -585,6 +613,99 @@ if _VARIANT == "crown_pref_forge":
     if PREF_FORGE_SOFT_REST_GUARD:
         ENABLE_NEXT_MARGINAL_PREF = True
     TRIDENT_QWEN_AUDIT_SCALE = 0.0
+
+if _VARIANT == "crown_dragon_orca":
+    _DRAGON_NOOP_STAGE = DRAGON_STAGE in {
+        "d1_compile_runtime_noop",
+        "d2_debt_accountant_monitor_noop",
+        "d3_value_model_loaded_noop",
+        "d4_query_policy_noop",
+        "noop",
+    }
+    RESCUE_VARIANT = _VARIANT
+    ENABLE_DRAGON_ORCA = True
+    ENABLE_QWEN_PREFERENCE_COMPILER = True
+    ENABLE_RESCUE_WAIT_PENALTY = True
+    ENABLE_RESCUE_MICRO_REPOSITION = True
+    ENABLE_RESCUE_PREFERENCE_SOFT = True
+    ENABLE_RESCUE_REST_GUARD = os.environ.get("CROWN_DRAGON_REST_GUARD", "1").strip() != "0"
+    ENABLE_RESCUE_TWOHOP_LITE = True
+    ENABLE_RESCUE_TIME_SHADOW_LITE = True
+    ENABLE_GOLD_CONTRACT_MPC = not _DRAGON_NOOP_STAGE
+    ENABLE_EXACT_RBT = not _DRAGON_NOOP_STAGE
+    ENABLE_PTT_AUDITOR = False
+    TRIDENT_QWEN_AUDIT_SCALE = 0.0
+    ENABLE_DRAGON_HIGH_GROSS = not _DRAGON_NOOP_STAGE
+    ENABLE_DRAGON_DEBT_SHIELD = DRAGON_STAGE in {
+        "m1",
+        "m2",
+        "m3",
+        "m4",
+        "m5",
+        "m6",
+        "m7",
+        "m8",
+        "m9",
+        "m10",
+        "m11",
+        "m12",
+        "m13",
+        "search",
+        "final",
+    }
+    ENABLE_DRAGON_QWEN_ENSEMBLE = DRAGON_STAGE in {
+        "m2",
+        "m3",
+        "m4",
+        "m5",
+        "m6",
+        "m7",
+        "m8",
+        "m9",
+        "m10",
+        "m11",
+        "m12",
+        "m13",
+        "search",
+        "final",
+    }
+    ENABLE_DRAGON_ADAPTIVE_QUERY = DRAGON_STAGE in {"m4", "m6", "m7", "m8", "m9", "m10", "m11", "m12", "m13", "search", "final"}
+    ENABLE_DRAGON_MONTH_END = DRAGON_STAGE in {"m5", "m6", "m7", "m8", "m9", "m10", "m11", "m12", "m13", "search", "final"}
+    ENABLE_DRAGON_VALUE_MODEL = DRAGON_STAGE in {"m6", "m7", "m8", "m10", "m11", "m12", "m13", "search", "final"} and DRAGON_VALUE_WEIGHT > 0.0
+    ENABLE_DRAGON_BEAM = DRAGON_STAGE in {"m7", "m8", "m10", "m11", "m12", "m13", "search", "final"} and DRAGON_BEAM_WIDTH > 0
+    ENABLE_DRAGON_REGRET_LNS = DRAGON_STAGE in {"m9", "m10", "m11", "m12", "m13", "search", "final"}
+    ENABLE_PTT_LINKER = ENABLE_DRAGON_QWEN_ENSEMBLE
+    ENABLE_PTT_FIREWALL = ENABLE_DRAGON_DEBT_SHIELD
+    ENABLE_PREF_FORGE_HUNTER = ENABLE_DRAGON_HIGH_GROSS
+    ENABLE_NEXT_DYNAMIC_QUERY_K = ENABLE_DRAGON_ADAPTIVE_QUERY
+    ENABLE_NEXT_PREFERENCE_STATE_MACHINE = ENABLE_DRAGON_REGRET_LNS
+    ENABLE_PCE_REPAIR_FIRST = ENABLE_DRAGON_REGRET_LNS
+    RESCUE_QUERY_K_DEFAULT = DRAGON_QUERY_K
+    RESCUE_QUERY_K_HIGH = max(RESCUE_QUERY_K_HIGH, min(MAX_QUERY_K, DRAGON_QUERY_K))
+    RESCUE_DIRECT_NET_FLOOR = _float_env("CROWN_DRAGON_DIRECT_NET_FLOOR", 1.0, -200.0, 1000.0)
+    RESCUE_PROFIT_PER_HOUR_FLOOR = _float_env("CROWN_DRAGON_PROFIT_PER_HOUR_FLOOR", 0.0, -50.0, 300.0)
+    if _DRAGON_NOOP_STAGE:
+        ENABLE_DRAGON_ORCA = False
+        ENABLE_DRAGON_HIGH_GROSS = False
+        ENABLE_DRAGON_DEBT_SHIELD = False
+        ENABLE_DRAGON_QWEN_ENSEMBLE = False
+        ENABLE_DRAGON_VALUE_MODEL = False
+        ENABLE_DRAGON_BEAM = False
+        ENABLE_DRAGON_ADAPTIVE_QUERY = False
+        ENABLE_DRAGON_MONTH_END = False
+        ENABLE_DRAGON_REGRET_LNS = False
+        ENABLE_PTT_LINKER = False
+        ENABLE_PTT_FIREWALL = False
+        ENABLE_PTT_AUDITOR = False
+        ENABLE_PREF_FORGE_HUNTER = False
+        ENABLE_NEXT_DYNAMIC_QUERY_K = False
+        ENABLE_NEXT_PREFERENCE_STATE_MACHINE = False
+        ENABLE_PCE_REPAIR_FIRST = False
+        ENABLE_VISIBLE_GRAPH_MPC = False
+        RESCUE_QUERY_K_DEFAULT = 120
+        RESCUE_QUERY_K_HIGH = 200
+        RESCUE_DIRECT_NET_FLOOR = 1.0
+        RESCUE_PROFIT_PER_HOUR_FLOOR = 0.0
 
 if _VARIANT in {"best_rescue", "a7"} or _VARIANT in _FUSE_VARIANTS:
     RESCUE_QUERY_K_DEFAULT = 120

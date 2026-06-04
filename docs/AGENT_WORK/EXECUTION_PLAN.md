@@ -214,3 +214,13 @@ If a required command is missing, implement it or record the exact equivalent co
 - Final reports are limited to `trident_final_report.md`, `trident_experiments.csv`, `trident_rule_ledger.csv`, `trident_decision_deltas.csv`, and `trident_qwen_effect.csv`.
 - If final official_net < 30000, the final report begins with `DO NOT SUBMIT: <precise reason>` and no submission-shaped zip is created.
 - If a package is generated, inspect root and exclusions before any submission claim.
+
+# CROWN-DRAGON-ORCA v1.1 Execution Plan
+
+1. Implement and run tools/verify_dragon_orca_completion.py setup before relying on strategy evidence.
+2. Archive old report files outside reports/ and keep final reports to the five dragon_orca_* artifacts.
+3. Execute D0-D4 no-op/query-noop isolation and block search on drift.
+4. Execute A1-A3 archaeology references and M0-M13 mandatory strategy rows.
+5. Execute at least 60 full 20260529 search rows, ReEvo/evolution rows, and B0 + top5 20260509 sanity.
+6. Build regret attribution, value-model audit, reviewer QA, package audit, and final report.
+7. Run pytest, compileall, audit_guard, all Dragon verifier phases, then commit and push.

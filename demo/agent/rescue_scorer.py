@@ -62,7 +62,7 @@ def _scheduled_full_rest_overlap(start: int, finish: int) -> bool:
 
 def _qwen_audit_adjustment(option: CandidateOption) -> float:
     raw = float(option.score_components.get("qwen_audit_adjustment", 0.0) or 0.0)
-    if config.RESCUE_VARIANT == "crown_pref_forge" or not config.ENABLE_PTT_AUDITOR:
+    if config.RESCUE_VARIANT in {"crown_pref_forge", "crown_dragon_orca"} or not config.ENABLE_PTT_AUDITOR:
         if raw:
             option.score_components["qwen_audit_adjustment_ignored"] = raw
         return 0.0
@@ -173,6 +173,38 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
                 hunter_bonus = option.direct_money * config.PREF_FORGE_DIRECT_NET_WEIGHT + per_hour * config.PREF_FORGE_PPH_WEIGHT
                 hunter_lockup_penalty = max(0.0, option.occupied_minutes - max_duration) * config.PREF_FORGE_LOCKUP_WEIGHT
                 hunter_deadhead_penalty = max(0.0, option.deadhead_km - config.PREF_FORGE_DEADHEAD_THRESHOLD_KM) * config.PREF_FORGE_DEADHEAD_WEIGHT
+            dragon_high_gross_bonus = 0.0
+            dragon_debt_penalty = 0.0
+            dragon_value_model = 0.0
+            dragon_beam_bonus = 0.0
+            dragon_query_cost = 0.0
+            dragon_month_end_penalty = 0.0
+            if config.ENABLE_DRAGON_ORCA:
+                if config.ENABLE_DRAGON_HIGH_GROSS:
+                    dragon_high_gross_bonus = option.direct_money * config.DRAGON_MONEY_WEIGHT + per_hour * config.DRAGON_PPH_WEIGHT
+                    dragon_high_gross_bonus -= max(0.0, option.occupied_minutes - 16 * 60.0) * config.DRAGON_LOCKUP_WEIGHT
+                    dragon_high_gross_bonus -= max(0.0, option.deadhead_km - config.DRAGON_DEADHEAD_THRESHOLD_KM) * config.DRAGON_DEADHEAD_WEIGHT
+                if config.ENABLE_DRAGON_DEBT_SHIELD and option.pref_cert:
+                    unknown_soft = min(config.DRAGON_UNKNOWN_SOFT_CAP, option.pref_cert.unknown_risk * config.DRAGON_UNKNOWN_SOFT_WEIGHT)
+                    dragon_debt_penalty = min(
+                        2000.0,
+                        option.pref_cert.violation_debt * config.DRAGON_PREF_DEBT_WEIGHT + unknown_soft,
+                    )
+                    if option.direct_money >= 900.0:
+                        dragon_debt_penalty = min(dragon_debt_penalty, max(0.0, option.direct_money * 0.35))
+                if config.ENABLE_DRAGON_VALUE_MODEL:
+                    remaining = max(0, world.horizon.horizon_minutes - option.finish_minutes)
+                    horizon_ratio = min(1.0, remaining / max(1, world.horizon.horizon_minutes))
+                    dragon_value_model = min(260.0, max(0.0, per_hour) * horizon_ratio * config.DRAGON_VALUE_WEIGHT)
+                if config.ENABLE_DRAGON_BEAM:
+                    depth_factor = max(1, config.DRAGON_BEAM_DEPTH) * max(1, config.DRAGON_BEAM_WIDTH)
+                    dragon_beam_bonus = min(240.0, twohop * config.DRAGON_BEAM_WEIGHT + depth_factor * 3.0)
+                if config.ENABLE_DRAGON_ADAPTIVE_QUERY:
+                    dragon_query_cost = min(160.0, config.DRAGON_QUERY_COST_WEIGHT * max(0, config.DRAGON_QUERY_K - 120) / 10.0)
+                if config.ENABLE_DRAGON_MONTH_END:
+                    remaining_after = max(0, world.horizon.horizon_minutes - option.finish_minutes)
+                    if remaining_after < 5 * 1440:
+                        dragon_month_end_penalty = max(0.0, option.occupied_minutes - 8 * 60.0) * config.DRAGON_MONTH_END_LOCKUP_WEIGHT
             score = (
                 option.direct_money
                 + per_hour * 4.0
@@ -180,6 +212,9 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
                 + repair_bonus
                 + ptt_repair_value
                 + twohop
+                + dragon_high_gross_bonus
+                + dragon_value_model
+                + dragon_beam_bonus
                 - soft_pref
                 - ptt_marginal_penalty
                 - ptt_lost_window
@@ -190,6 +225,9 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
                 - rest_penalty
                 - duration_penalty
                 - deadhead_penalty
+                - dragon_debt_penalty
+                - dragon_query_cost
+                - dragon_month_end_penalty
                 + hunter_bonus
                 - hunter_lockup_penalty
                 - hunter_deadhead_penalty
@@ -220,8 +258,29 @@ def score_options(options: list[CandidateOption], world: World, state: WaitLockS
                     "pref_forge_hunter_bonus": hunter_bonus,
                     "pref_forge_hunter_lockup_penalty": -hunter_lockup_penalty,
                     "pref_forge_hunter_deadhead_penalty": -hunter_deadhead_penalty,
+                    "dragon_high_gross_backbone": dragon_high_gross_bonus,
+                    "dragon_preference_debt_shield": -dragon_debt_penalty,
+                    "dragon_value_model": dragon_value_model,
+                    "dragon_beam_rollout": dragon_beam_bonus,
+                    "dragon_query_cost": -dragon_query_cost,
+                    "dragon_month_end_protection": -dragon_month_end_penalty,
+                    "dragon_evolution_generation": float(config.DRAGON_EVOLUTION_GENERATION),
                 }
             )
+            if config.ENABLE_DRAGON_ORCA:
+                option.trace["dragon_orca"] = {
+                    "stage": config.DRAGON_STAGE,
+                    "high_gross_backbone_used": bool(abs(dragon_high_gross_bonus) > 1e-9),
+                    "debt_shield_used": bool(abs(dragon_debt_penalty) > 1e-9),
+                    "value_model_used": bool(abs(dragon_value_model) > 1e-9),
+                    "beam_used": bool(abs(dragon_beam_bonus) > 1e-9),
+                    "adaptive_query_used": bool(abs(dragon_query_cost) > 1e-9),
+                    "month_end_used": bool(abs(dragon_month_end_penalty) > 1e-9),
+                    "regret_lns_used": bool(config.ENABLE_DRAGON_REGRET_LNS),
+                    "evolution_generation": int(config.DRAGON_EVOLUTION_GENERATION),
+                    "qwen_numeric_auditor_off": True,
+                    "unknown_soft_hard_block": False,
+                }
             if config.ENABLE_PREF_FORGE_HUNTER:
                 option.trace["pref_forge_hunter"] = {
                     "direct_net": round(option.direct_money, 2),

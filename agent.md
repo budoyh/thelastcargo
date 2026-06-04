@@ -2,6 +2,19 @@
 
 This lowercase rule file mirrors `AGENTS.md` for tools that look for `agent.md`.
 
+## Active Dragon-Orca Build
+
+- Branch: `crown-dragon-orca-v1-1`.
+- Task: CROWN-DRAGON-ORCA v1.1 = Preference Debt Accountant + High-Gross Backbone + Conservative Value Approximation + Depth-2/3 Beam Rollout + Query Budget + Regret-LNS + Heuristic Evolution.
+- Valid stop states: `DRAGON_RECOMMENDED_SUBMISSION`, `DRAGON_EXPERIMENTAL_SUBMISSION`, `DO_NOT_SUBMIT_WITH_COMPLETE_NEGATIVE_EVIDENCE`, `DO_NOT_SUBMIT_WITH_REVIEW_ONLY_PACKAGE`, `DO_NOT_SUBMIT_WITH_INCOMPLETE_SEARCH`, `DO_NOT_SUBMIT_WITH_INTERNAL_COMPILER_FAILURE_BUT_SEARCH_COMPLETE`, `PROMPT_NONCOMPLIANCE_FAIL`, `EXTERNAL_BLOCKER_QWEN_API`, `EXTERNAL_BLOCKER_EVAL_INFRA`, and `EXTERNAL_BLOCKER_REPO_OR_RESOURCE`.
+- Final reports are limited to `dragon_orca_final_report.md`, `dragon_orca_experiment_grid.csv`, `dragon_orca_regret_attribution.csv`, `dragon_orca_value_model_audit.csv`, and `dragon_orca_package_audit.md`.
+- `tools/verify_dragon_orca_completion.py` is the completion gate for setup, no_op, compiler_gym, attribution, strategy, search, and final phases.
+- No module may be claimed active unless it has real runtime code, deterministic tests, trace usage, 31-day full-run participation, and ablation/counterfactual score evidence.
+- Qwen numeric auditor stays OFF. Qwen schema failures trigger compiler repair or UnknownSoft, not search stop. Qwen must not choose/veto actions, emit cargo IDs, or emit numeric score adjustments.
+- Runtime may not read raw datasets, reports, scorer outputs, income calculators, server/bench internals, raw Qwen IO, future cargo, fixed locations/routes/coordinates, driver IDs, cargo IDs, or public preference literals.
+- D0 B0 rescue and D1-D4 no-op/query-noop isolation must pass before strategy search. Mandatory D/A/M rows, at least 60 full 20260529 search rows, ReEvo rows, 0509 sanity, reviewers, and final verifier are required for a compliant stop.
+- If score gates fail but code builds and the final variant runs legally, only a review-only package is allowed; it is not a submission candidate.
+
 ## Active Pref-Forge Build
 
 - Branch: `crown-pref-forge-v1`.
