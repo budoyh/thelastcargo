@@ -38,6 +38,7 @@ from . import (
 )
 from .llm_budget import LLMBudgetManager
 from .memory import DriverMemory
+from .pivot_redline import PivotRedlinePlanner
 from .schemas import CURRENT_ACTIONABLE, CandidateOption, NormalizedCargo, World
 from .time_utils import day_index, remaining_minutes
 from .wait_lock import WaitLockState, query_k
@@ -66,6 +67,7 @@ class ModelDecisionService:
         self._logger = logging.getLogger("agent.crown_y")
         self._runtime_by_driver: dict[str, DriverRuntime] = {}
         self._llm_budget = LLMBudgetManager()
+        self._pivot_planner = PivotRedlinePlanner(api)
 
     def decide(self, driver_id: str) -> dict[str, Any]:
         runtime = self._runtime_by_driver.setdefault(driver_id, DriverRuntime())
@@ -81,6 +83,16 @@ class ModelDecisionService:
                 prev_world=runtime.prev_world,
             )
             last_world = world0
+            if config.IS_PIVOT_REDLINE:
+                action = self._pivot_planner.decide(driver_id, runtime, world0, decision_id)
+                self._logger.info(
+                    "pivot decision driver_hash=%s seq=%s variant=%s action=%s",
+                    _log_hash(driver_id),
+                    runtime.decision_seq,
+                    config.RESCUE_VARIANT,
+                    action.get("action"),
+                )
+                return action
             if config.ENABLE_RESCUE_SCORER:
                 action = self._decide_rescue(driver_id, runtime, world0, decision_id)
                 runtime.prev_world = self._runtime_by_driver[driver_id].prev_world or world0

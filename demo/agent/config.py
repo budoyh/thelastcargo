@@ -222,7 +222,9 @@ _VARIANT = os.environ.get("CROWN_Y_VARIANT", "crown_dragon_orca").strip().lower(
 _FUSE_VARIANTS = {"fuse_rescue_core", "fuse_targeted_repair", "fuse_targeted_repair_graph", "fuse_hidden_safe"}
 _PREF_FORGE_VARIANTS = {"crown_pref_forge"}
 _DRAGON_ORCA_VARIANTS = {"crown_dragon_orca"}
+_PIVOT_REDLINE_VARIANTS = {"crown_pivot_redline_v1", "crown_pivot_redline_money_clean"}
 RESCUE_VARIANT = _VARIANT
+IS_PIVOT_REDLINE = _VARIANT in _PIVOT_REDLINE_VARIANTS
 ENABLE_LEGACY_RESCUE_QWEN = _VARIANT in {"a6", "a7", "best_rescue"}
 if _VARIANT in _FUSE_VARIANTS:
     ENABLE_LEGACY_RESCUE_QWEN = True

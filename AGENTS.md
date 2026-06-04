@@ -1,3 +1,20 @@
+# CROWN-PIVOT-REDLINE v1 Active Build Rules
+
+- Active build: CROWN-PIVOT-REDLINE v1 on branch `crown-pivot-redline-v1`.
+- Binding prompt: `CROWN_PIVOT_REDLINE_v1_1_codex_prompt.md`. This build creates an independent `crown_pivot_redline_v1` planner, not another Dragon-Orca or Rescue scorer overlay.
+- `best_rescue/B0` is frozen baseline, no-op oracle, and pure shadow comparison only. It must not be the final runtime fallback/default strategy.
+- `variant=crown_pivot_redline_v1` must directly call `PivotRedlinePlanner.decide()` and must not call `_decide_rescue()`, `rescue_scorer.score_options()`, or `rescue_scorer.choose()` as the main ranking path.
+- `demo/agent/pivot_redline/` is the owned runtime package for this build. Offline probes, scorer traces, counterfactuals, reports, and run artifacts must stay under `tools/`, `reports/`, or `runs/pivot_redline/`, never imported by runtime.
+- Only modules satisfying the full REAL_IMPLEMENTATION_GATE may be called `ACTIVE_AND_VALIDATED`: real runtime code, behavior tests, decision-chain integration, runtime trace fields, 31-day full-run usage, ON/OFF ablation evidence, and read-only reviewer PASS.
+- Missing any gate means the module status must be `DIAGNOSTIC_ONLY`, `IMPLEMENTED_BUT_NOT_ACTIVE`, `ACTIVE_BUT_NO_POSITIVE_EVIDENCE`, or `FAILED_INTEGRATION`.
+- Final `reports/` artifacts are limited to exactly `pivot_redline_final_report.md`, `pivot_redline_experiment_grid.csv`, `pivot_redline_forensics.csv`, `pivot_redline_model_and_trace_audit.csv`, and `pivot_redline_package_audit.md`.
+- `tools/verify_pivot_redline_completion.py` is mandatory and phase-aware for setup, noop, archaeology, money, compiler, scorer_probe, models, planner, search, and final. Final mode must fail on planned/missing/proxy/smoke rows, fewer than 120 executed full 20260529 rows, missing reviewer transcripts, active modules lacking full evidence, wrong package policy, raw leakage, Qwen numeric adjustment, or stop-state inconsistency.
+- Valid stop states are only `PIVOT_RECOMMENDED_SUBMISSION`, `PIVOT_EXPERIMENTAL_SUBMISSION`, `PIVOT_REVIEW_ONLY_NOT_FOR_SUBMISSION`, `DO_NOT_SUBMIT_WITH_COMPLETE_NEGATIVE_EVIDENCE`, `DO_NOT_SUBMIT_WITH_INCOMPLETE_IMPLEMENTATION`, `DO_NOT_SUBMIT_WITH_INCOMPLETE_SEARCH`, `PROMPT_NONCOMPLIANCE_FAIL`, `EXTERNAL_BLOCKER_EVAL_INFRA`, `EXTERNAL_BLOCKER_REPO_OR_RESOURCE`, `EXTERNAL_BLOCKER_QWEN_API`, or `EXTERNAL_BLOCKER_SUBAGENT_INFRA`.
+- Subagents/reviewers are read-only QA gates. If true subagent infrastructure is unavailable, run named independent read-only reviewer passes and record files, commands, CSV rows, run dirs, metrics, PASS/FAIL, and required fixes.
+- Package creation is forbidden below experimental gate. If final selected policy is effectively B0 or official_net < 15000, create no zip and write a DO_NOT_SUBMIT report.
+
+---
+
 # CROWN-DRAGON-ORCA v1.1 Active Build Rules
 
 - Active build: CROWN-DRAGON-ORCA v1.1 on branch `crown-dragon-orca-v1-1`.

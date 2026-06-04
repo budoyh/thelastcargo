@@ -94,6 +94,14 @@ ALLOWED_DRAGON_REPORTS = {
     "dragon_orca_package_audit.md",
 }
 REQUIRED_DRAGON_REPORTS = set(ALLOWED_DRAGON_REPORTS)
+ALLOWED_PIVOT_REPORTS = {
+    "pivot_redline_final_report.md",
+    "pivot_redline_experiment_grid.csv",
+    "pivot_redline_forensics.csv",
+    "pivot_redline_model_and_trace_audit.csv",
+    "pivot_redline_package_audit.md",
+}
+REQUIRED_PIVOT_REPORTS = set(ALLOWED_PIVOT_REPORTS)
 SUBMISSION_STOP_STATES = {
     "CROWN_TRIDENT_RECOMMENDED_SUBMISSION",
     "CROWN_TRIDENT_EXPERIMENTAL_SUBMISSION",
@@ -106,11 +114,14 @@ SUBMISSION_STOP_STATES = {
     "PREF_FORGE_EXPERIMENTAL_SUBMISSION_READY",
     "DRAGON_RECOMMENDED_SUBMISSION",
     "DRAGON_EXPERIMENTAL_SUBMISSION",
+    "PIVOT_RECOMMENDED_SUBMISSION",
+    "PIVOT_EXPERIMENTAL_SUBMISSION",
 }
 REVIEW_PACKAGE_STATES = {
     "FUSE_REVIEW_PACKAGES_ONLY",
     "PREF_FORGE_HIDDEN_SAFE_REVIEW_READY",
     "DO_NOT_SUBMIT_WITH_REVIEW_ONLY_PACKAGE",
+    "PIVOT_REVIEW_ONLY_NOT_FOR_SUBMISSION",
 }
 DISALLOWED_PACKAGE_DEFAULT_VARIANTS = {
     "best_rescue",
@@ -549,7 +560,12 @@ def check_final_reports(*, require_final_evidence: bool = False) -> list[Finding
     findings: list[Finding] = []
     report_files = iter_report_files()
     report_names = {path.name for path in report_files}
-    if "pref_forge_final_report.md" in report_names or any(name.startswith("pref_forge_") for name in report_names):
+    if "pivot_redline_final_report.md" in report_names or any(name.startswith("pivot_redline_") for name in report_names):
+        allowed_reports = ALLOWED_PIVOT_REPORTS
+        required_reports = REQUIRED_PIVOT_REPORTS
+        report_label = "Pivot-Redline"
+        final_report = ROOT / "reports" / "pivot_redline_final_report.md"
+    elif "pref_forge_final_report.md" in report_names or any(name.startswith("pref_forge_") for name in report_names):
         allowed_reports = ALLOWED_PREF_FORGE_REPORTS
         required_reports = REQUIRED_PREF_FORGE_REPORTS
         report_label = "Pref-Forge"
@@ -621,9 +637,9 @@ def check_final_reports(*, require_final_evidence: bool = False) -> list[Finding
 
 def _extract_stop_state(text: str) -> str:
     for line in text.splitlines()[:80]:
-        if "CROWN_TRIDENT_" in line or "SURGE_" in line or "FUSE_" in line or "PREF_FORGE_" in line or "DRAGON_" in line or "DO_NOT_SUBMIT" in line or "PROMPT_NONCOMPLIANCE_FAIL" in line or "EXTERNAL_BLOCKER" in line:
+        if "CROWN_TRIDENT_" in line or "SURGE_" in line or "FUSE_" in line or "PREF_FORGE_" in line or "DRAGON_" in line or "PIVOT_" in line or "DO_NOT_SUBMIT" in line or "PROMPT_NONCOMPLIANCE_FAIL" in line or "EXTERNAL_BLOCKER" in line:
             for token in re.split(r"[^A-Z0-9_]+", line):
-                if token in SUBMISSION_STOP_STATES or token in REVIEW_PACKAGE_STATES or token.startswith("SURGE_") or token.startswith("FUSE_") or token.startswith("PREF_FORGE_") or token.startswith("DRAGON_") or token.startswith("DO_NOT_SUBMIT") or token.startswith("PROMPT_NONCOMPLIANCE_FAIL") or token.startswith("EXTERNAL_BLOCKER"):
+                if token in SUBMISSION_STOP_STATES or token in REVIEW_PACKAGE_STATES or token.startswith("SURGE_") or token.startswith("FUSE_") or token.startswith("PREF_FORGE_") or token.startswith("DRAGON_") or token.startswith("PIVOT_") or token.startswith("DO_NOT_SUBMIT") or token.startswith("PROMPT_NONCOMPLIANCE_FAIL") or token.startswith("EXTERNAL_BLOCKER"):
                     return token
     return ""
 
@@ -641,7 +657,9 @@ def _extract_numeric_metric(text: str, metric: str) -> float | None:
 def check_submission_packages(*, require_final_evidence: bool = False) -> list[Finding]:
     findings: list[Finding] = []
     packages = iter_submission_zips()
-    if (ROOT / "reports" / "dragon_orca_final_report.md").is_file() or any(path.name.startswith("dragon_orca_") for path in iter_report_files()):
+    if (ROOT / "reports" / "pivot_redline_final_report.md").is_file() or any(path.name.startswith("pivot_redline_") for path in iter_report_files()):
+        final_report = ROOT / "reports" / "pivot_redline_final_report.md"
+    elif (ROOT / "reports" / "dragon_orca_final_report.md").is_file() or any(path.name.startswith("dragon_orca_") for path in iter_report_files()):
         final_report = ROOT / "reports" / "dragon_orca_final_report.md"
     elif (ROOT / "reports" / "pref_forge_final_report.md").is_file() or any(path.name.startswith("pref_forge_") for path in iter_report_files()):
         final_report = ROOT / "reports" / "pref_forge_final_report.md"
@@ -675,7 +693,11 @@ def _check_one_package(package: Path, *, first_line: str, stop_state: str) -> li
                     Finding("P0", package, 0, "package_created_for_do_not_submit", "DO NOT SUBMIT state must not ship a submission zip")
                 )
             review_only_allowed = (
-                (package.name.startswith("CROWN_FUSE_REVIEW_ONLY") or package.name.startswith("CROWN_DRAGON_ORCA_REVIEW_ONLY"))
+                (
+                    package.name.startswith("CROWN_FUSE_REVIEW_ONLY")
+                    or package.name.startswith("CROWN_DRAGON_ORCA_REVIEW_ONLY")
+                    or package.name.startswith("CROWN_PIVOT_REDLINE_REVIEW_ONLY")
+                )
                 and stop_state in REVIEW_PACKAGE_STATES
             )
             if stop_state and stop_state not in SUBMISSION_STOP_STATES and not review_only_allowed:

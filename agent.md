@@ -2,6 +2,19 @@
 
 This lowercase rule file mirrors `AGENTS.md` for tools that look for `agent.md`.
 
+## Active Pivot-Redline Build
+
+- Branch: `crown-pivot-redline-v1`.
+- Task: CROWN-PIVOT-REDLINE v1 = independent `demo/agent/pivot_redline/` planner and `variant=crown_pivot_redline_v1`, not a Dragon-Orca or Rescue scorer overlay.
+- Binding prompt: `CROWN_PIVOT_REDLINE_v1_1_codex_prompt.md`.
+- B0/best_rescue is frozen baseline, no-op oracle, and pure shadow comparison only. It must not be final runtime fallback/default.
+- The pivot variant must call `PivotRedlinePlanner.decide()` directly and must not call `_decide_rescue()`, `rescue_scorer.score_options()`, or `rescue_scorer.choose()` as the main ranking path.
+- A module may be `ACTIVE_AND_VALIDATED` only with real runtime code, behavior tests, decision-chain integration, trace fields, 31-day full-run usage, ON/OFF ablation evidence, and read-only reviewer PASS.
+- Final reports are limited to `pivot_redline_final_report.md`, `pivot_redline_experiment_grid.csv`, `pivot_redline_forensics.csv`, `pivot_redline_model_and_trace_audit.csv`, and `pivot_redline_package_audit.md`.
+- `tools/verify_pivot_redline_completion.py` is the phase-aware completion gate for setup, noop, archaeology, money, compiler, scorer_probe, models, planner, search, and final.
+- Valid stop states are `PIVOT_RECOMMENDED_SUBMISSION`, `PIVOT_EXPERIMENTAL_SUBMISSION`, `PIVOT_REVIEW_ONLY_NOT_FOR_SUBMISSION`, `DO_NOT_SUBMIT_WITH_COMPLETE_NEGATIVE_EVIDENCE`, `DO_NOT_SUBMIT_WITH_INCOMPLETE_IMPLEMENTATION`, `DO_NOT_SUBMIT_WITH_INCOMPLETE_SEARCH`, `PROMPT_NONCOMPLIANCE_FAIL`, `EXTERNAL_BLOCKER_EVAL_INFRA`, `EXTERNAL_BLOCKER_REPO_OR_RESOURCE`, `EXTERNAL_BLOCKER_QWEN_API`, and `EXTERNAL_BLOCKER_SUBAGENT_INFRA`.
+- Below experimental gate, do not generate a submission/probe zip. If official_net < 15000 or final behavior is effectively B0, generate no zip.
+
 ## Active Dragon-Orca Build
 
 - Branch: `crown-dragon-orca-v1-1`.

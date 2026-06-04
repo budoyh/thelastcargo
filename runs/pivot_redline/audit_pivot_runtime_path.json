@@ -1,0 +1,10 @@
+{
+  "_decide_rescue_call_count": 0,
+  "failures": [],
+  "pivot_decide_call_count": 1,
+  "rescue_scorer_choose_call_count": 0,
+  "rescue_scorer_score_call_count": 0,
+  "service_file": "demo/agent/model_decision_service.py",
+  "status": "PASS",
+  "variant": "crown_pivot_redline_v1"
+}
